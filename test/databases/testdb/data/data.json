@@ -1,0 +1,10 @@
+[
+    {
+        "column-inserts": true,
+        "table": "error_set"
+    },
+    {
+        "column-inserts": true,
+        "table": "membership.user_state"
+    }
+]

@@ -1,0 +1,6 @@
+DO $$
+BEGIN
+
+  --RAISE EXCEPTION 'ERROR BY WHAT? %', user;
+
+END $$;
