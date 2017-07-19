@@ -113,15 +113,20 @@ There could be many reason why one would want to manage data:
 1. Testing data.
 1. Just because your boss wants you too.
 
+
 #### -pulldata: Pull data from repository by table
 <pre>-pulldata [-t [table name]] -repo [repository name] [db connection information]</pre>
 e.g.
 <pre>-pulldata -t error_set -t membership.user_state -repo mydb -d mylocaldb</pre>
 Output:
-<pre>Pulling: error_set
-Pulling: membership.user_state</pre>
+<pre>
+Pulling: error_set
+Pulling: membership.user_state
+</pre>
 
-__What happens?__<br />
+
+__*What happens?*__<br />
+
 * The data folder for the repository is created.
 * One sql file per table is created with the table name was the file name.
 * A data.json file is created in data folder as well.
