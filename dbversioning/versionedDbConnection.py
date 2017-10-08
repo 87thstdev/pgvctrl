@@ -14,6 +14,22 @@ def connection_list(args):
             rtn_conn.append("-d")
             rtn_conn.append(args.d)
 
+        if args.host:
+            rtn_conn.append("-h")
+            rtn_conn.append(args.host)
+
+        if args.p:
+            rtn_conn.append("-p")
+            rtn_conn.append(args.p)
+
+        if args.u:
+            rtn_conn.append("-U")
+            rtn_conn.append(args.u)
+
+        if args.pwd:
+            rtn_conn.append("-W")
+            rtn_conn.append(args.p)
+
     except TypeError:
         raise VersionedDbExceptionMissingArgs
 
