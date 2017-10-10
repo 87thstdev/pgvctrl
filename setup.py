@@ -11,11 +11,10 @@ setup(
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     install_requires=[
         'argparse',
-        'simplejson', 'plumbum',
+        'simplejson',
+        'plumbum',
     ],
-    entry_points = {
+    entry_points={
         'console_scripts': ['pgvctrl=dbversioning.dbvctrl:main'],
     },
-    zip_safe=False,
-    long_description=open('readme.md').read(),
 )
