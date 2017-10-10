@@ -4,7 +4,9 @@ from simplejson import JSONDecodeError
 
 from collections import namedtuple
 
-from errorUtil import VersionedDbExceptionBadConfigFile, VersionedDbExceptionFileMissing
+from errorUtil import VersionedDbExceptionBadConfigFile, \
+    VersionedDbExceptionFileMissing, \
+    VersionedDbExceptionInvalidRepo
 
 Version_Table = namedtuple("version_table", ["tbl", "v", "hash", "repo"])
 
@@ -42,7 +44,7 @@ class RepositoryConf(object):
                     REPOSITORY: '',
                     VERSION_HASH: ''
                 }
-             }
+            }
         ]
     }
 
@@ -91,10 +93,16 @@ class RepositoryConf(object):
 
     @staticmethod
     def get_data_dump_dir(repo_name):
+        if not repo_name:
+            raise VersionedDbExceptionInvalidRepo()
+
         return os.path.join(RepositoryConf.root(), repo_name, DATA_DUMP)
 
     @staticmethod
     def get_data_dump_sql_dir(repo_name, sql_file):
+        if not repo_name:
+            raise VersionedDbExceptionInvalidRepo()
+
         return os.path.join(RepositoryConf.root(), repo_name, DATA_DUMP, sql_file)
 
     @staticmethod
@@ -135,6 +143,9 @@ class RepositoryConf(object):
 
     @staticmethod
     def get_custom_repo(repo_name):
+        if not repo_name:
+            raise VersionedDbExceptionInvalidRepo()
+
         repo_list = RepositoryConf.custom_repo_list()
 
         rp = [r for r in repo_list if r[NAME] == repo_name]

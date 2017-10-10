@@ -46,6 +46,12 @@ class VersionedDbExceptionBadDateSource(VersionedDbException):
         pass
 
 
+class VersionedDbExceptionInvalidRepo(VersionedDbException):
+    def __init__(self):
+        self.message = "Invalid Repo!"
+        pass
+
+
 class VersionedDbExceptionDatabaseAlreadyInit(VersionedDbException):
     def __init__(self):
         self.message = "Database already initialized!"

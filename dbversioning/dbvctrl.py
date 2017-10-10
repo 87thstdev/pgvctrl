@@ -172,7 +172,7 @@ def main():
     except OSError as e:
         error_message("OSError: {0} ({1})".format(e.strerror, e.filename))
     except Exception as e:
-        error_message(e)
+        error_message(e.message)
 
 
 if __name__ == '__main__':
