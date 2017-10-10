@@ -15,17 +15,18 @@ parent2.add_argument('-set2', action="store_true")
 parser = argparse.ArgumentParser(description='Postgres db version control.')
 group = parser.add_mutually_exclusive_group()
 group.add_argument('-version', help='Show vbctrl version number', action='store_true')
-group.add_argument("-init", help='initialize database on server for version control',
-                    action='store_true')
+group.add_argument("-init", help='initialize database on server for version control', action='store_true')
 group.add_argument('-repolist', help='Show list of repositories', action='store_true')
 group.add_argument('-chkver', help='Check database version', action='store_true')
 group.add_argument('-mkconf', help='Create dbRepoConfig.json', action='store_true')
-group.add_argument('-apply', help='Apply sql version',  action='store_true')
-group.add_argument('-setff', help='Set version fast forward',  action='store_true')
+group.add_argument('-apply', help='Apply sql version', action='store_true')
+group.add_argument('-setff', help='Set version fast forward', action='store_true')
 group.add_argument('-applyff', help='Apply version fast forward')
-group.add_argument('-pulldata', help='Pull data from repository by table',  action='store_true')
-group.add_argument('-pushdata', help='Push data from repository to database',  action='store_true')
+group.add_argument('-pulldata', help='Pull data from repository by table', action='store_true')
+group.add_argument('-pushdata', help='Push data from repository to database', action='store_true')
 
+
+parser.add_argument('-force', help='Force push data from repository to database', action='store_true')
 
 parser.add_argument('-verbose', help='Verbose output', action='store_true')
 parser.add_argument('-t', metavar='', help='Pull table for data', action='append')
@@ -41,8 +42,6 @@ parser.add_argument('-host', metavar='', help='postgres server host')
 parser.add_argument('-p', metavar='', help='port')
 parser.add_argument('-u', metavar='', help='database username')
 parser.add_argument('-pwd', metavar='', help='password')
-
-
 
 
 def display_repo_list(arg_set):
@@ -94,7 +93,8 @@ def push_repo_data_to_db(arg_set):
 
     vdb.push_data_to_database(
         db_conn=db_conn,
-        repo_name=arg_set.repo
+        repo_name=arg_set.repo,
+        force=arg_set.force
     )
 
 

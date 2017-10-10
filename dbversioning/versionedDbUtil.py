@@ -102,7 +102,7 @@ class VersionedDbHelper:
         VersionDbShellUtil.apply_fast_forward_sql(db_conn, fast_forward_to[0], repo_name)
 
     @staticmethod
-    def push_data_to_database(repo_name, db_conn):
+    def push_data_to_database(repo_name, db_conn, force):
         conf = RepositoryConf()
         data_files = []
         data_dump = conf.get_data_dump_dir(repo_name)
@@ -116,7 +116,7 @@ class VersionedDbHelper:
                 gs = GenericSql(sql_path)
                 data_files.append(gs)
 
-            VersionedDbHelper.apply_sql_files_to_database(db_conn, data_files)
+            VersionedDbHelper.apply_sql_files_to_database(db_conn, data_files, force)
         else:
             raise VersionedDbExceptionFolderMissing(data_dump)
 
@@ -162,10 +162,10 @@ class VersionedDbHelper:
         VersionDbShellUtil.dump_version_fast_forward(db_conn, v_stg)
 
     @staticmethod
-    def apply_sql_files_to_database(db_conn, sql_files):
+    def apply_sql_files_to_database(db_conn, sql_files, force=None):
 
         for sql_file in sql_files:
-            VersionDbShellUtil.apply_sql_file(db_conn, sql_file)
+            VersionDbShellUtil.apply_sql_file(db_conn, sql_file, force)
 
     @staticmethod
     def _version_standing(v_h, v_l):
