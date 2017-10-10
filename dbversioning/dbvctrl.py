@@ -34,6 +34,8 @@ parser.add_argument('-t', metavar='', help='Pull table for data', action='append
 parser.add_argument('-v', metavar='', help='version number')
 parser.add_argument('-repo', metavar='', help='Repository Database Name')
 
+parser.add_argument('-svc', metavar='', help='pg service')
+
 parser.add_argument('-d', metavar='', help='database name on server')
 parser.add_argument('-host', metavar='', help='postgres server host')
 parser.add_argument('-p', metavar='', help='port')

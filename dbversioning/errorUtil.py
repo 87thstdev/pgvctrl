@@ -40,6 +40,12 @@ class VersionedDbExceptionMissingDataTable(VersionedDbException):
         pass
 
 
+class VersionedDbExceptionBadDateSource(VersionedDbException):
+    def __init__(self, dbconn):
+        self.message = "Invalid Data Connection: {0}".format(dbconn)
+        pass
+
+
 class VersionedDbExceptionDatabaseAlreadyInit(VersionedDbException):
     def __init__(self):
         self.message = "Database already initialized!"
@@ -50,6 +56,7 @@ class VersionedDbExceptionSqlExecutionError(VersionedDbException):
     def __init__(self, stderr):
         self.message = "Sql Error: {0}".format(stderr)
         pass
+
 
 class VersionedDbExceptionBadConfigVersionFound(VersionedDbException):
     def __init__(self):

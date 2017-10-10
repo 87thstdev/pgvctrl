@@ -8,7 +8,9 @@ from plumbum import colors, local, ProcessExecutionError
 from simplejson import JSONDecodeError
 
 from errorUtil import VersionedDbExceptionMissingVersionTable, \
+    VersionedDbExceptionBadDateSource, \
     VersionedDbExceptionNoVersionFound, \
+    VersionedDbException, \
     VersionedDbExceptionTooManyVersionRecordsFound, \
     VersionedDbExceptionDatabaseAlreadyInit, \
     VersionedDbExceptionSqlExecutionError, \
@@ -329,8 +331,16 @@ def _good_version_table(v_tbl, db_conn):
 
     try:
         rtn = psql(db_conn, "-t", "-A", "-c", version_sql)
-    except ProcessExecutionError:
-        raise VersionedDbExceptionMissingVersionTable(v_tbl.tbl)
+    except ProcessExecutionError as e:
+        error_code = e[1]
+        if error_code == 1:
+            raise VersionedDbExceptionMissingVersionTable(v_tbl.tbl)
+        elif error_code == 2:
+            raise VersionedDbExceptionBadDateSource(db_conn)
+        else:
+            raise VersionedDbException(e)
+    except Exception as e:
+        print(e)
 
     rtn_array = rtn.split("|")
     count = int(rtn_array[0])
