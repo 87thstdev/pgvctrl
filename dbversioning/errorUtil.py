@@ -10,6 +10,14 @@ class VersionedDbExceptionFileExits(VersionedDbException):
         pass
 
 
+class VersionedDbExceptionRepoVersionExits(VersionedDbException):
+    def __init__(self, repo_name, version):
+        self.message = "Repository version already exists: {0} {1}.{2}".format(
+            repo_name, version.major, version.minor
+        )
+        pass
+
+
 class VersionedDbExceptionMissingArgs(VersionedDbException):
     def __init__(self):
         self.message = "Missing connection args"

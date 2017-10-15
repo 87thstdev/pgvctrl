@@ -14,7 +14,9 @@ from errorUtil import VersionedDbExceptionMissingVersionTable, \
     VersionedDbExceptionTooManyVersionRecordsFound, \
     VersionedDbExceptionDatabaseAlreadyInit, \
     VersionedDbExceptionSqlExecutionError, \
-    VersionedDbExceptionBadDataConfigFile, VersionedDbExceptionMissingDataTable
+    VersionedDbExceptionBadDataConfigFile, \
+    VersionedDbExceptionMissingDataTable, \
+    VersionedDbExceptionRepoVersionExits
 from repositoryconf import RepositoryConf
 
 DATA_DUMP_CONFIG_NAME = 'data.json'
@@ -270,7 +272,6 @@ class VersionDbShellUtil:
             return rtn_array[0], rtn_array[1]
         else:
             return None, None
-
 
     @staticmethod
     def get_col_inserts_setting(repo_name, tbl_name):

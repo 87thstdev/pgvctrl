@@ -72,6 +72,10 @@ class VersionDb(object):
 
         return ver_list
 
+    def create_version(self, version):
+        os.mkdir(os.path.join(self._repo_path, version))
+        return True
+
 
 class Version(object):
     def __init__(self, version_path):

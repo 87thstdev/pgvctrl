@@ -32,7 +32,8 @@ parser.add_argument('-verbose', help='Verbose output', action='store_true')
 parser.add_argument('-t', metavar='', help='Pull table for data', action='append')
 
 
-parser.add_argument('-v', metavar='', help='version number')
+parser.add_argument('-v', metavar='', help='Version number')
+parser.add_argument('-mkv', metavar='', help='Make version number')
 parser.add_argument('-repo', metavar='', help='Repository Database Name')
 
 parser.add_argument('-svc', metavar='', help='pg service')
@@ -119,6 +120,15 @@ def set_fast_forward_pull_from_db(arg_set):
     )
 
 
+def create_repository_version_folder(arg_set):
+    vdb = VersionedDbHelper()
+
+    vdb.create_repository_version_folder(
+        repo_name=arg_set.repo,
+        version=arg_set.mkv
+    )
+
+
 def create_config_file():
     vdb = VersionedDbHelper()
     vdb.create_config()
@@ -140,6 +150,9 @@ def main():
         elif arg_set.mkconf:
             # -mkconf
             create_config_file()
+        elif arg_set.mkv:
+            # -mkv
+            create_repository_version_folder(arg_set)
         elif arg_set.apply:
             # -apply -v 0.1 -repo test_db -d postgresPlay
             apply_repository_to_db(arg_set)

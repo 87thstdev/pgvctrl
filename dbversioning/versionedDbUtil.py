@@ -7,7 +7,9 @@ from os.path import join
 from dbversioning.versionedDbHelper import get_valid_elements
 from errorUtil import VersionedDbExceptionBadConfigVersionFound, \
     VersionedDbExceptionFileExits, \
-    VersionedDbExceptionVersionIsHigherThanApplying, VersionedDbExceptionFolderMissing
+    VersionedDbExceptionVersionIsHigherThanApplying, \
+    VersionedDbExceptionFolderMissing, \
+    VersionedDbExceptionRepoVersionExits
 from versionedDbShellUtil import VersionDbShellUtil, \
     information_message, DATA_DUMP_CONFIG_NAME, dir_exists
 from versionedDb import VersionDb, FastForwardDb, GenericSql
@@ -52,8 +54,6 @@ class VersionedDbHelper:
                     for s in v.sql_files:
                         information_message("\t\t{0} {1}".format(s.number, s.name))
 
-
-
     @staticmethod
     def get_repository_version(repository, version):
         conf = RepositoryConf()
@@ -62,13 +62,20 @@ class VersionedDbHelper:
         vdb = VersionDb(join(os.getcwd(), root, repository))
 
         rtn = [v for v in vdb.versions
-               if v.major == version.major
-               and v.minor == version.minor]
+               if v.major == version.major and v.minor == version.minor]
 
         if len(rtn) == 0:
             return None
 
         return rtn
+
+    @staticmethod
+    def create_repository_version(repository, version):
+        conf = RepositoryConf()
+        root = conf.root()
+        vdb = VersionDb(join(os.getcwd(), root, repository))
+        if vdb.create_version(version):
+            information_message("Version {0}/{1} created.".format(repository, version))
 
     @staticmethod
     def get_repository_fast_forward_version(repository, version):
@@ -127,13 +134,12 @@ class VersionedDbHelper:
         else:
             VersionDbShellUtil.pull_repo_tables_from_database(repo_name, db_conn)
 
-
     @staticmethod
     def apply_repository_to_database(repo_name, db_conn, version):
         v_stg = VersionedDbHelper._get_v_stg(repo_name)
         repo, ver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
-        repo_nums = VersionedDbHelper._get_version_numbers(ver)
-        ver_nums = VersionedDbHelper._get_version_numbers(version)
+        repo_nums = VersionedDbHelper.get_version_numbers(ver)
+        ver_nums = VersionedDbHelper.get_version_numbers(version)
 
         repo_ver = VersionedDbHelper.get_repository_version(repo_name, ver_nums)
         apply_repo = repo_ver[0]
@@ -181,6 +187,16 @@ class VersionedDbHelper:
         return -1
 
     @staticmethod
+    def create_repository_version_folder(repo_name, version):
+        version_nums = VersionedDbHelper.get_version_numbers(version)
+        version_found = VersionedDbHelper.get_repository_version(repo_name, version_nums)
+
+        if version_found:
+            raise VersionedDbExceptionRepoVersionExits(repo_name, version_found[0])
+
+        VersionedDbHelper.create_repository_version(repo_name, version)
+
+    @staticmethod
     def create_config():
         conf = RepositoryConf()
         if not os.path.isfile(conf.config_file_name()):
@@ -207,7 +223,7 @@ class VersionedDbHelper:
         return v_stg
 
     @staticmethod
-    def _get_version_numbers(version_string):
+    def get_version_numbers(version_string):
         ver_array = version_string.split(".")
 
         return Version_Numbers(int(ver_array[0]), int(ver_array[1]))
