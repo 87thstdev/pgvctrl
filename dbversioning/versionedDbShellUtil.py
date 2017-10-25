@@ -172,7 +172,17 @@ class VersionDbShellUtil:
                 raise VersionedDbExceptionSqlExecutionError(e.stderr)
 
     @staticmethod
-    def apply_sql_file(db_conn, sql_file, force=None):
+    def apply_sql_file(db_conn, sql_file):
+        psql = _local_psql()
+        psql_parm_list = copy.copy(db_conn)
+
+        psql_parm_list.append("-f")
+        psql_parm_list.append(sql_file.path)
+
+        VersionDbShellUtil._execute_sql_on_db(psql, psql_parm_list, sql_file)
+
+    @staticmethod
+    def apply_data_sql_file(db_conn, sql_file, force=None):
         psql = _local_psql()
         psql_parm_list = copy.copy(db_conn)
 
@@ -183,6 +193,10 @@ class VersionDbShellUtil:
             psql_parm_list.append("-v")
             psql_parm_list.append("ON_ERROR_STOP=1")
 
+        VersionDbShellUtil._execute_sql_on_db(psql, psql_parm_list, sql_file)
+
+    @staticmethod
+    def _execute_sql_on_db(psql, psql_parm_list, sql_file):
         try:
             information_message("Running: {0}".format(sql_file.fullname))
             rtn = psql.run(psql_parm_list, retcode=0)

@@ -123,7 +123,7 @@ class VersionedDbHelper:
                 gs = GenericSql(sql_path)
                 data_files.append(gs)
 
-            VersionedDbHelper.apply_sql_files_to_database(db_conn, data_files, force)
+            VersionedDbHelper.apply_data_sql_files_to_database(db_conn, data_files, force)
         else:
             raise VersionedDbExceptionFolderMissing(data_dump)
 
@@ -168,10 +168,16 @@ class VersionedDbHelper:
         VersionDbShellUtil.dump_version_fast_forward(db_conn, v_stg)
 
     @staticmethod
-    def apply_sql_files_to_database(db_conn, sql_files, force=None):
+    def apply_sql_files_to_database(db_conn, sql_files):
 
         for sql_file in sql_files:
-            VersionDbShellUtil.apply_sql_file(db_conn, sql_file, force)
+            VersionDbShellUtil.apply_sql_file(db_conn, sql_file)
+
+    @staticmethod
+    def apply_data_sql_files_to_database(db_conn, sql_files, force=None):
+
+        for sql_file in sql_files:
+            VersionDbShellUtil.apply_data_sql_file(db_conn, sql_file, force)
 
     @staticmethod
     def _version_standing(v_h, v_l):
