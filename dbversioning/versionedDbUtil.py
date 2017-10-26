@@ -14,7 +14,7 @@ from versionedDbShellUtil import VersionDbShellUtil, \
     information_message, DATA_DUMP_CONFIG_NAME, dir_exists
 from versionedDb import VersionDb, FastForwardDb, GenericSql
 from repositoryconf import RepositoryConf, \
-    VERSION_STORAGE, SNAPSHOTS, FAST_FORWARD
+    VERSION_STORAGE, SNAPSHOTS, FAST_FORWARD, ROLLBACK_FILE_ENDING
 
 try:
     to_unicode = unicode
@@ -169,13 +169,12 @@ class VersionedDbHelper:
 
     @staticmethod
     def apply_sql_files_to_database(db_conn, sql_files):
-
         for sql_file in sql_files:
-            VersionDbShellUtil.apply_sql_file(db_conn, sql_file)
+            if not sql_file.path.endswith(ROLLBACK_FILE_ENDING):
+                VersionDbShellUtil.apply_sql_file(db_conn, sql_file)
 
     @staticmethod
     def apply_data_sql_files_to_database(db_conn, sql_files, force=None):
-
         for sql_file in sql_files:
             VersionDbShellUtil.apply_data_sql_file(db_conn, sql_file, force)
 

@@ -7,6 +7,7 @@ import copy
 from plumbum import colors, local, ProcessExecutionError
 from simplejson import JSONDecodeError
 
+from versionedDb import SqlPatch
 from errorUtil import VersionedDbExceptionMissingVersionTable, \
     VersionedDbExceptionBadDateSource, \
     VersionedDbExceptionNoVersionFound, \
@@ -17,7 +18,7 @@ from errorUtil import VersionedDbExceptionMissingVersionTable, \
     VersionedDbExceptionBadDataConfigFile, \
     VersionedDbExceptionMissingDataTable, \
     VersionedDbExceptionRepoVersionExits
-from repositoryconf import RepositoryConf
+from repositoryconf import RepositoryConf, ROLLBACK_FILE_ENDING
 
 DATA_DUMP_CONFIG_NAME = 'data.json'
 
@@ -172,14 +173,32 @@ class VersionDbShellUtil:
                 raise VersionedDbExceptionSqlExecutionError(e.stderr)
 
     @staticmethod
-    def apply_sql_file(db_conn, sql_file):
+    def apply_sql_file(db_conn, sql_file, break_on_error=False):
         psql = _local_psql()
         psql_parm_list = copy.copy(db_conn)
 
         psql_parm_list.append("-f")
         psql_parm_list.append(sql_file.path)
 
-        VersionDbShellUtil._execute_sql_on_db(psql, psql_parm_list, sql_file)
+        psql_parm_list.append("-v")
+        psql_parm_list.append("ON_ERROR_STOP=1")
+
+        if break_on_error:
+            VersionDbShellUtil._execute_sql_on_db(psql, psql_parm_list, sql_file)
+            return False
+
+        try:
+            VersionDbShellUtil._execute_sql_on_db(psql, psql_parm_list, sql_file)
+        except VersionedDbExceptionSqlExecutionError as e:
+            error_message("SQL ERROR {0}".format(e.message))
+            VersionDbShellUtil._attempt_rollback(db_conn, sql_file)
+
+    @staticmethod
+    def _attempt_rollback(db_conn, sql_file):
+        warning_message("Attempting to rollback")
+        file_path = "{0}{1}".format(sql_file.path[:-4], ROLLBACK_FILE_ENDING)
+        rollback = SqlPatch(file_path)
+        VersionDbShellUtil.apply_sql_file(db_conn, rollback, break_on_error=True)
 
     @staticmethod
     def apply_data_sql_file(db_conn, sql_file, force=None):
