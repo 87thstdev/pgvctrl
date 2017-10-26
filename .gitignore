@@ -6,3 +6,4 @@ dbversioning/databases/
 dbversioning/dbRepoConfig.json
 *.pyc
 __pycache__
+test/
