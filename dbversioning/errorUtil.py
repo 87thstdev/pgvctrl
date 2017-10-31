@@ -18,6 +18,14 @@ class VersionedDbExceptionRepoVersionExits(VersionedDbException):
         pass
 
 
+class VersionedDbExceptionRepoVersionDoesNotExits(VersionedDbException):
+    def __init__(self, repo_name, version_name):
+        self.message = "Repository version does not exist: {0} {1}".format(
+            repo_name, version_name
+        )
+        pass
+
+
 class VersionedDbExceptionMissingArgs(VersionedDbException):
     def __init__(self):
         self.message = "Missing connection args"

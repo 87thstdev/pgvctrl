@@ -7,8 +7,8 @@ import copy
 from plumbum import colors, local, ProcessExecutionError
 from simplejson import JSONDecodeError
 
-from versionedDb import SqlPatch
-from errorUtil import VersionedDbExceptionMissingVersionTable, \
+from .versionedDb import SqlPatch
+from .errorUtil import VersionedDbExceptionMissingVersionTable, \
     VersionedDbExceptionBadDateSource, \
     VersionedDbExceptionNoVersionFound, \
     VersionedDbException, \
@@ -18,14 +18,14 @@ from errorUtil import VersionedDbExceptionMissingVersionTable, \
     VersionedDbExceptionBadDataConfigFile, \
     VersionedDbExceptionMissingDataTable, \
     VersionedDbExceptionRepoVersionExits
-from repositoryconf import RepositoryConf, ROLLBACK_FILE_ENDING
+from .repositoryconf import RepositoryConf, ROLLBACK_FILE_ENDING
 
 DATA_DUMP_CONFIG_NAME = 'data.json'
+RETCODE = 0
+STDOUT = 1
+STDERR = 2
 
-try:
-    to_unicode = unicode
-except NameError:
-    to_unicode = str
+to_unicode = str
 
 
 class VersionDbShellUtil:
@@ -87,7 +87,6 @@ class VersionDbShellUtil:
         # TODO: Decided if I want to create a ff point on init.
         # DbVersionShellHelper.dump_version_fast_forward(db_conn, v_stg)
 
-
     @staticmethod
     def apply_fast_forward_sql(db_conn, sql_file, repo_name):
         psql = _local_psql()
@@ -107,7 +106,6 @@ class VersionDbShellUtil:
             # TODO: Make this happen
             # v_stg = VersionedDbHelper._get_v_stg(repo_name)
             # DbVersionShellHelper.set_db_instance_version(db_conn, v_stg, sql_file.full_name)
-
 
         except ProcessExecutionError as e:
             raise VersionedDbExceptionSqlExecutionError(e.stderr)
@@ -366,20 +364,17 @@ def _good_version_table(v_tbl, db_conn):
     version_sql = "SELECT COUNT(*) cnt, 'notused' throwaway FROM {tbl};" \
         .format(tbl=v_tbl.tbl)
 
-    try:
-        rtn = psql(db_conn, "-t", "-A", "-c", version_sql)
-    except ProcessExecutionError as e:
-        error_code = e[1]
-        if error_code == 1:
-            raise VersionedDbExceptionMissingVersionTable(v_tbl.tbl)
-        elif error_code == 2:
-            raise VersionedDbExceptionBadDateSource(db_conn)
-        else:
-            raise VersionedDbException(e)
-    except Exception as e:
-        print(e)
+    rtn = psql[db_conn, "-t", "-A", "-c", version_sql].run()
+    error_code = rtn[RETCODE]
 
-    rtn_array = rtn.split("|")
+    if error_code == 1:
+        raise VersionedDbExceptionMissingVersionTable(v_tbl.tbl)
+    elif error_code == 2:
+        raise VersionedDbExceptionBadDateSource(db_conn)
+    elif error_code > 2:
+        raise VersionedDbException(rtn[STDERR])
+
+    rtn_array = rtn[STDOUT].split("|")
     count = int(rtn_array[0])
 
     if count == 1:
@@ -396,15 +391,14 @@ def get_table_size(tbl, db_conn):
     psql = _local_psql()
 
     tbl_sql = "SELECT pg_size_pretty(pg_total_relation_size('{0}')) " \
-                  "As tbl_size, pg_total_relation_size('{0}') num_size;" \
+        "As tbl_size, pg_total_relation_size('{0}') num_size;" \
         .format(tbl['table'])
 
-    try:
-        rtn = psql(db_conn, "-t", "-A", "-c", tbl_sql)
-    except ProcessExecutionError as e:
+    rtn = psql[db_conn, "-t", "-A", "-c", tbl_sql].run()
+    if rtn[RETCODE] > 0:
         raise VersionedDbExceptionMissingDataTable(tbl['table'])
 
-    rtn_array = rtn.split("|")
+    rtn_array = rtn[STDOUT].split("|")
     size_txt = rtn_array[0]
     size_num = int(rtn_array[1])
 

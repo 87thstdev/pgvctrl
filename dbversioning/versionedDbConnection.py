@@ -1,4 +1,4 @@
-from errorUtil import VersionedDbExceptionMissingArgs
+from .errorUtil import VersionedDbExceptionMissingArgs
 
 
 def _append_svc_args(args, rtn_conn):

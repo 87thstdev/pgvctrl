@@ -5,21 +5,19 @@ import simplejson as json
 from os.path import join
 
 from dbversioning.versionedDbHelper import get_valid_elements
-from errorUtil import VersionedDbExceptionBadConfigVersionFound, \
+from .errorUtil import VersionedDbExceptionBadConfigVersionFound, \
     VersionedDbExceptionFileExits, \
     VersionedDbExceptionVersionIsHigherThanApplying, \
     VersionedDbExceptionFolderMissing, \
-    VersionedDbExceptionRepoVersionExits
-from versionedDbShellUtil import VersionDbShellUtil, \
+    VersionedDbExceptionRepoVersionExits, \
+    VersionedDbExceptionRepoVersionDoesNotExits
+from .versionedDbShellUtil import VersionDbShellUtil, \
     information_message, DATA_DUMP_CONFIG_NAME, dir_exists
-from versionedDb import VersionDb, FastForwardDb, GenericSql
-from repositoryconf import RepositoryConf, \
+from .versionedDb import VersionDb, FastForwardDb, GenericSql
+from .repositoryconf import RepositoryConf, \
     VERSION_STORAGE, SNAPSHOTS, FAST_FORWARD, ROLLBACK_FILE_ENDING
 
-try:
-    to_unicode = unicode
-except NameError:
-    to_unicode = str
+to_unicode = str
 
 Version_Numbers = namedtuple("version_numbers", ["major", "minor"])
 
@@ -32,8 +30,8 @@ class VersionedDbHelper:
 
     @staticmethod
     def display_repo_list(verbose):
-        """    
-        :return: list of database in config 
+        """
+        :return: list of database in config
         """
         db_repos = []
         conf = RepositoryConf()
@@ -142,6 +140,10 @@ class VersionedDbHelper:
         ver_nums = VersionedDbHelper.get_version_numbers(version)
 
         repo_ver = VersionedDbHelper.get_repository_version(repo_name, ver_nums)
+
+        if repo_ver is None:
+            raise VersionedDbExceptionRepoVersionDoesNotExits(repo_name, version)
+
         apply_repo = repo_ver[0]
 
         standing = VersionedDbHelper._version_standing(ver_nums, repo_nums)

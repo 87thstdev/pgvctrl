@@ -4,7 +4,7 @@ from simplejson import JSONDecodeError
 
 from collections import namedtuple
 
-from errorUtil import VersionedDbExceptionBadConfigFile, \
+from .errorUtil import VersionedDbExceptionBadConfigFile, \
     VersionedDbExceptionFileMissing, \
     VersionedDbExceptionInvalidRepo
 

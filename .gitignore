@@ -5,5 +5,6 @@ pgvctrl.egg-info/
 dbversioning/databases/
 dbversioning/dbRepoConfig.json
 *.pyc
+*.bak
 __pycache__
 test/

@@ -3,10 +3,10 @@ import argparse
 from plumbum import ProcessExecutionError
 import pkg_resources
 
-from errorUtil import VersionedDbException
-from versionedDbConnection import connection_list
-from versionedDbShellUtil import information_message, error_message
-from versionedDbUtil import VersionedDbHelper
+from .errorUtil import VersionedDbException
+from .versionedDbConnection import connection_list
+from .versionedDbShellUtil import information_message, error_message
+from .versionedDbUtil import VersionedDbHelper
 
 
 parent2 = argparse.ArgumentParser(add_help=False)
@@ -185,7 +185,7 @@ def main():
     except OSError as e:
         error_message("OSError: {0} ({1})".format(e.strerror, e.filename))
     except Exception as e:
-        error_message(e.message)
+        error_message(e)
 
 
 if __name__ == '__main__':
