@@ -46,7 +46,8 @@ class VersionedDbHelper:
         for db_repo in db_repos:
             information_message("{0}".format(db_repo.db_name))
             if verbose:
-                for v in db_repo.versions:
+                v_sorted = sorted(db_repo.versions, key=lambda v: (v.major, v.minor))
+                for v in v_sorted:
                     information_message("\tv {0}".format(v.full_name))
 
                     for s in v.sql_files:

@@ -33,7 +33,6 @@ class FastForwardVersion(object):
 
         _set_version_info(os.path.basename(self._version_path), self)
 
-
     @property
     def full_name(self):
         if self.name == "":
