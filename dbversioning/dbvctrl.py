@@ -151,7 +151,7 @@ def main():
             # -mkconf
             create_config_file()
         elif arg_set.mkv:
-            # -mkv
+            # -mkv 2.0.new_version -repo test_db
             create_repository_version_folder(arg_set)
         elif arg_set.apply:
             # -apply -v 0.1 -repo test_db -d postgresPlay

@@ -24,7 +24,7 @@ Tests? Yeah, those are coming.
 
 1. If you don't already have a database, create one on your postges server.
     1. psql may create a table `test1`, not sure why, but it may.
-1. Create pgvctrl bRepoConfig:
+1. Create pgvctrl dbRepoConfig:
     1. Make a directory where you want you database repositories to live.
     <pre>pgvctrl -mkconf</pre>
     This will create a dbRepoConfig.json file.
@@ -84,6 +84,13 @@ Tests? Yeah, those are coming.
 
 
 ## What else can pgvctrl do?
+#### -mkv: Make version number:
+<pre>pgvctrl -mkv [x.x.version_name] -repo [repository name]</pre>
+e.g.:
+<pre>pgvctrl -mkv 1.0.my_new_version -repo mydb</pre>
+Output:
+<pre>Version mydb/1.0.my_new_version created.</pre>
+
 #### -chkver: Check the version and repo on a database:
 <pre>pgvctrl -chkver -repo [repository name] [db connection information]</pre>
 e.g:
