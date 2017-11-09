@@ -97,7 +97,8 @@ class VersionedDbHelper:
     @staticmethod
     def initialize_db_version_on_server(db_conn, repo_name):
         v_stg = VersionedDbHelper._get_v_stg(repo_name)
-        VersionDbShellUtil.init_db(repo_name=repo_name, v_stg=v_stg, db_conn=db_conn)
+        if VersionDbShellUtil.init_db(repo_name=repo_name, v_stg=v_stg, db_conn=db_conn):
+            information_message("Database initialized")
 
     @staticmethod
     def apply_repository_fast_forward_to_database(repo_name, db_conn, full_version):

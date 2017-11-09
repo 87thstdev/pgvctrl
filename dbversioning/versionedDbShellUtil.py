@@ -47,6 +47,7 @@ class VersionDbShellUtil:
             if repo and ver:
                 already_init = True
                 warning_message("Already initialized")
+                return False
 
         except VersionedDbExceptionMissingVersionTable:
             missing_tbl = True
@@ -54,7 +55,7 @@ class VersionDbShellUtil:
             need_version = True
         except VersionedDbExceptionDatabaseAlreadyInit as e:
             error_message(e.message)
-            return
+            return False
 
         create_v_tbl = "CREATE TABLE IF NOT EXISTS {tbl} (" \
                        "{v} VARCHAR NOT NULL," \
@@ -83,6 +84,8 @@ class VersionDbShellUtil:
 
         ensure_dir_exists(os.path.join(conf.root(), repo_name))
         ensure_dir_exists(os.path.join(conf.root(), repo_name, default_version))
+
+        return True
 
         # TODO: Decided if I want to create a ff point on init.
         # DbVersionShellHelper.dump_version_fast_forward(db_conn, v_stg)
@@ -364,15 +367,22 @@ def _good_version_table(v_tbl, db_conn):
     version_sql = "SELECT COUNT(*) cnt, 'notused' throwaway FROM {tbl};" \
         .format(tbl=v_tbl.tbl)
 
-    rtn = psql[db_conn, "-t", "-A", "-c", version_sql].run()
-    error_code = rtn[RETCODE]
+    psql_parm_list = copy.copy(db_conn)
 
-    if error_code == 1:
-        raise VersionedDbExceptionMissingVersionTable(v_tbl.tbl)
-    elif error_code == 2:
-        raise VersionedDbExceptionBadDateSource(db_conn)
-    elif error_code > 2:
-        raise VersionedDbException(rtn[STDERR])
+    psql_parm_list.append("-t")
+    psql_parm_list.append("-A")
+    psql_parm_list.append("-c")
+    psql_parm_list.append(version_sql)
+
+    try:
+        rtn = psql.run(psql_parm_list, retcode=0)
+    except ProcessExecutionError as e:
+        if e.retcode == 1:
+            raise VersionedDbExceptionMissingVersionTable(v_tbl.tbl)
+        elif e.retcode == 2:
+            raise VersionedDbExceptionBadDateSource(db_conn)
+        elif e.retcode > 2:
+            raise VersionedDbException(e.stderr)
 
     rtn_array = rtn[STDOUT].split("|")
     count = int(rtn_array[0])
