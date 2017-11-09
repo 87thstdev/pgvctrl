@@ -214,6 +214,7 @@ class VersionedDbHelper:
                                   indent=4, sort_keys=True,
                                   separators=(',', ': '), ensure_ascii=True)
                 outfile.write(to_unicode(str_))
+            information_message("Config file created")
         else:
             raise VersionedDbExceptionFileExits(conf.config_file_name())
 
