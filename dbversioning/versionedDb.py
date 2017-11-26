@@ -17,7 +17,7 @@ class FastForwardDb(object):
     def _populate_fast_forward_versions(self):
         ver_list = []
 
-        for v in os.listdir(self._repo_path):
+        for v in get_valid_elements(self._repo_path):
             v_path = os.path.join(self._repo_path, v)
             ver_list.append(FastForwardVersion(v_path))
 
@@ -82,8 +82,8 @@ class Version(object):
         self.name = ""
         self.major = None
         self.minor = None
-        self.sql_files = self._set_sql_objs(os.listdir(self._version_path))
-
+        self.sql_files = self._set_sql_objs(get_valid_elements(self._version_path))
+        
         _set_version_info(os.path.basename(self._version_path), self)
 
     @property
@@ -135,7 +135,7 @@ def _set_version_info(version_dir, ver):
 class SqlPatch(object):
     def __init__(self, sql_path):
         file_array = os.path.basename(sql_path).split(".")
-
+        
         self._path = sql_path
         self._number = int(file_array[0])
         self._name = file_array[1]
