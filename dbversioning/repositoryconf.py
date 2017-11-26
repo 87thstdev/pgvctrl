@@ -8,7 +8,7 @@ from .errorUtil import VersionedDbExceptionBadConfigFile, \
     VersionedDbExceptionFileMissing, \
     VersionedDbExceptionInvalidRepo
 
-Version_Table = namedtuple("version_table", ["tbl", "v", "hash", "repo"])
+Version_Table = namedtuple("version_table", ["tbl", "v", "hash", "repo", "is_prod"])
 
 ROOT = 'root'
 HIDDEN = '.'
@@ -24,6 +24,7 @@ REPOSITORY = 'repository'
 REPOSITORIES = 'repositories'
 VERSION_STORAGE = 'versionStorage'
 VERSION_HASH = "versionHash"
+IS_PRODUCTION = "isProduction"
 NAME = "name"
 
 
@@ -35,7 +36,8 @@ class RepositoryConf(object):
             TABLE: 'repository_version',
             VERSION: 'version',
             REPOSITORY: 'repository_name',
-            VERSION_HASH: 'version_hash'
+            VERSION_HASH: 'version_hash',
+            IS_PRODUCTION: 'is_production'
         }, REPOSITORIES: [
             {
                 NAME: '',
@@ -43,7 +45,8 @@ class RepositoryConf(object):
                     TABLE: '',
                     VERSION: '',
                     REPOSITORY: '',
-                    VERSION_HASH: ''
+                    VERSION_HASH: '',
+                    IS_PRODUCTION: ''
                 }
             }
         ]
@@ -118,7 +121,8 @@ class RepositoryConf(object):
             tbl=d[TABLE],
             v=d[VERSION],
             hash=d[VERSION_HASH],
-            repo=d[REPOSITORY]
+            repo=d[REPOSITORY],
+            is_prod=d[IS_PRODUCTION]
         )
 
     @staticmethod
@@ -133,7 +137,8 @@ class RepositoryConf(object):
                 tbl=vs[TABLE],
                 v=vs[VERSION],
                 hash=vs[VERSION_HASH],
-                repo=vs[REPOSITORY]
+                repo=vs[REPOSITORY],
+                is_prod=vs[IS_PRODUCTION]
             )
             cust_repos.append({
                 NAME: repo[NAME],

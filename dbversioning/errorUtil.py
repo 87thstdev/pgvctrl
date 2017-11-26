@@ -26,6 +26,28 @@ class VersionedDbExceptionRepoVersionDoesNotExits(VersionedDbException):
         pass
 
 
+class VersionedDbExceptionProductionChangeNoProductionFlag(VersionedDbException):
+    def __init__(self, action_name=None):
+        self.message = "Production changes need the -production flag: {0}".format(
+            action_name
+        )
+        pass
+
+
+class VersionedDbExceptionProductionChangeNotAllowed(VersionedDbException):
+    def __init__(self, action_name=None):
+        self.message = "Production changes not allowed for: {0}".format(
+            action_name
+        )
+        pass
+
+
+class VersionedDbExceptionFastForwardNotAllowed(VersionedDbException):
+    def __init__(self):
+        self.message = "Fast forwards only allowed on empty databases."
+        pass
+
+
 class VersionedDbExceptionMissingArgs(VersionedDbException):
     def __init__(self):
         self.message = "Missing connection args"

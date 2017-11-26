@@ -27,6 +27,13 @@ STDERR = 2
 
 to_unicode = str
 
+class DatabaseRepositoryVersion(object):
+    def __init__(self, version=None, repo_name=None, is_production=None, version_hash=None):
+        self.version = version
+        self.repo_name = repo_name
+        self.is_production = is_production
+        self.version_hash = version_hash
+
 
 class VersionDbShellUtil:
     @staticmethod
@@ -34,7 +41,7 @@ class VersionDbShellUtil:
         pass
 
     @staticmethod
-    def init_db(repo_name, v_stg=None, db_conn=None):
+    def init_db(repo_name, v_stg=None, db_conn=None, is_production=False):
         psql = _local_psql()
         conf = RepositoryConf()
         missing_tbl = False
@@ -43,8 +50,8 @@ class VersionDbShellUtil:
         default_version = "0.0.gettingStarted"
 
         try:
-            repo, ver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
-            if repo and ver:
+            dbv = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
+            if dbv:
                 already_init = True
                 warning_message("Already initialized")
                 return False
@@ -60,17 +67,20 @@ class VersionDbShellUtil:
         create_v_tbl = "CREATE TABLE IF NOT EXISTS {tbl} (" \
                        "{v} VARCHAR NOT NULL," \
                        "{repo} VARCHAR NOT NULL," \
+                       "{is_prod} BOOLEAN NOT NULL," \
                        "{hash} JSONB);" \
-            .format(tbl=v_stg.tbl, v=v_stg.v, hash=v_stg.hash, repo=v_stg.repo)
+            .format(tbl=v_stg.tbl, v=v_stg.v, is_prod=v_stg.is_prod ,hash=v_stg.hash, repo=v_stg.repo)
 
-        insert_v_sql = "INSERT INTO {tbl} ({repo}, {v}, {hash}) " \
-                       "VALUES ('{repo_name}', '{ver_num}', '{ver_hash}');" \
+        insert_v_sql = "INSERT INTO {tbl} ({repo}, {v}, {is_prod}, {hash}) " \
+                       "VALUES ('{repo_name}', '{ver_num}', '{ver_is_prod}', '{ver_hash}');" \
             .format(
                 tbl=v_stg.tbl,
                 repo=v_stg.repo,
                 v=v_stg.v,
+                is_prod=v_stg.is_prod,
                 hash=v_stg.hash,
                 ver_hash='null',
+                ver_is_prod=is_production,
                 repo_name=repo_name,
                 ver_num=default_version
             )
@@ -249,15 +259,15 @@ class VersionDbShellUtil:
         pg_dump = _local_pg_dump()
         conf = RepositoryConf()
 
-        repo, ver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
+        dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
 
         ensure_dir_exists(conf.fast_forward_dir())
 
-        repo_ff = os.path.join(conf.fast_forward_dir(), repo)
+        repo_ff = os.path.join(conf.fast_forward_dir(), dbver.repo_name)
 
         ensure_dir_exists(repo_ff)
 
-        ff = os.path.join(repo_ff, "{0}.sql".format(ver))
+        ff = os.path.join(repo_ff, "{0}.sql".format(dbver.version))
 
         pg_dump(db_conn, "-s", "-f", ff, retcode=0)
 
@@ -266,29 +276,32 @@ class VersionDbShellUtil:
         pg_dump = _local_pg_dump()
         conf = RepositoryConf()
 
-        repo, ver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
+        dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
 
         ensure_dir_exists(conf.snapshot_dir())
 
-        repo_sh = os.path.join(conf.snapshot_dir(), repo)
+        repo_sh = os.path.join(conf.snapshot_dir(), dbver.repo_name)
 
         ensure_dir_exists(repo_sh)
 
         d = datetime.datetime.now()
 
         ss = os.path.join(repo_sh, "{0}.{1}.sql"
-                          .format(ver, d))
+                          .format(dbver.version, d))
 
         pg_dump(db_conn, "-s", "-f", ss, retcode=0)
 
     @staticmethod
     def display_db_instance_version(v_tbl, db_conn):
-        repo, ver = VersionDbShellUtil.get_db_instance_version(v_tbl, db_conn)
+        dbv = VersionDbShellUtil.get_db_instance_version(v_tbl, db_conn)
 
-        if ver is None:
+        if dbv and dbv.version is None:
             warning_message("No version found!")
         else:
-            information_message("{0}: {1}".format(repo, ver))
+            if dbv.is_production:
+                information_message("{0}: {1} PRODUCTION".format(dbv.version, dbv.repo_name))
+            else:
+                information_message("{0}: {1}".format(dbv.version, dbv.repo_name))
 
     @staticmethod
     def get_db_instance_version(v_tbl, db_conn):
@@ -296,16 +309,21 @@ class VersionDbShellUtil:
 
         _good_version_table(v_tbl, db_conn)
 
-        version_sql = "SELECT {repo}, {v}, {hash}, 'notused' throwaway FROM {tbl};"\
-            .format(repo=v_tbl.repo, v=v_tbl.v, hash=v_tbl.hash, tbl=v_tbl.tbl)
+        version_sql = "SELECT {v}, {repo}, {is_prod}, {hash}, 'notused' throwaway FROM {tbl};"\
+            .format(repo=v_tbl.repo, v=v_tbl.v, is_prod=v_tbl.is_prod, hash=v_tbl.hash, tbl=v_tbl.tbl)
 
         rtn = psql(db_conn, "-t", "-A", "-c", version_sql, retcode=0)
         rtn_array = rtn.split("|")
 
         if len(rtn_array) > 1:
-            return rtn_array[0], rtn_array[1]
+            return DatabaseRepositoryVersion(
+                version=rtn_array[0],
+                repo_name=rtn_array[1],
+                is_production=convert_str_to_bool(rtn_array[2]),
+                version_hash=rtn_array[3]
+            )
         else:
-            return None, None
+            return None
 
     @staticmethod
     def get_col_inserts_setting(repo_name, tbl_name):
@@ -432,6 +450,17 @@ def make_data_file(file_name):
                               separators=(',', ': '), ensure_ascii=True)
             outfile.write(to_unicode(str_))
 
+def convert_str_to_bool(value):
+    if value is None:
+        return None
+
+    val = value.lower()
+    if val == 't' or val == 'true':
+        return True
+    elif val == 'f' or val == 'false':
+        return False
+    else:
+        raise ValueError("convert_str_to_bool: invalid valuse {0}".format(value))
 
 def warning_message(message):
     print(colors.yellow & colors.bold | message)

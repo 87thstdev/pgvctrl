@@ -10,7 +10,11 @@ from .errorUtil import VersionedDbExceptionBadConfigVersionFound, \
     VersionedDbExceptionVersionIsHigherThanApplying, \
     VersionedDbExceptionFolderMissing, \
     VersionedDbExceptionRepoVersionExits, \
-    VersionedDbExceptionRepoVersionDoesNotExits
+    VersionedDbExceptionRepoVersionDoesNotExits, \
+    VersionedDbExceptionProductionChangeNoProductionFlag, \
+    VersionedDbExceptionProductionChangeNotAllowed, \
+    VersionedDbExceptionMissingVersionTable, \
+    VersionedDbExceptionFastForwardNotAllowed
 from .versionedDbShellUtil import VersionDbShellUtil, \
     information_message, DATA_DUMP_CONFIG_NAME, dir_exists
 from .versionedDb import VersionDb, FastForwardDb, GenericSql
@@ -20,6 +24,9 @@ from .repositoryconf import RepositoryConf, \
 to_unicode = str
 
 Version_Numbers = namedtuple("version_numbers", ["major", "minor"])
+
+DB_INIT_DISPLAY = "Database initialized"
+DB_INIT_PRODUCITON_DISPLAY = DB_INIT_DISPLAY + " (PRODUCTION)"
 
 
 class VersionedDbHelper:
@@ -95,18 +102,33 @@ class VersionedDbHelper:
         VersionDbShellUtil.display_db_instance_version(v_stg, db_conn)
 
     @staticmethod
-    def initialize_db_version_on_server(db_conn, repo_name):
+    def initialize_db_version_on_server(db_conn, repo_name, is_production):
         v_stg = VersionedDbHelper._get_v_stg(repo_name)
-        if VersionDbShellUtil.init_db(repo_name=repo_name, v_stg=v_stg, db_conn=db_conn):
-            information_message("Database initialized")
+        if VersionDbShellUtil.init_db(repo_name=repo_name, v_stg=v_stg, db_conn=db_conn, is_production=is_production):
+            if is_production:
+                information_message(DB_INIT_PRODUCITON_DISPLAY)
+            else:
+                information_message(DB_INIT_DISPLAY)
 
     @staticmethod
     def apply_repository_fast_forward_to_database(repo_name, db_conn, full_version):
+        has_version_tbl = True
+        try:
+            v_stg = VersionedDbHelper._get_v_stg(repo_name)
+            dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
+        except VersionedDbExceptionMissingVersionTable:
+            has_version_tbl = False
+        
+        if (has_version_tbl):
+            raise VersionedDbExceptionFastForwardNotAllowed()
+
         fast_forward_to = VersionedDbHelper.get_repository_fast_forward_version(
             repo_name, full_version
         )
-
-        VersionDbShellUtil.apply_fast_forward_sql(db_conn, fast_forward_to[0], repo_name)
+        if fast_forward_to:
+            VersionDbShellUtil.apply_fast_forward_sql(db_conn, fast_forward_to[0], repo_name)
+        else:
+            information_message("Fast forward not found {0}".format(full_version))
 
     @staticmethod
     def push_data_to_database(repo_name, db_conn, force):
@@ -135,10 +157,14 @@ class VersionedDbHelper:
             VersionDbShellUtil.pull_repo_tables_from_database(repo_name, db_conn)
 
     @staticmethod
-    def apply_repository_to_database(repo_name, db_conn, version):
+    def apply_repository_to_database(repo_name, db_conn, version, is_production=False):
         v_stg = VersionedDbHelper._get_v_stg(repo_name)
-        repo, ver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
-        repo_nums = VersionedDbHelper.get_version_numbers(ver)
+        dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
+
+        if (is_production != dbver.is_production):
+            raise VersionedDbExceptionProductionChangeNoProductionFlag('-apply')
+            
+        repo_nums = VersionedDbHelper.get_version_numbers(dbver.version)
         ver_nums = VersionedDbHelper.get_version_numbers(version)
 
         repo_ver = VersionedDbHelper.get_repository_version(repo_name, ver_nums)
