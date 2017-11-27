@@ -131,7 +131,13 @@ class VersionedDbHelper:
             information_message("Fast forward not found {0}".format(full_version))
 
     @staticmethod
-    def push_data_to_database(repo_name, db_conn, force):
+    def push_data_to_database(repo_name, db_conn, force, is_production):
+        v_stg = VersionedDbHelper._get_v_stg(repo_name)
+        dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
+
+        if (is_production != dbver.is_production):
+            raise VersionedDbExceptionProductionChangeNoProductionFlag('-pushdata')
+
         conf = RepositoryConf()
         data_files = []
         data_dump = conf.get_data_dump_dir(repo_name)

@@ -97,7 +97,8 @@ def push_repo_data_to_db(arg_set):
     vdb.push_data_to_database(
         db_conn=db_conn,
         repo_name=arg_set.repo,
-        force=arg_set.force
+        force=arg_set.force,
+        is_production=arg_set.production
     )
 
 
