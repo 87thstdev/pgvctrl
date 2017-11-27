@@ -19,7 +19,8 @@ Get version:
 <pre>pgvctrl -version</pre>
 
 ## Running the tests
-Tests? Yeah, those are coming.
+In the test directory:
+<pre>pytest</pre>
 
 ## Getting Started
 

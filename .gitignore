@@ -9,4 +9,5 @@ dbversioning/dbRepoConfig.json
 *.pyc
 *.bak
 __pycache__
-test/
+htmlcov
+.coverage

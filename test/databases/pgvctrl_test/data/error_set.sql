@@ -83,7 +83,7 @@ INSERT INTO error_set (error_id, error_code, error_name) VALUES (4, '4000', 'WHY
 -- Name: error_set_error_id_seq; Type: SEQUENCE SET; Schema: public; Owner: 87admin
 --
 
-SELECT pg_catalog.setval('error_set_error_id_seq', 8, true);
+SELECT pg_catalog.setval('error_set_error_id_seq', 4, true);
 
 
 --
