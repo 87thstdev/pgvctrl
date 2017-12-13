@@ -79,6 +79,3 @@ def test_mkconf_exists():
     print_cmd_error_details(rtn, arg_list)
     assert rtn[TestUtil.stdout] == 'File already exists: {0}\n'.format(DB_REPO_CONFIG_JSON)
     assert rtn[TestUtil.return_code] == 0
-
-# TODO: Make tests for the following
-# -mkv 2.0.new_version -repo test_db

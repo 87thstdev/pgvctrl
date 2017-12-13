@@ -77,10 +77,38 @@ class TestPgvctrTestDb:
         assert rtn[TestUtil.stdout] == 'Running: error_set.sql\n\n'
         assert rtn[TestUtil.return_code] == 0
 
+    def test_mkv(self):
+        TestUtil.delete_folder(TestUtil.test_version_path)
+        pgv = TestUtil.local_pgvctrl()
+
+        arg_list = ["-mkv", TestUtil.test_version, "-repo", TestUtil.pgvctrl_test_temp_repo]
+        rtn = pgv.run(arg_list, retcode=0)
+        
+        print_cmd_error_details(rtn, arg_list)
+        assert rtn[TestUtil.stdout] == "Version {0}/{1} created.\n".format(
+            TestUtil.pgvctrl_test_temp_repo,
+            TestUtil.test_version
+        )
+        assert rtn[TestUtil.return_code] == 0
+
+    def test_mkv_exists(self):
+        TestUtil.delete_folder(TestUtil.test_version_path)
+        pgv = TestUtil.local_pgvctrl()
+
+        arg_list = ["-mkv", TestUtil.test_version, "-repo", TestUtil.pgvctrl_test_temp_repo]
+        pgv.run(arg_list, retcode=0)
+        
+        arg_list = ["-mkv", TestUtil.test_version, "-repo", TestUtil.pgvctrl_test_temp_repo]
+        rtn = pgv.run(arg_list, retcode=0)
+        
+        print_cmd_error_details(rtn, arg_list)
+        assert rtn[TestUtil.stdout] == "Repository version already exists: {0} 2.0\n".format(
+            TestUtil.pgvctrl_test_temp_repo
+        )
+        assert rtn[TestUtil.return_code] == 0
     
 # TODO: Make tests for    
 # -pulldata -t error_set -t membership.user_state -repo test_db -d postgresPlay
-# -pushdata -repo test_db -d postgresPlay
 
 class TestPgvctrTestCleanDb:
     def setup_method(self):
