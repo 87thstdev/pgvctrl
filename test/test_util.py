@@ -1,3 +1,7 @@
+import os
+import simplejson as json
+from simplejson import JSONDecodeError
+
 from plumbum import local
 
 
@@ -16,7 +20,7 @@ class TestUtil(object):
     @staticmethod
     def local_psql():
         return local["psql"]
-
+    
     @staticmethod
     def create_database():
         psql = TestUtil.local_psql()
@@ -30,6 +34,10 @@ class TestUtil(object):
         rtn = psql.run(["-c", "DROP DATABASE IF EXISTS {0}".format(TestUtil.pgvctrl_test_db)], retcode=0)
         print(rtn)
 
+    @staticmethod
+    def delete_file(file_name):
+        if os.path.isfile(file_name):
+            os.remove(file_name)
 
 def print_cmd_error_details(rtn, arg_list):
     print(":pgvctrl {0}".format(' '.join(arg_list)))
