@@ -25,6 +25,8 @@ RETCODE = 0
 STDOUT = 1
 STDERR = 2
 
+SNAPSHOT_DATE_FORMAT = '%Y%m%d%H%M%S'
+
 to_unicode = str
 
 class DatabaseRepositoryVersion(object):
@@ -284,7 +286,7 @@ class VersionDbShellUtil:
 
         ensure_dir_exists(repo_sh)
 
-        d = datetime.datetime.now()
+        d = datetime.datetime.now().strftime(SNAPSHOT_DATE_FORMAT)
 
         ss = os.path.join(repo_sh, "{0}.{1}.sql"
                           .format(dbver.version, d))
