@@ -39,9 +39,9 @@ class TestPgvctrTestDb:
     
         arg_list = ["-apply", "-v", "2.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
-        
+
         # TODO: Make better test
-        # assert rtn[TestUtil.stdout] == '\n'.format(TestUtil.pgvctrl_test_repo)        
+        # assert rtn[TestUtil.stdout] == '\n'.format(TestUtil.pgvctrl_test_repo)
         print_cmd_error_details(rtn, arg_list)
         assert rtn[TestUtil.return_code] == 0
     
