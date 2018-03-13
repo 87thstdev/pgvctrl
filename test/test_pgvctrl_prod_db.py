@@ -1,8 +1,4 @@
-import pytest
-import sys
-import dbversioning
-from plumbum import colors, local, ProcessExecutionError
-from test_util import TestUtil, print_cmd_error_details
+from .test_util import TestUtil, print_cmd_error_details
 
 PROD_FLG = "-production"
 NO_PROD_FLG = 'Production changes need the -production flag: {0}\n'
@@ -96,7 +92,6 @@ class TestPgvctrlProdDb:
         assert rtn[TestUtil.return_code] == 0
         assert rtn[TestUtil.stdout] == NO_USE_APPLYFF
 
-    
     def test_push_data(self):
         pgv = TestUtil.local_pgvctrl()
 
@@ -106,7 +101,6 @@ class TestPgvctrlProdDb:
         print_cmd_error_details(rtn, arg_list)
         assert rtn[TestUtil.stdout] == 'Running: error_set.sql\n\n'
         assert rtn[TestUtil.return_code] == 0
-
 
     def test_push_data_no_prod_flag(self):
         pgv = TestUtil.local_pgvctrl()

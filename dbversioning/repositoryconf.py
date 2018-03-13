@@ -4,9 +4,11 @@ from simplejson import JSONDecodeError
 
 from collections import namedtuple
 
-from .errorUtil import VersionedDbExceptionBadConfigFile, \
-    VersionedDbExceptionFileMissing, \
-    VersionedDbExceptionInvalidRepo
+from .errorUtil import (
+    VersionedDbExceptionBadConfigFile,
+    VersionedDbExceptionFileMissing,
+    VersionedDbExceptionInvalidRepo,
+    VersionedDbExceptionRepoEnvExits, VersionedDbExceptionRepoDoesNotExits)
 
 Version_Table = namedtuple("version_table", ["tbl", "v", "hash", "repo", "is_prod"])
 
@@ -26,6 +28,7 @@ VERSION_STORAGE = 'versionStorage'
 VERSION_HASH = "versionHash"
 IS_PRODUCTION = "isProduction"
 NAME = "name"
+ENVS = "envs"
 
 
 class RepositoryConf(object):
@@ -40,6 +43,7 @@ class RepositoryConf(object):
             IS_PRODUCTION: 'is_production'
         }, REPOSITORIES: [
             {
+                ENVS: [],
                 NAME: '',
                 VERSION_STORAGE: {
                     TABLE: '',
@@ -126,7 +130,7 @@ class RepositoryConf(object):
         )
 
     @staticmethod
-    def custom_repo_list():
+    def repo_list():
         conf = RepositoryConf._get_repo_dict()
         repos = conf[REPOSITORIES]
         cust_repos = []
@@ -148,12 +152,52 @@ class RepositoryConf(object):
         return cust_repos
 
     @staticmethod
-    def get_custom_repo(repo_name):
+    def get_repo(repo_name):
         if not repo_name:
             raise VersionedDbExceptionInvalidRepo()
 
-        repo_list = RepositoryConf.custom_repo_list()
+        repo_list = RepositoryConf.repo_list()
 
         rp = [r for r in repo_list if r[NAME] == repo_name]
 
         return rp
+
+    @staticmethod
+    def create_repo_env(repo_name, env):
+        conf = RepositoryConf._get_repo_dict()
+
+        if os.path.isfile(RepositoryConf._config_name):
+            try:
+                with open(RepositoryConf._config_name):
+                    repos = conf[REPOSITORIES]
+                    rp = [r for r in repos if r[NAME] == repo_name]
+
+                    if not rp:
+                        raise VersionedDbExceptionRepoDoesNotExits(repo_name)
+
+                    env_list = []
+                    for e in rp[0][ENVS]:
+                        if list(e.keys()):
+                            env_list.append(list(e.keys())[0])
+
+                    if env not in env_list:
+                        rp[0][ENVS].append({env: None})
+                    else:
+                        raise VersionedDbExceptionRepoEnvExits(repo_name, env)
+
+                    out_str = json.dumps(
+                            conf,
+                            indent=4,
+                            sort_keys=True,
+                            separators=(',', ': '),
+                            ensure_ascii=True)
+
+            except JSONDecodeError:
+                raise VersionedDbExceptionBadConfigFile()
+
+            with open(RepositoryConf._config_name, 'w') as outfile:
+                outfile.write(out_str)
+        else:
+            raise VersionedDbExceptionFileMissing(RepositoryConf._config_name)
+
+        return True

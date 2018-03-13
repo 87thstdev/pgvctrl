@@ -1,6 +1,4 @@
 import os
-import simplejson as json
-from simplejson import JSONDecodeError
 
 from plumbum import local
 
@@ -13,7 +11,11 @@ class TestUtil(object):
     pgvctrl_test_temp_repo = "pgvctrl_temp_test"
     pgvctrl_test_db = "pgvctrl_test_db"
     test_version = "2.0.new_version"
+    test_bad_version = "999.1.bad_version"
     test_version_path = "databases/pgvctrl_temp_test/{0}".format(test_version)
+    env_test = "test"
+    env_qa = "qa"
+    env_prod = "prod"
 
     @staticmethod
     def local_pgvctrl():
@@ -51,6 +53,7 @@ class TestUtil(object):
         pgv = TestUtil.local_pgvctrl()
         rtn = pgv.run(["-mkconf"], retcode=0)
         print(rtn)
+
 
 def print_cmd_error_details(rtn, arg_list):
     print(":pgvctrl {0}".format(' '.join(arg_list)))

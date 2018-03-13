@@ -1,7 +1,4 @@
-import pytest
-import sys
-from plumbum import colors, local, ProcessExecutionError
-from test_util import TestUtil, print_cmd_error_details
+from .test_util import TestUtil, print_cmd_error_details
 
 
 class TestPgvctrInitlWithOutDb:

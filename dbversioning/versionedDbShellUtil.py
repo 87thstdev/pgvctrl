@@ -8,16 +8,17 @@ from plumbum import colors, local, ProcessExecutionError
 from simplejson import JSONDecodeError
 
 from .versionedDb import SqlPatch
-from .errorUtil import VersionedDbExceptionMissingVersionTable, \
-    VersionedDbExceptionBadDateSource, \
-    VersionedDbExceptionNoVersionFound, \
-    VersionedDbException, \
-    VersionedDbExceptionTooManyVersionRecordsFound, \
-    VersionedDbExceptionDatabaseAlreadyInit, \
-    VersionedDbExceptionSqlExecutionError, \
-    VersionedDbExceptionBadDataConfigFile, \
-    VersionedDbExceptionMissingDataTable, \
-    VersionedDbExceptionRepoVersionExits
+from .errorUtil import (
+    VersionedDbExceptionMissingVersionTable,
+    VersionedDbExceptionBadDateSource,
+    VersionedDbExceptionNoVersionFound,
+    VersionedDbException,
+    VersionedDbExceptionTooManyVersionRecordsFound,
+    VersionedDbExceptionDatabaseAlreadyInit,
+    VersionedDbExceptionSqlExecutionError,
+    VersionedDbExceptionBadDataConfigFile,
+    VersionedDbExceptionMissingDataTable,
+)
 from .repositoryconf import RepositoryConf, ROLLBACK_FILE_ENDING
 
 DATA_DUMP_CONFIG_NAME = 'data.json'
@@ -28,6 +29,7 @@ STDERR = 2
 SNAPSHOT_DATE_FORMAT = '%Y%m%d%H%M%S'
 
 to_unicode = str
+
 
 class DatabaseRepositoryVersion(object):
     def __init__(self, version=None, repo_name=None, is_production=None, version_hash=None):
@@ -452,6 +454,7 @@ def make_data_file(file_name):
                               separators=(',', ': '), ensure_ascii=True)
             outfile.write(to_unicode(str_))
 
+
 def convert_str_to_bool(value):
     if value is None:
         return None
@@ -463,6 +466,7 @@ def convert_str_to_bool(value):
         return False
     else:
         raise ValueError("convert_str_to_bool: invalid valuse {0}".format(value))
+
 
 def warning_message(message):
     print(colors.yellow & colors.bold | message)

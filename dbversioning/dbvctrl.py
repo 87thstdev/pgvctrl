@@ -31,9 +31,9 @@ parser.add_argument('-force', help='Force push data from repository to database'
 parser.add_argument('-verbose', help='Verbose output', action='store_true')
 parser.add_argument('-t', metavar='', help='Pull table for data', action='append')
 
-
 parser.add_argument('-v', metavar='', help='Version number')
 parser.add_argument('-mkv', metavar='', help='Make version number')
+parser.add_argument('-mkenv', metavar='', help='Make environment type')
 parser.add_argument('-repo', metavar='', help='Repository Database Name')
 parser.add_argument('-production', help='Database production flag', action='store_true')
 
@@ -132,6 +132,15 @@ def create_repository_version_folder(arg_set):
     )
 
 
+def create_repository_env_type(arg_set):
+    vdb = VersionedDbHelper()
+
+    vdb.create_repository_environment(
+        repo_name=arg_set.repo,
+        env=arg_set.mkenv
+    )
+
+
 def show_version():
     pkg = pkg_resources.require("pgvctrl")[0]
     information_message("{0}: {1}".format(pkg.project_name, pkg.version))
@@ -167,6 +176,8 @@ class DbVctrl(object):
             elif arg_set.mkv:
                 # -mkv 2.0.new_version -repo test_db
                 create_repository_version_folder(arg_set)
+            elif arg_set.mkenv:
+                create_repository_env_type(arg_set)
             elif arg_set.apply:
                 # -apply -v 0.1 -repo test_db -d postgresPlay
                 apply_repository_to_db(arg_set)
@@ -201,6 +212,7 @@ class DbVctrl(object):
             error_message(e.message)
         except Exception as e:
             error_message(e)
+
 
 def main():
     c = DbVctrl()

@@ -1,10 +1,7 @@
-import pytest
-import sys
-import dbversioning
-from plumbum import colors, local, ProcessExecutionError
-from test_util import TestUtil, print_cmd_error_details
+from .test_util import TestUtil, print_cmd_error_details
 
 DB_REPO_CONFIG_JSON = 'dbRepoConfig.json'
+
 
 def test_version():
     pgv = TestUtil.local_pgvctrl()
@@ -56,6 +53,7 @@ def test_repo_list_verbose():
     print_cmd_error_details(rtn, arg_list)
     assert rtn[TestUtil.return_code] == 0
 
+
 def test_mkconf_not_exists():
     TestUtil.delete_file(DB_REPO_CONFIG_JSON)
     pgv = TestUtil.local_pgvctrl()
@@ -66,6 +64,7 @@ def test_mkconf_not_exists():
     print_cmd_error_details(rtn, arg_list)
     assert rtn[TestUtil.stdout] == 'Config file created: {0}\n'.format(DB_REPO_CONFIG_JSON)
     assert rtn[TestUtil.return_code] == 0
+
 
 def test_mkconf_exists():
     pgv = TestUtil.local_pgvctrl()

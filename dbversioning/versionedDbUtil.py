@@ -5,28 +5,35 @@ import simplejson as json
 from os.path import join
 
 from dbversioning.versionedDbHelper import get_valid_elements
-from .errorUtil import VersionedDbExceptionBadConfigVersionFound, \
-    VersionedDbExceptionFileExits, \
-    VersionedDbExceptionVersionIsHigherThanApplying, \
-    VersionedDbExceptionFolderMissing, \
-    VersionedDbExceptionRepoVersionExits, \
-    VersionedDbExceptionRepoVersionDoesNotExits, \
-    VersionedDbExceptionProductionChangeNoProductionFlag, \
-    VersionedDbExceptionProductionChangeNotAllowed, \
-    VersionedDbExceptionMissingVersionTable, \
-    VersionedDbExceptionFastForwardNotAllowed
-from .versionedDbShellUtil import VersionDbShellUtil, \
-    information_message, DATA_DUMP_CONFIG_NAME, dir_exists
+from .errorUtil import (
+    VersionedDbExceptionBadConfigVersionFound,
+    VersionedDbExceptionFileExits,
+    VersionedDbExceptionVersionIsHigherThanApplying,
+    VersionedDbExceptionFolderMissing,
+    VersionedDbExceptionRepoVersionExits,
+    VersionedDbExceptionRepoVersionDoesNotExits,
+    VersionedDbExceptionProductionChangeNoProductionFlag,
+    VersionedDbExceptionMissingVersionTable,
+    VersionedDbExceptionFastForwardNotAllowed, VersionedDbExceptionRepoDoesNotExits)
+from .versionedDbShellUtil import (
+    VersionDbShellUtil,
+    information_message,
+    DATA_DUMP_CONFIG_NAME,
+    dir_exists)
 from .versionedDb import VersionDb, FastForwardDb, GenericSql
-from .repositoryconf import RepositoryConf, \
-    VERSION_STORAGE, SNAPSHOTS, FAST_FORWARD, ROLLBACK_FILE_ENDING
+from .repositoryconf import (
+    RepositoryConf,
+    VERSION_STORAGE,
+    SNAPSHOTS,
+    FAST_FORWARD,
+    ROLLBACK_FILE_ENDING)
 
 to_unicode = str
 
 Version_Numbers = namedtuple("version_numbers", ["major", "minor"])
 
 DB_INIT_DISPLAY = "Database initialized"
-DB_INIT_PRODUCITON_DISPLAY = DB_INIT_DISPLAY + " (PRODUCTION)"
+DB_INIT_PRODUCTION_DISPLAY = DB_INIT_DISPLAY + " (PRODUCTION)"
 
 
 class VersionedDbHelper:
@@ -59,6 +66,18 @@ class VersionedDbHelper:
 
                     for s in v.sql_files:
                         information_message("\t\t{0} {1}".format(s.number, s.name))
+
+    @staticmethod
+    def valid_repository(repository):
+        found = True
+        conf = RepositoryConf()
+        root = conf.root()
+        try:
+            VersionDb(join(os.getcwd(), root, repository))
+        except OSError:
+            found = False
+
+        return found
 
     @staticmethod
     def get_repository_version(repository, version):
@@ -106,7 +125,7 @@ class VersionedDbHelper:
         v_stg = VersionedDbHelper._get_v_stg(repo_name)
         if VersionDbShellUtil.init_db(repo_name=repo_name, v_stg=v_stg, db_conn=db_conn, is_production=is_production):
             if is_production:
-                information_message(DB_INIT_PRODUCITON_DISPLAY)
+                information_message(DB_INIT_PRODUCTION_DISPLAY)
             else:
                 information_message(DB_INIT_DISPLAY)
 
@@ -182,7 +201,7 @@ class VersionedDbHelper:
 
         standing = VersionedDbHelper._version_standing(ver_nums, repo_nums)
         if standing < 0:
-            raise VersionedDbExceptionVersionIsHigherThanApplying(ver, version)
+            raise VersionedDbExceptionVersionIsHigherThanApplying(ver_nums, version)
 
         VersionedDbHelper.apply_sql_files_to_database(db_conn, apply_repo.sql_files)
 
@@ -238,6 +257,15 @@ class VersionedDbHelper:
         VersionedDbHelper.create_repository_version(repo_name, version)
 
     @staticmethod
+    def create_repository_environment(repo_name, env):
+        repo_found = VersionedDbHelper.valid_repository(repo_name)
+        if not repo_found:
+            raise VersionedDbExceptionRepoDoesNotExits(repo_name)
+
+        if RepositoryConf.create_repo_env(repo_name=repo_name, env=env):
+            information_message(f"Repository environment created: {repo_name} {env}")
+    
+    @staticmethod
     def create_config():
         conf = RepositoryConf()
         if not os.path.isfile(conf.config_file_name()):
@@ -252,7 +280,7 @@ class VersionedDbHelper:
 
     @staticmethod
     def _get_v_stg(repo_name):
-        repo = RepositoryConf.get_custom_repo(repo_name)
+        repo = RepositoryConf.get_repo(repo_name)
 
         if len(repo) == 1:
             v_stg = repo[0][VERSION_STORAGE]

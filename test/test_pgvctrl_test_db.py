@@ -1,8 +1,4 @@
-import pytest
-import sys
-import dbversioning
-from plumbum import colors, local, ProcessExecutionError
-from test_util import TestUtil, print_cmd_error_details
+from .test_util import TestUtil, print_cmd_error_details
 
 
 class TestPgvctrTestDb:
@@ -106,9 +102,27 @@ class TestPgvctrTestDb:
             TestUtil.pgvctrl_test_temp_repo
         )
         assert rtn[TestUtil.return_code] == 0
-    
-# TODO: Make tests for    
+
+    def test_mkenv(self):
+        pgv = TestUtil.local_pgvctrl()
+
+        arg_list = [
+            "-mkenv", TestUtil.env_test,
+            "-repo", TestUtil.pgvctrl_test_temp_repo
+        ]
+        rtn = pgv.run(arg_list, retcode=0)
+
+        print_cmd_error_details(rtn, arg_list)
+        assert rtn[TestUtil.stdout] == "{0} {1}\n".format(
+                TestUtil.pgvctrl_test_temp_repo,
+                TestUtil.env_test
+        )
+        assert rtn[TestUtil.return_code] == 0
+
+
+# TODO: Make tests for
 # -pulldata -t error_set -t membership.user_state -repo test_db -d postgresPlay
+
 
 class TestPgvctrTestCleanDb:
     def setup_method(self):
@@ -128,7 +142,6 @@ class TestPgvctrTestCleanDb:
         assert rtn[TestUtil.stdout] == 'Applying: {0}\n\n'.format(good_ff)
         assert rtn[TestUtil.return_code] == 0
 
-
     def test_apply_bad_fast_forward(self):
         pgv = TestUtil.local_pgvctrl()
         bad_ff = "BAD"
@@ -139,7 +152,6 @@ class TestPgvctrTestCleanDb:
         print_cmd_error_details(rtn, arg_list)
         assert rtn[TestUtil.stdout] == 'Fast forward not found {0}\n'.format(bad_ff)        
         assert rtn[TestUtil.return_code] == 0
-
 
     def test_apply_fast_forward_bad_db(self):
         pgv = TestUtil.local_pgvctrl()
