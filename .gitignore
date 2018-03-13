@@ -1,6 +1,7 @@
 .cache/
 .DS_Store
 .vscode/
+.idea/
 build/
 dist/
 pgvctrl.egg-info/
