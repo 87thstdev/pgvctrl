@@ -177,6 +177,7 @@ class DbVctrl(object):
                 # -mkv 2.0.new_version -repo test_db
                 create_repository_version_folder(arg_set)
             elif arg_set.mkenv:
+                # -mkenv test -repo test_db
                 create_repository_env_type(arg_set)
             elif arg_set.apply:
                 # -apply -v 0.1 -repo test_db -d postgresPlay
@@ -200,16 +201,16 @@ class DbVctrl(object):
                 prj_name = pkg_resources.require("pgvctrl")[0].project_name
                 information_message("{0}: No operation specified\nTry \"{0} --help\" "
                                     "for more information.".format(prj_name))
+        except VersionedDbExceptionProductionChangeNoProductionFlag as e:
+            error_message(e.message)
         except VersionedDbException as e:
             error_message(e.message)
         except KeyError as e:
-            error_message("Invalid key in config, expected {0}".format(e.message))
+            error_message("Invalid key in config, expected {0}".format(e))
         except ProcessExecutionError as e:
             error_message("DB Error {0}".format(e.stderr))
         except OSError as e:
             error_message("OSError: {0} ({1})".format(e.strerror, e.filename))
-        except VersionedDbExceptionProductionChangeNoProductionFlag as e:
-            error_message(e.message)
         except Exception as e:
             error_message(e)
 

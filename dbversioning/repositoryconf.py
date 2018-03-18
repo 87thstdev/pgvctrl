@@ -176,7 +176,11 @@ class RepositoryConf(object):
                     if not rp:
                         raise VersionedDbExceptionRepoDoesNotExits(repo_name)
 
-                    env_list = []
+                    env_list = list()
+
+                    if rp[0][ENVS] is None:
+                        rp[0][ENVS] = list()
+
                     for e in rp[0][ENVS]:
                         if list(e.keys()):
                             env_list.append(list(e.keys())[0])
