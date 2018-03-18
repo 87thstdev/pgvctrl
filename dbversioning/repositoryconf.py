@@ -4,11 +4,12 @@ from simplejson import JSONDecodeError
 
 from collections import namedtuple
 
-from .errorUtil import (
+from dbversioning.errorUtil import (
     VersionedDbExceptionBadConfigFile,
     VersionedDbExceptionFileMissing,
     VersionedDbExceptionInvalidRepo,
-    VersionedDbExceptionRepoEnvExits, VersionedDbExceptionRepoDoesNotExits)
+    VersionedDbExceptionRepoEnvExits,
+    VersionedDbExceptionRepoDoesNotExits)
 
 Version_Table = namedtuple("version_table", ["tbl", "v", "hash", "repo", "is_prod"])
 

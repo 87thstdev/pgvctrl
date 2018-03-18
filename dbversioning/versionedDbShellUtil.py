@@ -4,11 +4,14 @@ import datetime
 import simplejson as json
 
 import copy
-from plumbum import colors, local, ProcessExecutionError
+from plumbum import (
+    colors,
+    local,
+    ProcessExecutionError)
 from simplejson import JSONDecodeError
 
-from .versionedDb import SqlPatch
-from .errorUtil import (
+from dbversioning.versionedDb import SqlPatch
+from dbversioning.errorUtil import (
     VersionedDbExceptionMissingVersionTable,
     VersionedDbExceptionBadDateSource,
     VersionedDbExceptionNoVersionFound,
@@ -19,7 +22,9 @@ from .errorUtil import (
     VersionedDbExceptionBadDataConfigFile,
     VersionedDbExceptionMissingDataTable,
 )
-from .repositoryconf import RepositoryConf, ROLLBACK_FILE_ENDING
+from dbversioning.repositoryconf import (
+    RepositoryConf,
+    ROLLBACK_FILE_ENDING)
 
 DATA_DUMP_CONFIG_NAME = 'data.json'
 RETCODE = 0

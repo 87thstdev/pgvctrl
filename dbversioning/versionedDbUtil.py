@@ -5,7 +5,7 @@ import simplejson as json
 from os.path import join
 
 from dbversioning.versionedDbHelper import get_valid_elements
-from .errorUtil import (
+from dbversioning.errorUtil import (
     VersionedDbExceptionBadConfigVersionFound,
     VersionedDbExceptionFileExits,
     VersionedDbExceptionVersionIsHigherThanApplying,
@@ -14,14 +14,18 @@ from .errorUtil import (
     VersionedDbExceptionRepoVersionDoesNotExits,
     VersionedDbExceptionProductionChangeNoProductionFlag,
     VersionedDbExceptionMissingVersionTable,
-    VersionedDbExceptionFastForwardNotAllowed, VersionedDbExceptionRepoDoesNotExits)
-from .versionedDbShellUtil import (
+    VersionedDbExceptionFastForwardNotAllowed,
+    VersionedDbExceptionRepoDoesNotExits)
+from dbversioning.versionedDbShellUtil import (
     VersionDbShellUtil,
     information_message,
     DATA_DUMP_CONFIG_NAME,
     dir_exists)
-from .versionedDb import VersionDb, FastForwardDb, GenericSql
-from .repositoryconf import (
+from dbversioning.versionedDb import (
+    VersionDb,
+    FastForwardDb,
+    GenericSql)
+from dbversioning.repositoryconf import (
     RepositoryConf,
     VERSION_STORAGE,
     SNAPSHOTS,

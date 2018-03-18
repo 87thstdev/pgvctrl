@@ -3,10 +3,10 @@ import argparse
 from plumbum import ProcessExecutionError
 import pkg_resources
 
-from .errorUtil import VersionedDbException, VersionedDbExceptionProductionChangeNoProductionFlag
-from .versionedDbConnection import connection_list
-from .versionedDbShellUtil import information_message, error_message
-from .versionedDbUtil import VersionedDbHelper
+from dbversioning.errorUtil import VersionedDbException, VersionedDbExceptionProductionChangeNoProductionFlag
+from dbversioning.versionedDbConnection import connection_list
+from dbversioning.versionedDbShellUtil import information_message, error_message
+from dbversioning.versionedDbUtil import VersionedDbHelper
 
 
 parent2 = argparse.ArgumentParser(add_help=False)

@@ -1,4 +1,6 @@
-from .test_util import TestUtil, print_cmd_error_details
+from test.test_util import (
+    TestUtil,
+    print_cmd_error_details)
 
 
 class TestPgvctrTestDb:
