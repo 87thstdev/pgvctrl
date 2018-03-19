@@ -105,22 +105,6 @@ class TestPgvctrTestDb:
         )
         assert rtn[TestUtil.return_code] == 0
 
-    def test_mkenv(self):
-        pgv = TestUtil.local_pgvctrl()
-
-        arg_list = [
-            "-mkenv", TestUtil.env_test,
-            "-repo", TestUtil.pgvctrl_test_temp_repo
-        ]
-        rtn = pgv.run(arg_list, retcode=0)
-
-        print_cmd_error_details(rtn, arg_list)
-        assert rtn[TestUtil.stdout] == "{0} {1}\n".format(
-                TestUtil.pgvctrl_test_temp_repo,
-                TestUtil.env_test
-        )
-        assert rtn[TestUtil.return_code] == 0
-
 
 # TODO: Make tests for
 # -pulldata -t error_set -t membership.user_state -repo test_db -d postgresPlay

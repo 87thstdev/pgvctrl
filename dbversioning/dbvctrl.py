@@ -32,6 +32,7 @@ parser.add_argument('-verbose', help='Verbose output', action='store_true')
 parser.add_argument('-t', metavar='', help='Pull table for data', action='append')
 
 parser.add_argument('-v', metavar='', help='Version number')
+parser.add_argument('-mkrepo', metavar='', help='Make Repository')
 parser.add_argument('-mkv', metavar='', help='Make version number')
 parser.add_argument('-mkenv', metavar='', help='Make environment type')
 parser.add_argument('-repo', metavar='', help='Repository Database Name')
@@ -123,6 +124,12 @@ def set_fast_forward_pull_from_db(arg_set):
     )
 
 
+def create_repository(repo_name):
+    vdb = VersionedDbHelper()
+
+    vdb.create_repository(repo_name=repo_name)
+
+
 def create_repository_version_folder(arg_set):
     vdb = VersionedDbHelper()
 
@@ -173,6 +180,9 @@ class DbVctrl(object):
             elif arg_set.mkconf:
                 # -mkconf
                 create_config_file()
+            elif arg_set.mkrepo:
+                # -mkrepo test_db
+                create_repository(arg_set.mkrepo)
             elif arg_set.mkv:
                 # -mkv 2.0.new_version -repo test_db
                 create_repository_version_folder(arg_set)

@@ -24,6 +24,12 @@ class VersionedDbExceptionRepoEnvExits(VersionedDbException):
         pass
 
 
+class VersionedDbExceptionRepoExits(VersionedDbException):
+    def __init__(self, repo_name):
+        self.message = f"Repository already exist: {repo_name}"
+        pass
+
+
 class VersionedDbExceptionRepoDoesNotExits(VersionedDbException):
     def __init__(self, repo_name):
         self.message = f"Repository does not exist: {repo_name}"

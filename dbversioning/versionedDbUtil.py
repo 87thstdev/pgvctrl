@@ -4,6 +4,7 @@ from collections import namedtuple
 import simplejson as json
 from os.path import join
 
+from dbversioning.osUtil import dir_exists
 from dbversioning.versionedDbHelper import get_valid_elements
 from dbversioning.errorUtil import (
     VersionedDbExceptionBadConfigVersionFound,
@@ -15,12 +16,13 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionProductionChangeNoProductionFlag,
     VersionedDbExceptionMissingVersionTable,
     VersionedDbExceptionFastForwardNotAllowed,
-    VersionedDbExceptionRepoDoesNotExits)
+    VersionedDbExceptionRepoDoesNotExits,
+    VersionedDbExceptionRepoExits)
 from dbversioning.versionedDbShellUtil import (
     VersionDbShellUtil,
     information_message,
-    DATA_DUMP_CONFIG_NAME,
-    dir_exists)
+    DATA_DUMP_CONFIG_NAME
+)
 from dbversioning.versionedDb import (
     VersionDb,
     FastForwardDb,
@@ -64,7 +66,7 @@ class VersionedDbHelper:
         for db_repo in db_repos:
             information_message("{0}".format(db_repo.db_name))
             if verbose:
-                v_sorted = sorted(db_repo.versions, key=lambda v: (v.major, v.minor))
+                v_sorted = sorted(db_repo.versions, key=lambda vs: (vs.major, vs.minor))
                 for v in v_sorted:
                     information_message("\tv {0}".format(v.full_name))
 
@@ -138,11 +140,11 @@ class VersionedDbHelper:
         has_version_tbl = True
         try:
             v_stg = VersionedDbHelper._get_v_stg(repo_name)
-            dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
+            VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
         except VersionedDbExceptionMissingVersionTable:
             has_version_tbl = False
         
-        if (has_version_tbl):
+        if has_version_tbl:
             raise VersionedDbExceptionFastForwardNotAllowed()
 
         fast_forward_to = VersionedDbHelper.get_repository_fast_forward_version(
@@ -158,7 +160,7 @@ class VersionedDbHelper:
         v_stg = VersionedDbHelper._get_v_stg(repo_name)
         dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
 
-        if (is_production != dbver.is_production):
+        if is_production != dbver.is_production:
             raise VersionedDbExceptionProductionChangeNoProductionFlag('-pushdata')
 
         conf = RepositoryConf()
@@ -190,7 +192,7 @@ class VersionedDbHelper:
         v_stg = VersionedDbHelper._get_v_stg(repo_name)
         dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
 
-        if (is_production != dbver.is_production):
+        if is_production != dbver.is_production:
             raise VersionedDbExceptionProductionChangeNoProductionFlag('-apply')
             
         repo_nums = VersionedDbHelper.get_version_numbers(dbver.version)
@@ -259,6 +261,15 @@ class VersionedDbHelper:
             raise VersionedDbExceptionRepoVersionExits(repo_name, version_found[0])
 
         VersionedDbHelper.create_repository_version(repo_name, version)
+
+    @staticmethod
+    def create_repository(repo_name):
+        repo_found = VersionedDbHelper.valid_repository(repo_name)
+        if repo_found:
+            raise VersionedDbExceptionRepoExits(repo_name)
+
+        if RepositoryConf.create_repo(repo_name=repo_name):
+            information_message(f"Repository created: {repo_name}")
 
     @staticmethod
     def create_repository_environment(repo_name, env):

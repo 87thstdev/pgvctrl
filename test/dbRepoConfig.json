@@ -7,18 +7,6 @@
         "version": "version",
         "versionHash": "version_hash"
     },
-    "repositories": [
-        {
-            "envs": [],
-            "name": "",
-            "versionStorage": {
-                "isProduction": "",
-                "repository": "",
-                "table": "",
-                "version": "",
-                "versionHash": ""
-            }
-        }
-    ],
+    "repositories": [],
     "root": "databases"
 }

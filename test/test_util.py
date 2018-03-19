@@ -9,6 +9,8 @@ class TestUtil(object):
     stderr = 2
     pgvctrl_test_repo = "pgvctrl_test"
     pgvctrl_test_temp_repo = "pgvctrl_temp_test"
+    pgvctrl_no_files_repo = "pgvctrl_no_files"
+    pgvctrl_no_files_repo_path = "databases/pgvctrl_no_files"
     pgvctrl_test_db = "pgvctrl_test_db"
     test_version = "2.0.new_version"
     test_bad_version = "999.1.bad_version"
