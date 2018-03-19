@@ -10,6 +10,9 @@ from plumbum import (
     ProcessExecutionError)
 from simplejson import JSONDecodeError
 
+from dbversioning.osUtil import (
+    ensure_dir_exists,
+    make_data_file)
 from dbversioning.versionedDb import SqlPatch
 from dbversioning.errorUtil import (
     VersionedDbExceptionMissingVersionTable,
@@ -440,24 +443,6 @@ def get_table_size(tbl, db_conn):
     size_num = int(rtn_array[1])
 
     return size_num, size_txt
-
-
-def ensure_dir_exists(dir_name):
-    if not os.path.isdir(dir_name):
-        os.makedirs(dir_name)
-
-
-def dir_exists(dir_name):
-    return os.path.isdir(dir_name)
-
-
-def make_data_file(file_name):
-    if not os.path.isfile(file_name):
-        with open(file_name, 'w') as outfile:
-            str_ = json.dumps([],
-                              indent=4, sort_keys=True,
-                              separators=(',', ': '), ensure_ascii=True)
-            outfile.write(to_unicode(str_))
 
 
 def convert_str_to_bool(value):
