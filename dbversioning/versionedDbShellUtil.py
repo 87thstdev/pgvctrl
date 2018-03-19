@@ -81,7 +81,7 @@ class VersionDbShellUtil:
                        "{repo} VARCHAR NOT NULL," \
                        "{is_prod} BOOLEAN NOT NULL," \
                        "{hash} JSONB);" \
-            .format(tbl=v_stg.tbl, v=v_stg.v, is_prod=v_stg.is_prod ,hash=v_stg.hash, repo=v_stg.repo)
+            .format(tbl=v_stg.tbl, v=v_stg.v, is_prod=v_stg.is_prod, hash=v_stg.hash, repo=v_stg.repo)
 
         insert_v_sql = "INSERT INTO {tbl} ({repo}, {v}, {is_prod}, {hash}) " \
                        "VALUES ('{repo_name}', '{ver_num}', '{ver_is_prod}', '{ver_hash}');" \

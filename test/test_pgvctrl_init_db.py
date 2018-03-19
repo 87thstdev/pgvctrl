@@ -35,8 +35,7 @@ class TestPgvctrInitlWithDb:
         assert rtn[TestUtil.stdout] == 'Database initialized\n'
         assert rtn[TestUtil.return_code] == 0
 
-
-    def test_init_produciton(self):
+    def test_init_production(self):
         pgv = TestUtil.local_pgvctrl()
 
         arg_list = ["-init", "-repo", TestUtil.pgvctrl_test_temp_repo, "-production",  "-d", TestUtil.pgvctrl_test_db]
