@@ -30,6 +30,18 @@ In the test directory:
     1. Make a directory where you want you database repositories to live.
     <pre>pgvctrl -mkconf</pre>
     This will create a dbRepoConfig.json file.
+1. Create database repository:
+    1. In the same directory as the dbRepoConfig.json file, run:
+    <pre>pgvctrl -mkrepo [repository name]</pre>
+    e.g
+    <pre>pgvctrl -mkrepo mydb</pre>
+    Output:
+    <pre>Repository created: mydb</pre>
+
+    __What just happened?__<br />
+    * There will be a folder structure: [my dir]/databases/[repository name]/ created.
+    
+    
 1. Initialize database repository:
     1. In the same directory as the dbRepoConfig.json file, run:
     <pre>pgvctrl -init [db connection information] -repo [repository name]</pre>
@@ -103,6 +115,13 @@ e.g:
 <pre>pgvctrl -chkver -repo mydb -d mylocaldb</pre>
 Output:
 <pre>mydb: 0.0</pre>
+
+#### -mkenv: Make environment type:
+<pre>pgvctrl -mkenv [env_name] -repo [repository name]</pre>
+e.g.:
+<pre>pgvctrl -mkenv test -repo mydb</pre>
+Output:
+<pre>Repository environment created: mydb test</pre>
 
 ### Fast Forward (-setff, -applyff)
 __What are Fast Forwards?__<br />
