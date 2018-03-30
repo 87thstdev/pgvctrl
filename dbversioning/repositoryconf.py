@@ -123,13 +123,13 @@ class RepositoryConf(object):
     def default_version_storage():
         conf = RepositoryConf._get_repo_dict()
         d = conf[DEFAULT_VERSION_STORAGE]
-        return Version_Table(
-            tbl=d[TABLE],
-            v=d[VERSION],
-            hash=d[VERSION_HASH],
-            repo=d[REPOSITORY],
-            is_prod=d[IS_PRODUCTION]
-        )
+        return {
+            TABLE: d[TABLE],
+            VERSION: d[VERSION],
+            VERSION_HASH: d[VERSION_HASH],
+            REPOSITORY: d[REPOSITORY],
+            IS_PRODUCTION: d[IS_PRODUCTION]
+        }
 
     @staticmethod
     def repo_list():
