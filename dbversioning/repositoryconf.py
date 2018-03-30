@@ -10,7 +10,8 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionInvalidRepo,
     VersionedDbExceptionRepoEnvExits,
     VersionedDbExceptionRepoDoesNotExits,
-    VersionedDbExceptionRepoExits)
+    VersionedDbExceptionRepoExits,
+    VersionedDbExceptionRepoEnvDoesNotExits)
 from dbversioning.osUtil import ensure_dir_exists
 
 Version_Table = namedtuple("version_table", ["tbl", "v", "hash", "repo", "is_prod"])
@@ -226,6 +227,48 @@ class RepositoryConf(object):
                         rp[0][ENVS].append({env: None})
                     else:
                         raise VersionedDbExceptionRepoEnvExits(repo_name, env)
+
+                    out_str = json.dumps(
+                            conf,
+                            indent=4,
+                            sort_keys=True,
+                            separators=(',', ': '),
+                            ensure_ascii=True)
+
+            except JSONDecodeError:
+                raise VersionedDbExceptionBadConfigFile()
+
+            with open(RepositoryConf.config_file_name(), 'w') as outfile:
+                outfile.write(out_str)
+        else:
+            raise VersionedDbExceptionFileMissing(RepositoryConf.config_file_name())
+
+        return True
+
+    @staticmethod
+    def set_repo_env(repo_name, env, version):
+        print(f"{repo_name} {env} {version}")
+
+        conf = RepositoryConf._get_repo_dict()
+
+        if os.path.isfile(RepositoryConf.config_file_name()):
+            try:
+                with open(RepositoryConf.config_file_name()):
+                    repos = conf[REPOSITORIES]
+                    rp = [r for r in repos if r[NAME] == repo_name]
+
+                    if not rp:
+                        raise VersionedDbExceptionRepoDoesNotExits(repo_name)
+
+                    if rp[0][ENVS] is None:
+                        raise VersionedDbExceptionRepoEnvDoesNotExits(repo_name, env)
+
+                    env_f = [e for e in rp[0][ENVS] if e.keys() and list(e.keys())[0] == env]
+
+                    if env_f:
+                        env_f[0][env] = version
+                    else:
+                        raise VersionedDbExceptionRepoEnvDoesNotExits(repo_name, env)
 
                     out_str = json.dumps(
                             conf,

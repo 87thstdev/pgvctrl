@@ -18,6 +18,20 @@ class VersionedDbExceptionRepoVersionExits(VersionedDbException):
         pass
 
 
+class VersionedDbExceptionRepoVersionDoesNotExits(VersionedDbException):
+    def __init__(self, repo_name, version_name):
+        self.message = "Repository version does not exist: {0} {1}".format(
+            repo_name, version_name
+        )
+        pass
+
+
+class VersionedDbExceptionRepoEnvDoesNotExits(VersionedDbException):
+    def __init__(self, repo_name, env):
+        self.message = f"Repository environment does note exists: {repo_name} {env}"
+        pass
+
+
 class VersionedDbExceptionRepoEnvExits(VersionedDbException):
     def __init__(self, repo_name, env):
         self.message = f"Repository environment already exists: {repo_name} {env}"
@@ -33,14 +47,6 @@ class VersionedDbExceptionRepoExits(VersionedDbException):
 class VersionedDbExceptionRepoDoesNotExits(VersionedDbException):
     def __init__(self, repo_name):
         self.message = f"Repository does not exist: {repo_name}"
-        pass
-
-
-class VersionedDbExceptionRepoVersionDoesNotExits(VersionedDbException):
-    def __init__(self, repo_name, version_name):
-        self.message = "Repository version does not exist: {0} {1}".format(
-            repo_name, version_name
-        )
         pass
 
 

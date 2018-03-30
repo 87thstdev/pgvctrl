@@ -35,6 +35,7 @@ parser.add_argument('-v', metavar='', help='Version number')
 parser.add_argument('-mkrepo', metavar='', help='Make Repository')
 parser.add_argument('-mkv', metavar='', help='Make version number')
 parser.add_argument('-mkenv', metavar='', help='Make environment type')
+parser.add_argument('-setenv', metavar='', help='Set environment type to a version')
 parser.add_argument('-repo', metavar='', help='Repository Database Name')
 parser.add_argument('-production', help='Database production flag', action='store_true')
 
@@ -148,6 +149,16 @@ def create_repository_env_type(arg_set):
     )
 
 
+def set_repository_env_version(arg_set):
+    vdb = VersionedDbHelper()
+
+    vdb.set_repository_environment_version(
+            repo_name=arg_set.repo,
+            env=arg_set.setenv,
+            version=arg_set.v,
+    )
+
+
 def show_version():
     pkg = pkg_resources.require("pgvctrl")[0]
     information_message("{0}: {1}".format(pkg.project_name, pkg.version))
@@ -189,6 +200,9 @@ class DbVctrl(object):
             elif arg_set.mkenv:
                 # -mkenv test -repo test_db
                 create_repository_env_type(arg_set)
+            elif arg_set.setenv:
+                # -setenv test -repo test_db -v 1.0
+                set_repository_env_version(arg_set)
             elif arg_set.apply:
                 # -apply -v 0.1 -repo test_db -d postgresPlay
                 apply_repository_to_db(arg_set)
