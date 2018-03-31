@@ -281,6 +281,14 @@ class VersionedDbHelper:
             information_message(f"Repository environment created: {repo_name} {env}")
 
     @staticmethod
+    def get_repository_environment(repo_name, env):
+        repo_found = VersionedDbHelper.valid_repository(repo_name)
+        if not repo_found:
+            raise VersionedDbExceptionRepoDoesNotExits(repo_name)
+
+        return RepositoryConf.get_repo_env(repo_name=repo_name, env=env)
+
+    @staticmethod
     def set_repository_environment_version(repo_name, env, version):
         repo_found = VersionedDbHelper.valid_repository(repo_name)
         version_nums = VersionedDbHelper.get_version_numbers(version)

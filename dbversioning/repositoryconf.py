@@ -286,3 +286,34 @@ class RepositoryConf(object):
             raise VersionedDbExceptionFileMissing(RepositoryConf.config_file_name())
 
         return True
+
+    @staticmethod
+    def get_repo_env(repo_name, env):
+        conf = RepositoryConf._get_repo_dict()
+
+        if os.path.isfile(RepositoryConf.config_file_name()):
+            try:
+                with open(RepositoryConf.config_file_name()):
+                    repos = conf[REPOSITORIES]
+                    rp = [r for r in repos if r[NAME] == repo_name]
+
+                    if not rp:
+                        raise VersionedDbExceptionRepoDoesNotExits(repo_name)
+
+                    if rp[0][ENVS] is None:
+                        raise VersionedDbExceptionRepoEnvDoesNotExits(repo_name, env)
+
+                    env_f = [e for e in rp[0][ENVS] if e.keys() and list(e.keys())[0] == env]
+
+                    if env_f:
+                        return env_f[0][env]
+                    else:
+                        raise VersionedDbExceptionRepoEnvDoesNotExits(repo_name, env)
+
+            except JSONDecodeError:
+                raise VersionedDbExceptionBadConfigFile()
+
+        else:
+            raise VersionedDbExceptionFileMissing(RepositoryConf.config_file_name())
+
+        return True

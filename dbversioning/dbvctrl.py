@@ -36,7 +36,8 @@ parser.add_argument('-mkrepo', metavar='', help='Make Repository')
 parser.add_argument('-mkv', metavar='', help='Make version number')
 parser.add_argument('-mkenv', metavar='', help='Make environment type')
 parser.add_argument('-setenv', metavar='', help='Set environment type to a version')
-parser.add_argument('-repo', metavar='', help='Repository Database Name')
+parser.add_argument('-env', metavar='', help='Repository environment name')
+parser.add_argument('-repo', metavar='', help='Repository name')
 parser.add_argument('-production', help='Database production flag', action='store_true')
 
 parser.add_argument('-svc', metavar='', help='pg service')
@@ -72,12 +73,27 @@ def initialize_versioned_db(arg_set):
 def apply_repository_to_db(arg_set):
     vdb = VersionedDbHelper()
     db_conn = connection_list(arg_set)
+    version = _get_repo_version(arg_set)
 
     vdb.apply_repository_to_database(
         db_conn=db_conn,
         repo_name=arg_set.repo,
-        version=arg_set.v,
+        version=version,
         is_production=arg_set.production
+    )
+
+
+def _get_repo_version(arg_set):
+    if arg_set.v and arg_set.env:
+        raise VersionedDbException("Version and environment args are mutually exclusive.")
+
+    if arg_set.v:
+        return arg_set.v
+
+    vdb = VersionedDbHelper()
+    return vdb.get_repository_environment(
+            repo_name=arg_set.repo,
+            env=arg_set.env
     )
 
 
@@ -204,7 +220,7 @@ class DbVctrl(object):
                 # -setenv test -repo test_db -v 1.0
                 set_repository_env_version(arg_set)
             elif arg_set.apply:
-                # -apply -v 0.1 -repo test_db -d postgresPlay
+                # -apply <-v 0.1 | -env test> -repo test_db -d postgresPlay
                 apply_repository_to_db(arg_set)
             elif arg_set.setff:
                 # -setff -repo test_db -d postgresPlay
