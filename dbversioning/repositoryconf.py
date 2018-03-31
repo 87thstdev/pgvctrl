@@ -247,8 +247,6 @@ class RepositoryConf(object):
 
     @staticmethod
     def set_repo_env(repo_name, env, version):
-        print(f"{repo_name} {env} {version}")
-
         conf = RepositoryConf._get_repo_dict()
 
         if os.path.isfile(RepositoryConf.config_file_name()):

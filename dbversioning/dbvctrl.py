@@ -3,14 +3,15 @@ import argparse
 from plumbum import ProcessExecutionError
 import pkg_resources
 
-from dbversioning.errorUtil import VersionedDbException, VersionedDbExceptionProductionChangeNoProductionFlag
+from dbversioning.errorUtil import (
+    VersionedDbException,
+    VersionedDbExceptionProductionChangeNoProductionFlag)
 from dbversioning.versionedDbConnection import connection_list
-from dbversioning.versionedDbShellUtil import information_message, error_message
+from dbversioning.versionedDbShellUtil import (
+    information_message,
+    error_message)
 from dbversioning.versionedDbUtil import VersionedDbHelper
 
-
-parent2 = argparse.ArgumentParser(add_help=False)
-parent2.add_argument('-set2', action="store_true")
 
 parser = argparse.ArgumentParser(description='Postgres db version control.')
 group = parser.add_mutually_exclusive_group()
@@ -251,8 +252,6 @@ class DbVctrl(object):
             error_message("DB Error {0}".format(e.stderr))
         except OSError as e:
             error_message("OSError: {0} ({1})".format(e.strerror, e.filename))
-        except Exception as e:
-            error_message(e)
 
 
 def main():
