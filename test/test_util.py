@@ -1,4 +1,5 @@
 import os
+from shutil import copy2
 
 from plumbum import local
 
@@ -9,10 +10,14 @@ class TestUtil(object):
     stderr = 2
     pgvctrl_test_repo = "pgvctrl_test"
     pgvctrl_test_temp_repo = "pgvctrl_temp_test"
+    pgvctrl_test_temp_repo_path = "databases/pgvctrl_temp_test"
     pgvctrl_no_files_repo = "pgvctrl_no_files"
     pgvctrl_no_files_repo_path = "databases/pgvctrl_no_files"
     pgvctrl_test_db = "pgvctrl_test_db"
-    test_version = "2.0.new_version"
+    test_first_version = "0.0.first"
+    test_version = "2.0.NewVersion"
+    test_make_version = "3.0.MakeNewVersion"
+    test_make_version_path = f"databases/{pgvctrl_test_repo}/{test_make_version}"
     test_bad_version = "999.1.bad_version"
     test_version_path = "databases/pgvctrl_temp_test/{0}".format(test_version)
     env_test = "test"
@@ -55,6 +60,23 @@ class TestUtil(object):
         pgv = TestUtil.local_pgvctrl()
         rtn = pgv.run(["-mkconf"], retcode=0)
         print(rtn)
+
+    @staticmethod
+    def mkrepo(repo_name):
+        pgv = TestUtil.local_pgvctrl()
+        rtn = pgv.run(["-mkrepo", repo_name], retcode=0)
+        print(rtn)
+
+
+    @staticmethod
+    def mkrepo_ver(repo_name, ver):
+        pgv = TestUtil.local_pgvctrl()
+        rtn = pgv.run(["-repo", repo_name, '-mkv', ver], retcode=0)
+        print(rtn)
+
+    @staticmethod
+    def get_static_config():
+        copy2('dbRepoConfig.json.default', 'dbRepoConfig.json')
 
 
 def print_cmd_error_details(rtn, arg_list):

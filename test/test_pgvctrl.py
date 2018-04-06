@@ -142,3 +142,35 @@ def test_mkconf_exists():
     print_cmd_error_details(rtn, arg_list)
     assert rtn[TestUtil.stdout] == 'File already exists: {0}\n'.format(DB_REPO_CONFIG_JSON)
     assert rtn[TestUtil.return_code] == 0
+
+
+class TestPgvctrTestDb:
+    def setup_method(self, test_method):
+        TestUtil.get_static_config()
+
+    def teardown_method(self, test_method):
+        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+        TestUtil.delete_folder(TestUtil.test_make_version_path)
+
+    def test_mkv(self):
+        pgv = TestUtil.local_pgvctrl()
+
+        arg_list = ["-mkv", TestUtil.test_make_version, "-repo", TestUtil.pgvctrl_test_repo]
+        rtn = pgv.run(arg_list, retcode=0)
+
+        print_cmd_error_details(rtn, arg_list)
+        assert rtn[TestUtil.stdout] == f'Version {TestUtil.pgvctrl_test_repo}/{TestUtil.test_make_version} created.\n'
+        assert rtn[TestUtil.return_code] == 0
+
+    def test_mkv_exists(self):
+        pgv = TestUtil.local_pgvctrl()
+
+        arg_list = ["-mkv", TestUtil.test_make_version, "-repo", TestUtil.pgvctrl_test_repo]
+        pgv.run(arg_list, retcode=0)
+
+        arg_list = ["-mkv", TestUtil.test_make_version, "-repo", TestUtil.pgvctrl_test_repo]
+        rtn = pgv.run(arg_list, retcode=0)
+
+        print_cmd_error_details(rtn, arg_list)
+        assert rtn[TestUtil.stdout] == f'Repository version already exists: {TestUtil.pgvctrl_test_repo} 3.0\n'
+        assert rtn[TestUtil.return_code] == 0

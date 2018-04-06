@@ -1,0 +1,24 @@
+{
+    "autoSnapshots": true,
+    "defaultVersionStorage": {
+        "isProduction": "is_production",
+        "repository": "repository_name",
+        "table": "repository_version",
+        "version": "version",
+        "versionHash": "version_hash"
+    },
+    "repositories": [
+        {
+            "envs": [],
+            "name": "pgvctrl_test",
+            "versionStorage": {
+                "isProduction": "is_production",
+                "repository": "repository_name",
+                "table": "repository_version",
+                "version": "version",
+                "versionHash": "version_hash"
+            }
+        }
+     ],
+    "root": "databases"
+}
