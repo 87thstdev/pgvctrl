@@ -11,7 +11,8 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionRepoEnvExits,
     VersionedDbExceptionRepoDoesNotExits,
     VersionedDbExceptionRepoExits,
-    VersionedDbExceptionRepoEnvDoesNotExits)
+    VersionedDbExceptionRepoEnvDoesNotExits,
+    VersionedDbExceptionBadConfigVersionFound)
 from dbversioning.osUtil import ensure_dir_exists
 
 Version_Table = namedtuple("version_table", ["tbl", "v", "hash", "repo", "is_prod"])
@@ -148,13 +149,15 @@ class RepositoryConf(object):
             )
             cust_repos.append({
                 NAME: repo[NAME],
-                VERSION_STORAGE: ver_tbl
+                VERSION_STORAGE: ver_tbl,
+                ENVS: repo[ENVS]
             })
 
         return cust_repos
 
     @staticmethod
     def get_repo(repo_name):
+        rtn_val = None
         if not repo_name:
             raise VersionedDbExceptionInvalidRepo()
 
@@ -162,7 +165,12 @@ class RepositoryConf(object):
 
         rp = [r for r in repo_list if r[NAME] == repo_name]
 
-        return rp
+        if len(rp) == 1:
+            rtn_val = rp[0]
+        elif len(rp) > 1:
+            raise VersionedDbExceptionBadConfigVersionFound()
+
+        return rtn_val
 
     @staticmethod
     def create_repo(repo_name):
@@ -314,4 +322,4 @@ class RepositoryConf(object):
         else:
             raise VersionedDbExceptionFileMissing(RepositoryConf.config_file_name())
 
-        return True
+        return None

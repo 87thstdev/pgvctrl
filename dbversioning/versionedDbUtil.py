@@ -7,7 +7,6 @@ from os.path import join
 from dbversioning.osUtil import dir_exists
 from dbversioning.versionedDbHelper import get_valid_elements
 from dbversioning.errorUtil import (
-    VersionedDbExceptionBadConfigVersionFound,
     VersionedDbExceptionFileExits,
     VersionedDbExceptionVersionIsHigherThanApplying,
     VersionedDbExceptionFolderMissing,
@@ -21,8 +20,8 @@ from dbversioning.errorUtil import (
 from dbversioning.versionedDbShellUtil import (
     VersionDbShellUtil,
     information_message,
-    DATA_DUMP_CONFIG_NAME
-)
+    DATA_DUMP_CONFIG_NAME,
+    repo_version_information_message)
 from dbversioning.versionedDb import (
     VersionDb,
     FastForwardDb,
@@ -32,7 +31,8 @@ from dbversioning.repositoryconf import (
     VERSION_STORAGE,
     SNAPSHOTS,
     FAST_FORWARD,
-    ROLLBACK_FILE_ENDING)
+    ROLLBACK_FILE_ENDING,
+    ENVS)
 
 to_unicode = str
 
@@ -64,14 +64,22 @@ class VersionedDbHelper:
             db_repos.append(VersionDb(join(os.getcwd(), root, repo_location)))
 
         for db_repo in db_repos:
-            information_message("{0}".format(db_repo.db_name))
-            if verbose:
-                v_sorted = sorted(db_repo.versions, key=lambda vs: (vs.major, vs.minor))
-                for v in v_sorted:
-                    information_message("\tv {0}".format(v.full_name))
+            information_message(db_repo.db_name)
+            v_sorted = sorted(db_repo.versions, key=lambda vs: (vs.major, vs.minor))
+            repo_conf = conf.get_repo(db_repo.db_name)
+            for v in v_sorted:
+                env = ''
+                if repo_conf and repo_conf[ENVS]:
+                    for i in repo_conf[ENVS]:
+                        for k, val in i.items():
+                            if val == v.version_number:
+                                env = k
 
+                repo_version_information_message(f"\tv {v.full_name}", f" {env}")
+
+                if verbose:
                     for s in v.sql_files:
-                        information_message("\t\t{0} {1}".format(s.number, s.name))
+                        information_message(f"\t\t{s.number} {s.name}")
 
     @staticmethod
     def valid_repository(repository):
@@ -191,11 +199,14 @@ class VersionedDbHelper:
     def apply_repository_to_database(repo_name, db_conn, version, is_production=False):
         v_stg = VersionedDbHelper._get_v_stg(repo_name)
         dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
+        repo_nums = None
 
         if is_production != dbver.is_production:
             raise VersionedDbExceptionProductionChangeNoProductionFlag('-apply')
-            
-        repo_nums = VersionedDbHelper.get_version_numbers(dbver.version)
+
+        if dbver.version:
+            repo_nums = VersionedDbHelper.get_version_numbers(dbver.version)
+
         ver_nums = VersionedDbHelper.get_version_numbers(version)
 
         repo_ver = VersionedDbHelper.get_repository_version(repo_name, ver_nums)
@@ -220,6 +231,7 @@ class VersionedDbHelper:
             db_conn, v_stg, apply_repo.full_name, ver_hash
         )
 
+        information_message(f"Applied: {repo_name} v {version}")
         return True
 
     @staticmethod
@@ -241,7 +253,7 @@ class VersionedDbHelper:
 
     @staticmethod
     def _version_standing(v_h, v_l):
-        if v_h.major > v_l.major:
+        if v_l is None or v_h.major > v_l.major:
             return 1
 
         if v_h.major == v_l.major and v_h.minor > v_l.minor:
@@ -320,10 +332,8 @@ class VersionedDbHelper:
     def _get_v_stg(repo_name):
         repo = RepositoryConf.get_repo(repo_name)
 
-        if len(repo) == 1:
-            v_stg = repo[0][VERSION_STORAGE]
-        elif len(repo) > 1:
-            raise VersionedDbExceptionBadConfigVersionFound()
+        if repo:
+            v_stg = repo[VERSION_STORAGE]
         else:
             conf = RepositoryConf()
             v_stg = conf.default_version_storage()
@@ -332,6 +342,9 @@ class VersionedDbHelper:
 
     @staticmethod
     def get_version_numbers(version_string):
-        ver_array = version_string.split(".")
+        try:
+            ver_array = version_string.split(".")
 
-        return Version_Numbers(int(ver_array[0]), int(ver_array[1]))
+            return Version_Numbers(int(ver_array[0]), int(ver_array[1]))
+        except ValueError:
+            return None

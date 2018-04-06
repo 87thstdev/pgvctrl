@@ -57,21 +57,15 @@ class VersionDbShellUtil:
         psql = _local_psql()
         conf = RepositoryConf()
         missing_tbl = False
-        need_version = False
-        already_init = False
-        default_version = "0.0.gettingStarted"
 
         try:
             dbv = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
             if dbv:
-                already_init = True
                 warning_message("Already initialized")
                 return False
 
         except VersionedDbExceptionMissingVersionTable:
             missing_tbl = True
-        except VersionedDbExceptionNoVersionFound:
-            need_version = True
         except VersionedDbExceptionDatabaseAlreadyInit as e:
             error_message(e.message)
             return False
@@ -94,23 +88,16 @@ class VersionDbShellUtil:
                 ver_hash='null',
                 ver_is_prod=is_production,
                 repo_name=repo_name,
-                ver_num=default_version
+                ver_num="null"
             )
         if missing_tbl:
             psql(db_conn, "-c", create_v_tbl, retcode=0)
 
-        if already_init:
-            VersionDbShellUtil.set_db_instance_version(db_conn, v_stg, default_version)
-        else:
-            psql(db_conn, "-c", insert_v_sql, retcode=0)
+        psql(db_conn, "-c", insert_v_sql, retcode=0)
 
         ensure_dir_exists(os.path.join(conf.root(), repo_name))
-        ensure_dir_exists(os.path.join(conf.root(), repo_name, default_version))
 
         return True
-
-        # TODO: Decided if I want to create a ff point on init.
-        # DbVersionShellHelper.dump_version_fast_forward(db_conn, v_stg)
 
     @staticmethod
     def apply_fast_forward_sql(db_conn, sql_file, repo_name):
@@ -468,6 +455,10 @@ def error_message(message):
 
 def information_message(message):
     print(colors.blue & colors.bold | message)
+
+
+def repo_version_information_message(version, env):
+    print(colors.blue & colors.bold | version, colors.green & colors.bold | env)
 
 
 def _local_psql():
