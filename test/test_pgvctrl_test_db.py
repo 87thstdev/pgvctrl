@@ -17,14 +17,14 @@ class TestPgvctrTestDb:
         TestUtil.delete_file(DB_REPO_CONFIG_JSON)
         TestUtil.drop_database()
 
-    def test_chkver(self):
+    def test_chkver_no_env(self):
         pgv = TestUtil.local_pgvctrl()
     
         arg_list = ["-chkver", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
         
         print_cmd_error_details(rtn, arg_list)
-        assert rtn[TestUtil.stdout] == f'{TestUtil.test_first_version}: {TestUtil.pgvctrl_test_repo}\n'
+        assert rtn[TestUtil.stdout] == f'{TestUtil.test_first_version}: {TestUtil.pgvctrl_test_repo} environment (None)\n'
         assert rtn[TestUtil.return_code] == 0
 
     def test_apply_bad_version(self):
@@ -126,4 +126,31 @@ class TestPgvctrTestCleanDb:
 
         print_cmd_error_details(rtn, arg_list)
         assert rtn[TestUtil.stdout] == "Invalid Data Connection: ['-d', '{0}']\n".format(bad_db)
+        assert rtn[TestUtil.return_code] == 0
+
+
+class TestPgvctrTestDbEnv:
+    def setup_method(self, test_method):
+        pgv = TestUtil.local_pgvctrl()
+        TestUtil.create_database()
+        TestUtil.get_static_config()
+        pgv.run(["-init", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db, "-setenv",
+                 TestUtil.env_test], retcode=0)
+        pgv.run(["-apply", "-v", "0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db],
+                retcode=0)
+
+    def teardown_method(self, test_method):
+        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+        TestUtil.drop_database()
+
+    def test_chkver_no_env(self):
+        pgv = TestUtil.local_pgvctrl()
+
+        arg_list = ["-chkver", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        rtn = pgv.run(arg_list, retcode=0)
+
+        print_cmd_error_details(rtn, arg_list)
+        assert rtn[
+                   TestUtil.stdout] == f'{TestUtil.test_first_version}: {TestUtil.pgvctrl_test_repo} environment (' \
+                                       f'{TestUtil.env_test})\n'
         assert rtn[TestUtil.return_code] == 0

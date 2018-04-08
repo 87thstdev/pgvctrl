@@ -40,6 +40,7 @@ Version_Numbers = namedtuple("version_numbers", ["major", "minor"])
 
 DB_INIT_DISPLAY = "Database initialized"
 DB_INIT_PRODUCTION_DISPLAY = DB_INIT_DISPLAY + " (PRODUCTION)"
+DB_INIT_ENV = " environment ({0})"
 
 
 class VersionedDbHelper:
@@ -135,13 +136,24 @@ class VersionedDbHelper:
         VersionDbShellUtil.display_db_instance_version(v_stg, db_conn)
 
     @staticmethod
-    def initialize_db_version_on_server(db_conn, repo_name, is_production):
+    def initialize_db_version_on_server(db_conn, repo_name, is_production, env=None):
         v_stg = VersionedDbHelper._get_v_stg(repo_name)
-        if VersionDbShellUtil.init_db(repo_name=repo_name, v_stg=v_stg, db_conn=db_conn, is_production=is_production):
+        if VersionDbShellUtil.init_db(
+                repo_name=repo_name,
+                v_stg=v_stg,
+                db_conn=db_conn,
+                is_production=is_production,
+                env=env):
+
             if is_production:
-                information_message(DB_INIT_PRODUCTION_DISPLAY)
+                msg = DB_INIT_PRODUCTION_DISPLAY
             else:
-                information_message(DB_INIT_DISPLAY)
+                msg = DB_INIT_DISPLAY
+
+            if env:
+                msg += DB_INIT_ENV.format(env)
+
+            information_message(msg)
 
     @staticmethod
     def apply_repository_fast_forward_to_database(repo_name, db_conn, full_version):

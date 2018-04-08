@@ -19,7 +19,7 @@ class TestPgvctrInitlWithOutDb:
 
         arg_list = ["-init", "-repo", TestUtil.pgvctrl_test_temp_repo, "-d", TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
-        
+
         print_cmd_error_details(rtn, arg_list)
         assert rtn[TestUtil.stdout] == "Invalid Data Connection: ['-d', '{0}']\n".format(TestUtil.pgvctrl_test_db)
         assert rtn[TestUtil.return_code] == 0
@@ -54,4 +54,26 @@ class TestPgvctrInitlWithDb:
 
         print_cmd_error_details(rtn, arg_list)
         assert rtn[TestUtil.stdout] == 'Database initialized (PRODUCTION)\n'
+        assert rtn[TestUtil.return_code] == 0
+
+    def test_init_env(self):
+        pgv = TestUtil.local_pgvctrl()
+
+        arg_list = ["-init", "-repo", TestUtil.pgvctrl_test_temp_repo, "-d", TestUtil.pgvctrl_test_db, "-setenv",
+                    TestUtil.env_test]
+        rtn = pgv.run(arg_list, retcode=0)
+
+        print_cmd_error_details(rtn, arg_list)
+        assert rtn[TestUtil.stdout] == f'Database initialized environment ({TestUtil.env_test})\n'
+        assert rtn[TestUtil.return_code] == 0
+
+    def test_init_production_with_env(self):
+        pgv = TestUtil.local_pgvctrl()
+
+        arg_list = ["-init", "-repo", TestUtil.pgvctrl_test_temp_repo, "-production",  "-d",
+                    TestUtil.pgvctrl_test_db, "-setenv", TestUtil.env_test]
+        rtn = pgv.run(arg_list, retcode=0)
+
+        print_cmd_error_details(rtn, arg_list)
+        assert rtn[TestUtil.stdout] == f'Database initialized (PRODUCTION) environment ({TestUtil.env_test})\n'
         assert rtn[TestUtil.return_code] == 0

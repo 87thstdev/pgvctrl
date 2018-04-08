@@ -15,7 +15,7 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionBadConfigVersionFound)
 from dbversioning.osUtil import ensure_dir_exists
 
-Version_Table = namedtuple("version_table", ["tbl", "v", "hash", "repo", "is_prod"])
+Version_Table = namedtuple("version_table", ["tbl", "v", "hash", "repo", "is_prod", "env"])
 
 ROOT = 'root'
 HIDDEN = '.'
@@ -32,6 +32,7 @@ REPOSITORIES = 'repositories'
 VERSION_STORAGE = 'versionStorage'
 VERSION_HASH = "versionHash"
 IS_PRODUCTION = "isProduction"
+ENV = "env"
 NAME = "name"
 ENVS = "envs"
 
@@ -68,7 +69,8 @@ class RepositoryConf(object):
                 VERSION: 'version',
                 REPOSITORY: 'repository_name',
                 VERSION_HASH: 'version_hash',
-                IS_PRODUCTION: 'is_production'
+                IS_PRODUCTION: 'is_production',
+                ENV: 'env'
             }, REPOSITORIES: []
         }
         return config_json
@@ -129,7 +131,8 @@ class RepositoryConf(object):
             VERSION: d[VERSION],
             VERSION_HASH: d[VERSION_HASH],
             REPOSITORY: d[REPOSITORY],
-            IS_PRODUCTION: d[IS_PRODUCTION]
+            IS_PRODUCTION: d[IS_PRODUCTION],
+            ENV: d[ENV]
         }
 
     @staticmethod
@@ -145,7 +148,8 @@ class RepositoryConf(object):
                 v=vs[VERSION],
                 hash=vs[VERSION_HASH],
                 repo=vs[REPOSITORY],
-                is_prod=vs[IS_PRODUCTION]
+                is_prod=vs[IS_PRODUCTION],
+                env=vs[ENV]
             )
             cust_repos.append({
                 NAME: repo[NAME],

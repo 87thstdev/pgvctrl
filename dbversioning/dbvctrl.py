@@ -67,8 +67,13 @@ def check_db_version_on_server(arg_set):
 def initialize_versioned_db(arg_set):
     init = VersionedDbHelper()
     db_conn = connection_list(arg_set)
-    
-    init.initialize_db_version_on_server(db_conn=db_conn, repo_name=arg_set.repo, is_production=arg_set.production)
+
+    init.initialize_db_version_on_server(
+            db_conn=db_conn,
+            repo_name=arg_set.repo,
+            is_production=arg_set.production,
+            env=arg_set.setenv
+    )
 
 
 def apply_repository_to_db(arg_set):
@@ -203,7 +208,7 @@ class DbVctrl(object):
                 # -chkver -repo test_db -d postgresPlay
                 check_db_version_on_server(arg_set)
             elif arg_set.init:
-                # -init -repo test_db -d postgresPlay
+                # -init -repo test_db -d postgresPlay [-setenv test]
                 initialize_versioned_db(arg_set)
             elif arg_set.mkconf:
                 # -mkconf

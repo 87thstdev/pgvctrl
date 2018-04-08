@@ -40,11 +40,12 @@ to_unicode = str
 
 
 class DatabaseRepositoryVersion(object):
-    def __init__(self, version=None, repo_name=None, is_production=None, version_hash=None):
+    def __init__(self, version=None, repo_name=None, is_production=None, version_hash=None, env=None):
         self.version = version
         self.repo_name = repo_name
         self.is_production = is_production
         self.version_hash = version_hash
+        self.env = env
 
 
 class VersionDbShellUtil:
@@ -53,7 +54,7 @@ class VersionDbShellUtil:
         pass
 
     @staticmethod
-    def init_db(repo_name, v_stg=None, db_conn=None, is_production=False):
+    def init_db(repo_name, v_stg=None, db_conn=None, is_production=False, env=None):
         psql = _local_psql()
         conf = RepositoryConf()
         missing_tbl = False
@@ -70,26 +71,21 @@ class VersionDbShellUtil:
             error_message(e.message)
             return False
 
-        create_v_tbl = "CREATE TABLE IF NOT EXISTS {tbl} (" \
-                       "{v} VARCHAR NOT NULL," \
-                       "{repo} VARCHAR NOT NULL," \
-                       "{is_prod} BOOLEAN NOT NULL," \
-                       "{hash} JSONB);" \
-            .format(tbl=v_stg.tbl, v=v_stg.v, is_prod=v_stg.is_prod, hash=v_stg.hash, repo=v_stg.repo)
+        create_v_tbl = f"CREATE TABLE IF NOT EXISTS {v_stg.tbl} (" \
+                       f"{v_stg.v} VARCHAR," \
+                       f"{v_stg.repo} VARCHAR NOT NULL," \
+                       f"{v_stg.is_prod} BOOLEAN NOT NULL," \
+                       f"{v_stg.env} VARCHAR," \
+                       f"{v_stg.hash} JSONB);"
 
-        insert_v_sql = "INSERT INTO {tbl} ({repo}, {v}, {is_prod}, {hash}) " \
-                       "VALUES ('{repo_name}', '{ver_num}', '{ver_is_prod}', '{ver_hash}');" \
-            .format(
-                tbl=v_stg.tbl,
-                repo=v_stg.repo,
-                v=v_stg.v,
-                is_prod=v_stg.is_prod,
-                hash=v_stg.hash,
-                ver_hash='null',
-                ver_is_prod=is_production,
-                repo_name=repo_name,
-                ver_num="null"
-            )
+        if v_stg.env:
+            env_var = f"'{env}'"
+        else:
+            env_var = "NULL"
+
+        insert_v_sql = f"INSERT INTO {v_stg.tbl} ({v_stg.repo}, {v_stg.v}, {v_stg.is_prod}, {v_stg.env}, {v_stg.hash}) "
+        insert_v_sql += f"VALUES ('{repo_name}', NULL, '{is_production}', {env_var}, NULL);"
+
         if missing_tbl:
             psql(db_conn, "-c", create_v_tbl, retcode=0)
 
@@ -297,10 +293,11 @@ class VersionDbShellUtil:
         if dbv and dbv.version is None:
             warning_message("No version found!")
         else:
-            if dbv.is_production:
-                information_message("{0}: {1} PRODUCTION".format(dbv.version, dbv.repo_name))
-            else:
-                information_message("{0}: {1}".format(dbv.version, dbv.repo_name))
+            prod_display = " PRODUCTION" if dbv.is_production else ""
+            env_display = f" environment ({dbv.env})" if dbv.env else ""
+
+            information_message(f"{dbv.version}: {dbv.repo_name}{prod_display}{env_display}")
+
 
     @staticmethod
     def get_db_instance_version(v_tbl, db_conn):
@@ -308,8 +305,8 @@ class VersionDbShellUtil:
 
         _good_version_table(v_tbl, db_conn)
 
-        version_sql = "SELECT {v}, {repo}, {is_prod}, {hash}, 'notused' throwaway FROM {tbl};"\
-            .format(repo=v_tbl.repo, v=v_tbl.v, is_prod=v_tbl.is_prod, hash=v_tbl.hash, tbl=v_tbl.tbl)
+        version_sql = f"SELECT {v_tbl.v}, {v_tbl.repo}, {v_tbl.is_prod}, {v_tbl.env}, {v_tbl.hash}, 'notused' " \
+                      f"throwaway FROM {v_tbl.tbl};"
 
         rtn = psql(db_conn, "-t", "-A", "-c", version_sql, retcode=0)
         rtn_array = rtn.split("|")
@@ -319,7 +316,8 @@ class VersionDbShellUtil:
                 version=rtn_array[0],
                 repo_name=rtn_array[1],
                 is_production=convert_str_to_bool(rtn_array[2]),
-                version_hash=rtn_array[3]
+                env=rtn_array[3],
+                version_hash=rtn_array[4]
             )
         else:
             return None

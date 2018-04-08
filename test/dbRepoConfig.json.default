@@ -1,6 +1,7 @@
 {
     "autoSnapshots": true,
     "defaultVersionStorage": {
+        "env": "env",
         "isProduction": "is_production",
         "repository": "repository_name",
         "table": "repository_version",
@@ -12,6 +13,7 @@
             "envs": [],
             "name": "pgvctrl_test",
             "versionStorage": {
+                "env": "env",
                 "isProduction": "is_production",
                 "repository": "repository_name",
                 "table": "repository_version",
