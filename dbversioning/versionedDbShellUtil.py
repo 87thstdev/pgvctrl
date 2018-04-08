@@ -459,6 +459,10 @@ def repo_version_information_message(version, env):
     print(colors.blue & colors.bold | version, colors.green & colors.bold | env)
 
 
+def repo_unregistered_message(repo_name):
+    print(colors.blue & colors.bold | repo_name, colors.red & colors.bold | "UNREGISTERED")
+
+
 def _local_psql():
     return local["psql"]
 

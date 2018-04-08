@@ -21,7 +21,8 @@ from dbversioning.versionedDbShellUtil import (
     VersionDbShellUtil,
     information_message,
     DATA_DUMP_CONFIG_NAME,
-    repo_version_information_message)
+    repo_version_information_message,
+    repo_unregistered_message)
 from dbversioning.versionedDb import (
     VersionDb,
     FastForwardDb,
@@ -65,9 +66,12 @@ class VersionedDbHelper:
             db_repos.append(VersionDb(join(os.getcwd(), root, repo_location)))
 
         for db_repo in db_repos:
-            information_message(db_repo.db_name)
             v_sorted = sorted(db_repo.versions, key=lambda vs: (vs.major, vs.minor))
             repo_conf = conf.get_repo(db_repo.db_name)
+            if repo_conf:
+                information_message(db_repo.db_name)
+            else:
+                repo_unregistered_message(db_repo.db_name)
             for v in v_sorted:
                 env = ''
                 if repo_conf and repo_conf[ENVS]:
