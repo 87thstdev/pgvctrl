@@ -78,7 +78,7 @@ class VersionDbShellUtil:
                        f"{v_stg.env} VARCHAR," \
                        f"{v_stg.hash} JSONB);"
 
-        if v_stg.env:
+        if env:
             env_var = f"'{env}'"
         else:
             env_var = "NULL"
@@ -294,7 +294,7 @@ class VersionDbShellUtil:
             warning_message("No version found!")
         else:
             prod_display = " PRODUCTION" if dbv.is_production else ""
-            env_display = f" environment ({dbv.env})" if dbv.env else ""
+            env_display = f" environment ({dbv.env})" if dbv.env else " environment (None)"
 
             information_message(f"{dbv.version}: {dbv.repo_name}{prod_display}{env_display}")
 
