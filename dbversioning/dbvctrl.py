@@ -85,7 +85,8 @@ def apply_repository_to_db(arg_set):
         db_conn=db_conn,
         repo_name=arg_set.repo,
         version=version,
-        is_production=arg_set.production
+        is_production=arg_set.production,
+        env=arg_set.env
     )
 
 
@@ -174,11 +175,17 @@ def create_repository_env_type(arg_set):
 def set_repository_env_version(arg_set):
     vdb = VersionedDbHelper()
 
-    vdb.set_repository_environment_version(
-            repo_name=arg_set.repo,
-            env=arg_set.setenv,
-            version=arg_set.v,
-    )
+    if arg_set.setenv and arg_set.v:
+        vdb.set_repository_environment_version(
+                repo_name=arg_set.repo,
+                env=arg_set.setenv,
+                version=arg_set.v,
+        )
+    else:
+        if arg_set.setenv is None:
+            error_message(f"Missing -setenv")
+        if arg_set.v is None:
+            error_message(f"Missing -v")
 
 
 def show_version():

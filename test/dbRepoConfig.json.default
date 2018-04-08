@@ -10,7 +10,11 @@
     },
     "repositories": [
         {
-            "envs": [],
+           "envs": [
+                {
+                    "test": "0.0"
+                }
+            ],
             "name": "pgvctrl_test",
             "versionStorage": {
                 "env": "env",

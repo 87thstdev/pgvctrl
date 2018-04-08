@@ -28,13 +28,19 @@ class VersionedDbExceptionRepoVersionDoesNotExits(VersionedDbException):
 
 class VersionedDbExceptionRepoEnvDoesNotExits(VersionedDbException):
     def __init__(self, repo_name, env):
-        self.message = f"Repository environment does note exists: {repo_name} {env}"
+        self.message = f"Repository environment does not exists: {repo_name} {env}"
         pass
 
 
 class VersionedDbExceptionRepoEnvExits(VersionedDbException):
     def __init__(self, repo_name, env):
         self.message = f"Repository environment already exists: {repo_name} {env}"
+        pass
+
+
+class VersionedDbExceptionEnvDoesMatchDbEnv(VersionedDbException):
+    def __init__(self, env, db_env):
+        self.message = f"Environment does not match databases environment: {env} != {db_env}"
         pass
 
 

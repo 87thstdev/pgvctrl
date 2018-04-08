@@ -16,7 +16,9 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionMissingVersionTable,
     VersionedDbExceptionFastForwardNotAllowed,
     VersionedDbExceptionRepoDoesNotExits,
-    VersionedDbExceptionRepoExits)
+    VersionedDbExceptionRepoExits,
+    VersionedDbExceptionNoVersionFound,
+    VersionedDbExceptionEnvDoesMatchDbEnv)
 from dbversioning.versionedDbShellUtil import (
     VersionDbShellUtil,
     information_message,
@@ -104,6 +106,9 @@ class VersionedDbHelper:
         root = conf.root()
 
         vdb = VersionDb(join(os.getcwd(), root, repository))
+
+        if version is None:
+            raise VersionedDbExceptionNoVersionFound()
 
         rtn = [v for v in vdb.versions
                if v.major == version.major and v.minor == version.minor]
@@ -212,13 +217,16 @@ class VersionedDbHelper:
             VersionDbShellUtil.pull_repo_tables_from_database(repo_name, db_conn)
 
     @staticmethod
-    def apply_repository_to_database(repo_name, db_conn, version, is_production=False):
+    def apply_repository_to_database(repo_name, db_conn, version, is_production=False, env=None):
         v_stg = VersionedDbHelper._get_v_stg(repo_name)
         dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
         repo_nums = None
 
         if is_production != dbver.is_production:
             raise VersionedDbExceptionProductionChangeNoProductionFlag('-apply')
+
+        if f"{env}" != f"{dbver.env}":
+            raise VersionedDbExceptionEnvDoesMatchDbEnv(env=env, db_env=dbver.env)
 
         if dbver.version:
             repo_nums = VersionedDbHelper.get_version_numbers(dbver.version)
@@ -362,5 +370,5 @@ class VersionedDbHelper:
             ver_array = version_string.split(".")
 
             return Version_Numbers(int(ver_array[0]), int(ver_array[1]))
-        except ValueError:
+        except (ValueError, AttributeError):
             return None

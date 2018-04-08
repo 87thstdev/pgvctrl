@@ -130,7 +130,8 @@ class TestPgvctrlProdDbEnv:
         TestUtil.get_static_config()
         pgv.run(["-init", PROD_FLG, "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db, "-setenv",
                  TestUtil.env_test], retcode=0)
-        pgv.run(["-apply", PROD_FLG, "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db, "-v", "0.0"],
+        pgv.run(["-apply", PROD_FLG, "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db, "-env",
+                 TestUtil.env_test],
                 retcode=0)
 
     def teardown_method(self, test_method):

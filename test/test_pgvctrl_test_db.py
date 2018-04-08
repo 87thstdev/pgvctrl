@@ -136,8 +136,8 @@ class TestPgvctrTestDbEnv:
         TestUtil.get_static_config()
         pgv.run(["-init", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db, "-setenv",
                  TestUtil.env_test], retcode=0)
-        pgv.run(["-apply", "-v", "0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db],
-                retcode=0)
+        pgv.run(["-apply", "-env", TestUtil.env_test, "-repo", TestUtil.pgvctrl_test_repo, "-d",
+                 TestUtil.pgvctrl_test_db], retcode=0)
 
     def teardown_method(self, test_method):
         TestUtil.delete_file(DB_REPO_CONFIG_JSON)

@@ -313,10 +313,10 @@ class VersionDbShellUtil:
 
         if len(rtn_array) > 1:
             return DatabaseRepositoryVersion(
-                version=rtn_array[0],
+                version=convert_str_none_if_empty(rtn_array[0]),
                 repo_name=rtn_array[1],
                 is_production=convert_str_to_bool(rtn_array[2]),
-                env=rtn_array[3],
+                env=convert_str_none_if_empty(rtn_array[3]),
                 version_hash=rtn_array[4]
             )
         else:
@@ -441,6 +441,10 @@ def convert_str_to_bool(value):
         return False
     else:
         raise ValueError("convert_str_to_bool: invalid valuse {0}".format(value))
+
+
+def convert_str_none_if_empty(value):
+    return value if value else None
 
 
 def warning_message(message):
