@@ -43,10 +43,9 @@ class TestPgvctrTestDb:
         arg_list = ["-apply", "-v", "2.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
 
-        # TODO: Make better test
-        # assert rtn[TestUtil.stdout] == '\n'.format(TestUtil.pgvctrl_test_repo)
         print_cmd_error_details(rtn, arg_list)
         assert rtn[TestUtil.return_code] == 0
+        assert rtn[TestUtil.stdout] == TestUtil.sql_return
 
     def test_set_fast_forward(self):
         pgv = TestUtil.local_pgvctrl()
@@ -54,11 +53,8 @@ class TestPgvctrTestDb:
         arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
 
-
-        # TODO: Make better test
-        # assert rtn[TestUtil.stdout] == '\n'.format(TestUtil.pgvctrl_test_repo)
         print_cmd_error_details(rtn, arg_list)
-        assert rtn[TestUtil.stdout] == ''
+        assert rtn[TestUtil.stdout] == f'Fast forward set: {TestUtil.pgvctrl_test_repo}\n'
         assert rtn[TestUtil.return_code] == 0
 
     def test_apply_fast_forward(self):

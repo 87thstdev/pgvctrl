@@ -266,6 +266,8 @@ class VersionDbShellUtil:
 
         pg_dump(db_conn, "-s", "-f", ff, retcode=0)
 
+        return True
+
     @staticmethod
     def dump_version_snapshot(db_conn, v_stg):
         pg_dump = _local_pg_dump()

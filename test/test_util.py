@@ -24,6 +24,17 @@ class TestUtil(object):
     env_qa = "qa"
     env_prod = "prod"
 
+    sql_return = 'Running: 100.AddUsersTable\n\n' \
+                 'Running: 105.Notice\n' \
+                 '\t8: NOTICE:  WHO DAT? 87admin\n' \
+                 '\t8: NOTICE:  Just me, 87admin\n' \
+                 '\t8: NOTICE:  Guess we are talking to ourselves!  87admin\n\n' \
+                 'Running: 110.Error\n\n' \
+                 'Running: 200.AddEmailTable\n\n' \
+                 'Running: 300.UserStateTable\n\n' \
+                 'Running: 400.ErrorSet\n\n' \
+                 f'Applied: {pgvctrl_test_repo} v 2.0\n'
+
     @staticmethod
     def local_pgvctrl():
         return local["pgvctrl"]
@@ -36,7 +47,6 @@ class TestUtil(object):
     def create_database():
         psql = TestUtil.local_psql()
         rtn = psql.run(["-c", "CREATE DATABASE {0}".format(TestUtil.pgvctrl_test_db)], retcode=0)
-        rtn = psql.run(["-d", TestUtil.pgvctrl_test_db, "-c",  "DROP TABLE IF EXISTS test1;"])
         print(rtn)
 
     @staticmethod

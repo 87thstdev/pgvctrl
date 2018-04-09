@@ -1,5 +1,5 @@
 import argparse
-# TODO: make arguments dependent as needed
+
 from plumbum import ProcessExecutionError
 import pkg_resources
 
