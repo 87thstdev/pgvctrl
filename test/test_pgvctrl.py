@@ -36,26 +36,6 @@ def test_help_help():
     assert rtn[TestUtil.return_code] == 0
 
 
-def test_repo_list():
-    pgv = TestUtil.local_pgvctrl()
-
-    arg_list = ["-repolist"]
-    rtn = pgv.run(arg_list, retcode=0)
-
-    print_cmd_error_details(rtn, arg_list)
-    assert rtn[TestUtil.return_code] == 0
-
-
-def test_repo_list_verbose():
-    pgv = TestUtil.local_pgvctrl()
-
-    arg_list = ["-repolist", "-verbose"]
-    rtn = pgv.run(arg_list, retcode=0)
-
-    print_cmd_error_details(rtn, arg_list)
-    assert rtn[TestUtil.return_code] == 0
-
-
 def test_mkconf_not_exists():
     TestUtil.delete_file(DB_REPO_CONFIG_JSON)
     pgv = TestUtil.local_pgvctrl()
@@ -82,7 +62,31 @@ def test_mkconf_exists():
     assert rtn[TestUtil.return_code] == 0
 
 
-class TestPgvctrNoFiles:
+class TestPgvctrRepoMakeEnv:
+    def setup_method(self, test_method):
+        TestUtil.get_static_config()
+
+    def teardown_method(self, test_method):
+        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+
+    def test_mkenv(self):
+        pgv = TestUtil.local_pgvctrl()
+
+        arg_list = [
+            "-mkenv", TestUtil.env_qa,
+            "-repo", TestUtil.pgvctrl_test_repo
+        ]
+        rtn = pgv.run(arg_list, retcode=0)
+
+        print_cmd_error_details(rtn, arg_list)
+        assert rtn[TestUtil.stdout] == "Repository environment created: {0} {1}\n".format(
+                TestUtil.pgvctrl_test_repo,
+                TestUtil.env_qa
+        )
+        assert rtn[TestUtil.return_code] == 0
+
+
+class TestPgvctrRepoMakeRemove:
     def setup_method(self, test_method):
         TestUtil.get_static_config()
         TestUtil.mkrepo(TestUtil.pgvctrl_no_files_repo)
@@ -132,24 +136,68 @@ class TestPgvctrNoFiles:
         assert rtn[TestUtil.stdout] == f'Repository does not exist: {TestUtil.pgvctrl_test_temp_repo}\n'
         assert rtn[TestUtil.return_code] == 0
 
-    def test_mkenv(self):
+
+class TestPgvctrRepoList:
+    def setup_method(self, test_method):
+        TestUtil.get_static_config()
+
+    def teardown_method(self, test_method):
+        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+        TestUtil.delete_folder(TestUtil.test_make_version_path)
+        TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
+
+    def test_repo_list(self):
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = [
-            "-mkenv", TestUtil.env_test,
-            "-repo", TestUtil.pgvctrl_no_files_repo
-        ]
+        arg_list = ["-repolist"]
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
-        assert rtn[TestUtil.stdout] == "Repository environment created: {0} {1}\n".format(
-                TestUtil.pgvctrl_no_files_repo,
-                TestUtil.env_test
-        )
         assert rtn[TestUtil.return_code] == 0
+        assert rtn[TestUtil.stdout] == f'{TestUtil.pgvctrl_test_repo}\n' \
+                                       f'\tv 0.0.first test\n' \
+                                       f'\tv 2.0.NewVersion \n'
+
+    def test_repo_list_verbose(self):
+        pgv = TestUtil.local_pgvctrl()
+
+        arg_list = ["-repolist", "-verbose"]
+        rtn = pgv.run(arg_list, retcode=0)
+
+        print_cmd_error_details(rtn, arg_list)
+        assert rtn[TestUtil.return_code] == 0
+        assert rtn[TestUtil.stdout] == f'{TestUtil.pgvctrl_test_repo}\n' \
+                                       f'\tv 0.0.first test\n' \
+                                       f'\tv 2.0.NewVersion \n' \
+                                       f'\t\t100 AddUsersTable\n' \
+                                       f'\t\t105 Notice\n' \
+                                       f'\t\t110 Error\n' \
+                                       f'\t\t200 AddEmailTable\n' \
+                                       f'\t\t300 UserStateTable\n' \
+                                       f'\t\t400 ErrorSet\n' \
 
 
-class TestPgvctrTestDb:
+    def test_repo_list_unregistered(self):
+        pgv = TestUtil.local_pgvctrl()
+
+        arg_list = ["-mkrepo", TestUtil.pgvctrl_test_temp_repo]
+        pgv.run(arg_list, retcode=0)
+
+        arg_list = ["-rmrepo", TestUtil.pgvctrl_test_temp_repo]
+        pgv.run(arg_list, retcode=0)
+
+        arg_list = ["-repolist"]
+        rtn = pgv.run(arg_list, retcode=0)
+
+        print_cmd_error_details(rtn, arg_list)
+        assert rtn[TestUtil.return_code] == 0
+        assert rtn[TestUtil.stdout] == f'{TestUtil.pgvctrl_test_temp_repo} UNREGISTERED\n' \
+                                       f'{TestUtil.pgvctrl_test_repo}\n' \
+                                       f'\tv 0.0.first test\n' \
+                                       f'\tv 2.0.NewVersion \n'
+
+
+class TestPgvctrMakeVersion:
     def setup_method(self, test_method):
         TestUtil.get_static_config()
 

@@ -1,5 +1,5 @@
 {
-    "autoSnapshots": true,
+    "autoSnapshots": false,
     "defaultVersionStorage": {
         "env": "env",
         "isProduction": "is_production",
