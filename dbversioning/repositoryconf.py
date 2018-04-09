@@ -50,7 +50,7 @@ class RepositoryConf(object):
             repo_name_val = ''
 
         return {
-            ENVS: [],
+            ENVS: {},
             NAME: repo_name_val,
             VERSION_STORAGE: RepositoryConf.default_version_storage()
         }
@@ -226,19 +226,48 @@ class RepositoryConf(object):
                     if not rp:
                         raise VersionedDbExceptionRepoDoesNotExits(repo_name)
 
-                    env_list = list()
-
                     if rp[0][ENVS] is None:
-                        rp[0][ENVS] = list()
+                        rp[0][ENVS] = {}
 
-                    for e in rp[0][ENVS]:
-                        if list(e.keys()):
-                            env_list.append(list(e.keys())[0])
-
-                    if env not in env_list:
-                        rp[0][ENVS].append({env: None})
+                    if env not in rp[0][ENVS]:
+                        rp[0][ENVS].update({env: None})
                     else:
                         raise VersionedDbExceptionRepoEnvExits(repo_name, env)
+
+                    out_str = json.dumps(
+                            conf,
+                            indent=4,
+                            sort_keys=True,
+                            separators=(',', ': '),
+                            ensure_ascii=True)
+
+            except JSONDecodeError:
+                raise VersionedDbExceptionBadConfigFile()
+
+            with open(RepositoryConf.config_file_name(), 'w') as outfile:
+                outfile.write(out_str)
+        else:
+            raise VersionedDbExceptionFileMissing(RepositoryConf.config_file_name())
+
+        return True
+
+    @staticmethod
+    def remove_repo_env(repo_name, env):
+        conf = RepositoryConf._get_repo_dict()
+
+        if os.path.isfile(RepositoryConf.config_file_name()):
+            try:
+                with open(RepositoryConf.config_file_name()):
+                    repos = conf[REPOSITORIES]
+                    rp = [r for r in repos if r[NAME] == repo_name]
+
+                    if not rp:
+                        raise VersionedDbExceptionRepoDoesNotExits(repo_name)
+
+                    if rp[0][ENVS] is None:
+                        raise VersionedDbExceptionRepoEnvDoesNotExits(repo_name, env)
+
+                    del rp[0][ENVS][env]
 
                     out_str = json.dumps(
                             conf,
@@ -270,13 +299,8 @@ class RepositoryConf(object):
                     if not rp:
                         raise VersionedDbExceptionRepoDoesNotExits(repo_name)
 
-                    if rp[0][ENVS] is None:
-                        raise VersionedDbExceptionRepoEnvDoesNotExits(repo_name, env)
-
-                    env_f = [e for e in rp[0][ENVS] if e.keys() and list(e.keys())[0] == env]
-
-                    if env_f:
-                        env_f[0][env] = version
+                    if rp[0][ENVS] and env in rp[0][ENVS]:
+                        rp[0][ENVS][env] = version
                     else:
                         raise VersionedDbExceptionRepoEnvDoesNotExits(repo_name, env)
 
@@ -313,10 +337,8 @@ class RepositoryConf(object):
                     if rp[0][ENVS] is None:
                         raise VersionedDbExceptionRepoEnvDoesNotExits(repo_name, env)
 
-                    env_f = [e for e in rp[0][ENVS] if e.keys() and list(e.keys())[0] == env]
-
-                    if env_f:
-                        return env_f[0][env]
+                    if rp[0][ENVS] and env in rp[0][ENVS]:
+                        return rp[0][ENVS][env]
                     else:
                         raise VersionedDbExceptionRepoEnvDoesNotExits(repo_name, env)
 

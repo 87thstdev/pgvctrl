@@ -36,6 +36,7 @@ parser.add_argument('-v', metavar='', help='Version number')
 parser.add_argument('-mkrepo', metavar='', help='Make Repository')
 parser.add_argument('-mkv', metavar='', help='Make version number')
 parser.add_argument('-mkenv', metavar='', help='Make environment type')
+parser.add_argument('-rmenv', metavar='', help='Remove environment type')
 parser.add_argument('-setenv', metavar='', help='Set environment type to a version')
 parser.add_argument('-env', metavar='', help='Repository environment name')
 parser.add_argument('-repo', metavar='', help='Repository name')
@@ -172,6 +173,15 @@ def create_repository_env_type(arg_set):
     )
 
 
+def remove_repository_env_type(arg_set):
+    vdb = VersionedDbHelper()
+
+    vdb.remove_repository_environment(
+            repo_name=arg_set.repo,
+            env=arg_set.rmenv
+    )
+
+
 def set_repository_env_version(arg_set):
     vdb = VersionedDbHelper()
 
@@ -229,6 +239,9 @@ class DbVctrl(object):
             elif arg_set.mkenv:
                 # -mkenv test -repo test_db
                 create_repository_env_type(arg_set)
+            elif arg_set.rmenv:
+                # -rmenv test -repo test_db
+                remove_repository_env_type(arg_set)
             elif arg_set.setenv:
                 # -setenv test -repo test_db -v 1.0
                 set_repository_env_version(arg_set)
