@@ -77,12 +77,11 @@ class VersionedDbHelper:
             for v in v_sorted:
                 env = ''
                 if repo_conf and repo_conf[ENVS]:
-                    for i in repo_conf[ENVS]:
-                        for k, val in i.items():
-                            if val == v.version_number:
-                                env = k
+                    for e in repo_conf[ENVS]:
+                        if repo_conf[ENVS][e] == v.version_number:
+                            env = e
 
-                repo_version_information_message(f"\tv {v.full_name}", f" {env}")
+                repo_version_information_message(f"\tv {v.full_name}", f"{env}")
 
                 if verbose:
                     for s in v.sql_files:
