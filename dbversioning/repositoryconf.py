@@ -214,6 +214,43 @@ class RepositoryConf(object):
         return True
 
     @staticmethod
+    def remove_repo(repo_name):
+        conf = RepositoryConf._get_repo_dict()
+
+        if os.path.isfile(RepositoryConf.config_file_name()):
+            try:
+                with open(RepositoryConf.config_file_name()):
+                    if conf[REPOSITORIES] is None:
+                        conf[REPOSITORIES] = list()
+                    repos = conf[REPOSITORIES]
+
+                    rp = [r for r in repos if r[NAME] == repo_name]
+
+                    if not rp:
+                        raise VersionedDbExceptionRepoDoesNotExits(repo_name)
+
+                    conf[REPOSITORIES].remove(rp[0])
+
+                    out_str = json.dumps(
+                            conf,
+                            indent=4,
+                            sort_keys=True,
+                            separators=(',', ': '),
+                            ensure_ascii=True)
+
+            except JSONDecodeError:
+                raise VersionedDbExceptionBadConfigFile()
+
+            with open(RepositoryConf.config_file_name(), 'w') as outfile:
+                outfile.write(out_str)
+
+            ensure_dir_exists(os.path.join(RepositoryConf.root(), repo_name))
+        else:
+            raise VersionedDbExceptionFileMissing(RepositoryConf.config_file_name())
+
+        return True
+
+    @staticmethod
     def create_repo_env(repo_name, env):
         conf = RepositoryConf._get_repo_dict()
 

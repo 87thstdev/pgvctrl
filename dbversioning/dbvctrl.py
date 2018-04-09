@@ -34,6 +34,7 @@ parser.add_argument('-t', metavar='', help='Pull table for data', action='append
 
 parser.add_argument('-v', metavar='', help='Version number')
 parser.add_argument('-mkrepo', metavar='', help='Make Repository')
+parser.add_argument('-rmrepo', metavar='', help='Remove Repository')
 parser.add_argument('-mkv', metavar='', help='Make version number')
 parser.add_argument('-mkenv', metavar='', help='Make environment type')
 parser.add_argument('-rmenv', metavar='', help='Remove environment type')
@@ -155,6 +156,12 @@ def create_repository(repo_name):
     vdb.create_repository(repo_name=repo_name)
 
 
+def remove_repository(repo_name):
+    vdb = VersionedDbHelper()
+
+    vdb.remove_repository(repo_name=repo_name)
+
+
 def create_repository_version_folder(arg_set):
     vdb = VersionedDbHelper()
 
@@ -233,6 +240,9 @@ class DbVctrl(object):
             elif arg_set.mkrepo:
                 # -mkrepo test_db
                 create_repository(arg_set.mkrepo)
+            elif arg_set.rmrepo:
+                # -rmrepo test_db
+                remove_repository(arg_set.rmrepo)
             elif arg_set.mkv:
                 # -mkv 2.0.new_version -repo test_db
                 create_repository_version_folder(arg_set)

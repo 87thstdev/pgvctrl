@@ -308,6 +308,15 @@ class VersionedDbHelper:
             information_message(f"Repository created: {repo_name}")
 
     @staticmethod
+    def remove_repository(repo_name):
+        repo_found = VersionedDbHelper.valid_repository(repo_name)
+        if not repo_found:
+            raise VersionedDbExceptionRepoDoesNotExits(repo_name)
+
+        if RepositoryConf.remove_repo(repo_name=repo_name):
+            information_message(f"Repository removed: {repo_name}")
+
+    @staticmethod
     def create_repository_environment(repo_name, env):
         repo_found = VersionedDbHelper.valid_repository(repo_name)
         if not repo_found:
