@@ -355,7 +355,7 @@ class VersionedDbHelper:
             raise VersionedDbExceptionRepoVersionDoesNotExits(repo_name, version)
 
         if RepositoryConf.set_repo_env(repo_name=repo_name, env=env, version=version):
-            information_message(f"Repository environment set to: {repo_name} {env} {version}")
+            information_message(f"Repository environment set: {repo_name} {env} {version}")
 
     @staticmethod
     def create_config():

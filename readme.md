@@ -9,6 +9,10 @@ Database **dbvctrl** is a tool designed to help deploy changes to postgres datab
 
 ## Getting started:
 
+## pip install
+<pre>pip install pgvctrl</pre>
+
+## github
 Download or clone the repository
 
 ## Install
@@ -24,8 +28,7 @@ In the test directory:
 
 ## Getting Started
 
-1. If you don't already have a database, create one on your postges server.
-    1. psql may create a table `test1`, not sure why, but it may.
+1. If you don't already have a database, create one on your postgres server.
 1. Create pgvctrl dbRepoConfig:
     1. Make a directory where you want you database repositories to live.
     <pre>pgvctrl -mkconf</pre>
@@ -40,7 +43,7 @@ In the test directory:
 
     __What just happened?__<br />
     * There will be a folder structure: [my dir]/databases/[repository name]/ created.
-    
+    * The dbRepoConfig.json file will be updated  to reflect the new repository. 
     
 1. Initialize database repository:
     1. In the same directory as the dbRepoConfig.json file, run:
@@ -62,11 +65,16 @@ In the test directory:
 
     __What just happened?__<br />
     After initialization is complete:
-    * There will be a folder structure: [my dir]/databases/[repository name]/0.0/ created.
-    This will be the location where you should but your sql update files.
     * There will be a new table in your database named repository_version.
-      This is where pbvctrl stores your repository name and version number with a
-       version hash for each sql update file.
+      This is where pbvctrl stores your repository name, version number with a
+       version hash for each sql update file, environment name and production flag.
+       
+1. Make repository version for repository: -mkv: Make version number:
+    <pre>pgvctrl -mkv [x.x.version_name] -repo [repository name]</pre>
+    e.g.:
+    <pre>pgvctrl -mkv 1.0.my_new_version -repo mydb</pre>
+    Output:
+    <pre>Version mydb/1.0.my_new_version created.</pre>
 
 1. Create sql change files in the versioned directory!  These files will be used to update your database and should
   have the naming convention of:<br />
@@ -76,13 +84,14 @@ In the test directory:
 1. List repositories and changes:
     <pre>pgvctrl -repolist</pre>
     Output:
-    <pre>mydb</pre>
+    <pre>mydb
+        v 1.0.my_new_version</pre>
 
     Verbose:
     <pre>pgvctrl -repolist -verbose</pre>
     Output:
     <pre>mydb
-        v 0.0
+        v 0.0.my_new_version
             100 AddUsersTable</pre>
 
 1. When you are ready to apply your changes to your database:
@@ -102,13 +111,6 @@ In the test directory:
 
 
 ## What else can pgvctrl do?
-#### -mkv: Make version number:
-<pre>pgvctrl -mkv [x.x.version_name] -repo [repository name]</pre>
-e.g.:
-<pre>pgvctrl -mkv 1.0.my_new_version -repo mydb</pre>
-Output:
-<pre>Version mydb/1.0.my_new_version created.</pre>
-
 #### -chkver: Check the version and repo on a database:
 <pre>pgvctrl -chkver -repo [repository name] [db connection information]</pre>
 e.g:
@@ -123,9 +125,33 @@ e.g.:
 Output:
 <pre>Repository environment created: mydb test</pre>
 
+#### -setenv: Set environment type to a version:
+<pre>pgvctrl -setenv [env_name] -v [x.x] -repo [repository name]</pre>
+e.g.:
+<pre>pgvctrl -setenv test -v 1.0 -repo mydb</pre>
+Output:
+<pre>Repository environment set: mydb test 1.0</pre>
+
+#### -rmenv: Remove environment type:
+<pre>pgvctrl -rmenv [env_name] -repo [repository name]</pre>
+e.g.:
+<pre>pgvctrl -rmenv test -repo mydb</pre>
+Output:
+<pre>Repository environment removed: mydb test</pre>
+
+#### -rmrepo: Remove Repository
+<pre>pgvctrl -rmrepo [repository name]</pre>
+e.g.:
+<pre>pgvctrl -rmrepo test</pre>
+Output:
+<pre>Repository removed: test</pre>
+__*Notes:*__<br />
+* If this command does not remove the folder from database, you must remove it and its contents yourself.  This is a safety measure.
+* Any repository folders left behind will be displayed as UNREGISTERED when the -repolist option is used.
+
 ### Fast Forward (-setff, -applyff)
 __What are Fast Forwards?__<br />
-Fast forwards are snapshots of the database based on the repository and version it has.
+Fast forwards are snapshots of the database structure at the time the snapshot was taken.
 
 __*Notes:*__
 1. There can be only one per repository version!
@@ -189,6 +215,8 @@ tells pgvctrl where to look for the repositories.
 {
     "autoSnapshots": true,
     "defaultVersionStorage": {
+        "env": "env",
+        "isProduction": "is_production",
         "repository": "repository_name",
         "table": "repository_version",
         "version": "version",
@@ -196,12 +224,19 @@ tells pgvctrl where to look for the repositories.
     },
     "repositories": [
         {
-            "name": "",
+            "envs": { 
+                "your_test": "1.0",
+                "your_qa": "1.0",
+                "your_prod": "0.9"
+             },
+            "name": "YouRepoName",
             "versionStorage": {
-                "repository": "",
-                "table": "",
-                "version": "",
-                "versionHash": ""
+                "env": "env",
+                "isProduction": "is_production",
+                "repository": "repository_name",
+                "table": "repository_version",
+                "version": "version",
+                "versionHash": "version_hash"
             }
         }
     ],
