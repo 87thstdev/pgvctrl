@@ -1,6 +1,7 @@
 {
     "autoSnapshots": true,
     "defaultVersionStorage": {
+        "isProduction": "is_production",
         "repository": "repository_name",
         "table": "repository_version",
         "version": "version",
@@ -10,6 +11,7 @@
         {
             "name": "",
             "versionStorage": {
+                "isProduction": "",
                 "repository": "",
                 "table": "",
                 "version": "",

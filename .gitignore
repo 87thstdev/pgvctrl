@@ -1,8 +1,15 @@
+.cache/
 .DS_Store
+.vscode/
 build/
 dist/
 pgvctrl.egg-info/
 dbversioning/databases/
 dbversioning/dbRepoConfig.json
 *.pyc
+*.bak
 __pycache__
+htmlcov
+.coverage
+/test/databases/_fastForward/
+/test/databases/_snapshots/

@@ -10,6 +10,44 @@ class VersionedDbExceptionFileExits(VersionedDbException):
         pass
 
 
+class VersionedDbExceptionRepoVersionExits(VersionedDbException):
+    def __init__(self, repo_name, version):
+        self.message = "Repository version already exists: {0} {1}.{2}".format(
+            repo_name, version.major, version.minor
+        )
+        pass
+
+
+class VersionedDbExceptionRepoVersionDoesNotExits(VersionedDbException):
+    def __init__(self, repo_name, version_name):
+        self.message = "Repository version does not exist: {0} {1}".format(
+            repo_name, version_name
+        )
+        pass
+
+
+class VersionedDbExceptionProductionChangeNoProductionFlag(VersionedDbException):
+    def __init__(self, action_name=None):
+        self.message = "Production changes need the -production flag: {0}".format(
+            action_name
+        )
+        pass
+
+
+class VersionedDbExceptionProductionChangeNotAllowed(VersionedDbException):
+    def __init__(self, action_name=None):
+        self.message = "Production changes not allowed for: {0}".format(
+            action_name
+        )
+        pass
+
+
+class VersionedDbExceptionFastForwardNotAllowed(VersionedDbException):
+    def __init__(self):
+        self.message = "Fast forwards only allowed on empty databases."
+        pass
+
+
 class VersionedDbExceptionMissingArgs(VersionedDbException):
     def __init__(self):
         self.message = "Missing connection args"
@@ -40,6 +78,18 @@ class VersionedDbExceptionMissingDataTable(VersionedDbException):
         pass
 
 
+class VersionedDbExceptionBadDateSource(VersionedDbException):
+    def __init__(self, dbconn):
+        self.message = "Invalid Data Connection: {0}".format(dbconn)
+        pass
+
+
+class VersionedDbExceptionInvalidRepo(VersionedDbException):
+    def __init__(self):
+        self.message = "Invalid Repo!"
+        pass
+
+
 class VersionedDbExceptionDatabaseAlreadyInit(VersionedDbException):
     def __init__(self):
         self.message = "Database already initialized!"
@@ -50,6 +100,7 @@ class VersionedDbExceptionSqlExecutionError(VersionedDbException):
     def __init__(self, stderr):
         self.message = "Sql Error: {0}".format(stderr)
         pass
+
 
 class VersionedDbExceptionBadConfigVersionFound(VersionedDbException):
     def __init__(self):

@@ -4,14 +4,17 @@ from simplejson import JSONDecodeError
 
 from collections import namedtuple
 
-from errorUtil import VersionedDbExceptionBadConfigFile, VersionedDbExceptionFileMissing
+from .errorUtil import VersionedDbExceptionBadConfigFile, \
+    VersionedDbExceptionFileMissing, \
+    VersionedDbExceptionInvalidRepo
 
-Version_Table = namedtuple("version_table", ["tbl", "v", "hash", "repo"])
+Version_Table = namedtuple("version_table", ["tbl", "v", "hash", "repo", "is_prod"])
 
 ROOT = 'root'
 HIDDEN = '.'
 AUTO_SNAPSHOTS = 'autoSnapshots'
 FAST_FORWARD = '_fastForward'
+ROLLBACK_FILE_ENDING = '_rollback.sql'
 SNAPSHOTS = '_snapshots'
 DATA_DUMP = 'data'
 DEFAULT_VERSION_STORAGE = 'defaultVersionStorage'
@@ -21,6 +24,7 @@ REPOSITORY = 'repository'
 REPOSITORIES = 'repositories'
 VERSION_STORAGE = 'versionStorage'
 VERSION_HASH = "versionHash"
+IS_PRODUCTION = "isProduction"
 NAME = "name"
 
 
@@ -32,7 +36,8 @@ class RepositoryConf(object):
             TABLE: 'repository_version',
             VERSION: 'version',
             REPOSITORY: 'repository_name',
-            VERSION_HASH: 'version_hash'
+            VERSION_HASH: 'version_hash',
+            IS_PRODUCTION: 'is_production'
         }, REPOSITORIES: [
             {
                 NAME: '',
@@ -40,9 +45,10 @@ class RepositoryConf(object):
                     TABLE: '',
                     VERSION: '',
                     REPOSITORY: '',
-                    VERSION_HASH: ''
+                    VERSION_HASH: '',
+                    IS_PRODUCTION: ''
                 }
-             }
+            }
         ]
     }
 
@@ -91,10 +97,16 @@ class RepositoryConf(object):
 
     @staticmethod
     def get_data_dump_dir(repo_name):
+        if not repo_name:
+            raise VersionedDbExceptionInvalidRepo()
+
         return os.path.join(RepositoryConf.root(), repo_name, DATA_DUMP)
 
     @staticmethod
     def get_data_dump_sql_dir(repo_name, sql_file):
+        if not repo_name:
+            raise VersionedDbExceptionInvalidRepo()
+
         return os.path.join(RepositoryConf.root(), repo_name, DATA_DUMP, sql_file)
 
     @staticmethod
@@ -109,7 +121,8 @@ class RepositoryConf(object):
             tbl=d[TABLE],
             v=d[VERSION],
             hash=d[VERSION_HASH],
-            repo=d[REPOSITORY]
+            repo=d[REPOSITORY],
+            is_prod=d[IS_PRODUCTION]
         )
 
     @staticmethod
@@ -124,7 +137,8 @@ class RepositoryConf(object):
                 tbl=vs[TABLE],
                 v=vs[VERSION],
                 hash=vs[VERSION_HASH],
-                repo=vs[REPOSITORY]
+                repo=vs[REPOSITORY],
+                is_prod=vs[IS_PRODUCTION]
             )
             cust_repos.append({
                 NAME: repo[NAME],
@@ -135,6 +149,9 @@ class RepositoryConf(object):
 
     @staticmethod
     def get_custom_repo(repo_name):
+        if not repo_name:
+            raise VersionedDbExceptionInvalidRepo()
+
         repo_list = RepositoryConf.custom_repo_list()
 
         rp = [r for r in repo_list if r[NAME] == repo_name]
