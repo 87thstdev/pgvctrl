@@ -1,16 +1,17 @@
 import argparse
-# TODO: make arguments dependent as needed
+
 from plumbum import ProcessExecutionError
 import pkg_resources
 
-from .errorUtil import VersionedDbException, VersionedDbExceptionProductionChangeNoProductionFlag
-from .versionedDbConnection import connection_list
-from .versionedDbShellUtil import information_message, error_message
-from .versionedDbUtil import VersionedDbHelper
+from dbversioning.errorUtil import (
+    VersionedDbException,
+    VersionedDbExceptionProductionChangeNoProductionFlag)
+from dbversioning.versionedDbConnection import connection_list
+from dbversioning.versionedDbShellUtil import (
+    information_message,
+    error_message)
+from dbversioning.versionedDbUtil import VersionedDbHelper
 
-
-parent2 = argparse.ArgumentParser(add_help=False)
-parent2.add_argument('-set2', action="store_true")
 
 parser = argparse.ArgumentParser(description='Postgres db version control.')
 group = parser.add_mutually_exclusive_group()
@@ -31,10 +32,15 @@ parser.add_argument('-force', help='Force push data from repository to database'
 parser.add_argument('-verbose', help='Verbose output', action='store_true')
 parser.add_argument('-t', metavar='', help='Pull table for data', action='append')
 
-
 parser.add_argument('-v', metavar='', help='Version number')
+parser.add_argument('-mkrepo', metavar='', help='Make Repository')
+parser.add_argument('-rmrepo', metavar='', help='Remove Repository')
 parser.add_argument('-mkv', metavar='', help='Make version number')
-parser.add_argument('-repo', metavar='', help='Repository Database Name')
+parser.add_argument('-mkenv', metavar='', help='Make environment type')
+parser.add_argument('-rmenv', metavar='', help='Remove environment type')
+parser.add_argument('-setenv', metavar='', help='Set environment type to a version')
+parser.add_argument('-env', metavar='', help='Repository environment name')
+parser.add_argument('-repo', metavar='', help='Repository name')
 parser.add_argument('-production', help='Database production flag', action='store_true')
 
 parser.add_argument('-svc', metavar='', help='pg service')
@@ -63,19 +69,40 @@ def check_db_version_on_server(arg_set):
 def initialize_versioned_db(arg_set):
     init = VersionedDbHelper()
     db_conn = connection_list(arg_set)
-    
-    init.initialize_db_version_on_server(db_conn=db_conn, repo_name=arg_set.repo, is_production=arg_set.production)
+
+    init.initialize_db_version_on_server(
+            db_conn=db_conn,
+            repo_name=arg_set.repo,
+            is_production=arg_set.production,
+            env=arg_set.setenv
+    )
 
 
 def apply_repository_to_db(arg_set):
     vdb = VersionedDbHelper()
     db_conn = connection_list(arg_set)
+    version = _get_repo_version(arg_set)
 
     vdb.apply_repository_to_database(
         db_conn=db_conn,
         repo_name=arg_set.repo,
-        version=arg_set.v,
-        is_production=arg_set.production
+        version=version,
+        is_production=arg_set.production,
+        env=arg_set.env
+    )
+
+
+def _get_repo_version(arg_set):
+    if arg_set.v and arg_set.env:
+        raise VersionedDbException("Version and environment args are mutually exclusive.")
+
+    if arg_set.v:
+        return arg_set.v
+
+    vdb = VersionedDbHelper()
+    return vdb.get_repository_environment(
+            repo_name=arg_set.repo,
+            env=arg_set.env
     )
 
 
@@ -123,6 +150,18 @@ def set_fast_forward_pull_from_db(arg_set):
     )
 
 
+def create_repository(repo_name):
+    vdb = VersionedDbHelper()
+
+    vdb.create_repository(repo_name=repo_name)
+
+
+def remove_repository(repo_name):
+    vdb = VersionedDbHelper()
+
+    vdb.remove_repository(repo_name=repo_name)
+
+
 def create_repository_version_folder(arg_set):
     vdb = VersionedDbHelper()
 
@@ -130,6 +169,40 @@ def create_repository_version_folder(arg_set):
         repo_name=arg_set.repo,
         version=arg_set.mkv
     )
+
+
+def create_repository_env_type(arg_set):
+    vdb = VersionedDbHelper()
+
+    vdb.create_repository_environment(
+        repo_name=arg_set.repo,
+        env=arg_set.mkenv
+    )
+
+
+def remove_repository_env_type(arg_set):
+    vdb = VersionedDbHelper()
+
+    vdb.remove_repository_environment(
+            repo_name=arg_set.repo,
+            env=arg_set.rmenv
+    )
+
+
+def set_repository_env_version(arg_set):
+    vdb = VersionedDbHelper()
+
+    if arg_set.setenv and arg_set.v:
+        vdb.set_repository_environment_version(
+                repo_name=arg_set.repo,
+                env=arg_set.setenv,
+                version=arg_set.v,
+        )
+    else:
+        if arg_set.setenv is None:
+            error_message(f"Missing -setenv")
+        if arg_set.v is None:
+            error_message(f"Missing -v")
 
 
 def show_version():
@@ -159,16 +232,31 @@ class DbVctrl(object):
                 # -chkver -repo test_db -d postgresPlay
                 check_db_version_on_server(arg_set)
             elif arg_set.init:
-                # -init -repo test_db -d postgresPlay
+                # -init -repo test_db -d postgresPlay [-setenv test]
                 initialize_versioned_db(arg_set)
             elif arg_set.mkconf:
                 # -mkconf
                 create_config_file()
+            elif arg_set.mkrepo:
+                # -mkrepo test_db
+                create_repository(arg_set.mkrepo)
+            elif arg_set.rmrepo:
+                # -rmrepo test_db
+                remove_repository(arg_set.rmrepo)
             elif arg_set.mkv:
                 # -mkv 2.0.new_version -repo test_db
                 create_repository_version_folder(arg_set)
+            elif arg_set.mkenv:
+                # -mkenv test -repo test_db
+                create_repository_env_type(arg_set)
+            elif arg_set.rmenv:
+                # -rmenv test -repo test_db
+                remove_repository_env_type(arg_set)
+            elif arg_set.setenv:
+                # -setenv test -repo test_db -v 1.0
+                set_repository_env_version(arg_set)
             elif arg_set.apply:
-                # -apply -v 0.1 -repo test_db -d postgresPlay
+                # -apply <-v 0.1 | -env test> -repo test_db -d postgresPlay
                 apply_repository_to_db(arg_set)
             elif arg_set.setff:
                 # -setff -repo test_db -d postgresPlay
@@ -189,18 +277,17 @@ class DbVctrl(object):
                 prj_name = pkg_resources.require("pgvctrl")[0].project_name
                 information_message("{0}: No operation specified\nTry \"{0} --help\" "
                                     "for more information.".format(prj_name))
+        except VersionedDbExceptionProductionChangeNoProductionFlag as e:
+            error_message(e.message)
         except VersionedDbException as e:
             error_message(e.message)
         except KeyError as e:
-            error_message("Invalid key in config, expected {0}".format(e.message))
+            error_message("Invalid key in config, expected {0}".format(e))
         except ProcessExecutionError as e:
             error_message("DB Error {0}".format(e.stderr))
         except OSError as e:
             error_message("OSError: {0} ({1})".format(e.strerror, e.filename))
-        except VersionedDbExceptionProductionChangeNoProductionFlag as e:
-            error_message(e.message)
-        except Exception as e:
-            error_message(e)
+
 
 def main():
     c = DbVctrl()

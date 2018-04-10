@@ -1,6 +1,5 @@
 import os
-import simplejson as json
-from simplejson import JSONDecodeError
+from shutil import copy2
 
 from plumbum import local
 
@@ -11,9 +10,30 @@ class TestUtil(object):
     stderr = 2
     pgvctrl_test_repo = "pgvctrl_test"
     pgvctrl_test_temp_repo = "pgvctrl_temp_test"
+    pgvctrl_test_temp_repo_path = "databases/pgvctrl_temp_test"
+    pgvctrl_no_files_repo = "pgvctrl_no_files"
+    pgvctrl_no_files_repo_path = "databases/pgvctrl_no_files"
     pgvctrl_test_db = "pgvctrl_test_db"
-    test_version = "2.0.new_version"
+    test_first_version = "0.0.first"
+    test_version = "2.0.NewVersion"
+    test_make_version = "3.0.MakeNewVersion"
+    test_make_version_path = f"databases/{pgvctrl_test_repo}/{test_make_version}"
+    test_bad_version = "999.1.bad_version"
     test_version_path = "databases/pgvctrl_temp_test/{0}".format(test_version)
+    env_test = "test"
+    env_qa = "qa"
+    env_prod = "prod"
+
+    sql_return = 'Running: 100.AddUsersTable\n\n' \
+                 'Running: 105.Notice\n' \
+                 '\t8: NOTICE:  WHO DAT? 87admin\n' \
+                 '\t8: NOTICE:  Just me, 87admin\n' \
+                 '\t8: NOTICE:  Guess we are talking to ourselves!  87admin\n\n' \
+                 'Running: 110.Error\n\n' \
+                 'Running: 200.AddEmailTable\n\n' \
+                 'Running: 300.UserStateTable\n\n' \
+                 'Running: 400.ErrorSet\n\n' \
+                 f'Applied: {pgvctrl_test_repo} v 2.0\n'
 
     @staticmethod
     def local_pgvctrl():
@@ -27,7 +47,6 @@ class TestUtil(object):
     def create_database():
         psql = TestUtil.local_psql()
         rtn = psql.run(["-c", "CREATE DATABASE {0}".format(TestUtil.pgvctrl_test_db)], retcode=0)
-        rtn = psql.run(["-d", TestUtil.pgvctrl_test_db, "-c",  "DROP TABLE IF EXISTS test1;"])
         print(rtn)
 
     @staticmethod
@@ -51,6 +70,24 @@ class TestUtil(object):
         pgv = TestUtil.local_pgvctrl()
         rtn = pgv.run(["-mkconf"], retcode=0)
         print(rtn)
+
+    @staticmethod
+    def mkrepo(repo_name):
+        pgv = TestUtil.local_pgvctrl()
+        rtn = pgv.run(["-mkrepo", repo_name], retcode=0)
+        print(rtn)
+
+
+    @staticmethod
+    def mkrepo_ver(repo_name, ver):
+        pgv = TestUtil.local_pgvctrl()
+        rtn = pgv.run(["-repo", repo_name, '-mkv', ver], retcode=0)
+        print(rtn)
+
+    @staticmethod
+    def get_static_config():
+        copy2('dbRepoConfig.json.default', 'dbRepoConfig.json')
+
 
 def print_cmd_error_details(rtn, arg_list):
     print(":pgvctrl {0}".format(' '.join(arg_list)))

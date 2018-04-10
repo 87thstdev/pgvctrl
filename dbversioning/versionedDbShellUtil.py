@@ -4,21 +4,30 @@ import datetime
 import simplejson as json
 
 import copy
-from plumbum import colors, local, ProcessExecutionError
+from plumbum import (
+    colors,
+    local,
+    ProcessExecutionError)
 from simplejson import JSONDecodeError
 
-from .versionedDb import SqlPatch
-from .errorUtil import VersionedDbExceptionMissingVersionTable, \
-    VersionedDbExceptionBadDateSource, \
-    VersionedDbExceptionNoVersionFound, \
-    VersionedDbException, \
-    VersionedDbExceptionTooManyVersionRecordsFound, \
-    VersionedDbExceptionDatabaseAlreadyInit, \
-    VersionedDbExceptionSqlExecutionError, \
-    VersionedDbExceptionBadDataConfigFile, \
-    VersionedDbExceptionMissingDataTable, \
-    VersionedDbExceptionRepoVersionExits
-from .repositoryconf import RepositoryConf, ROLLBACK_FILE_ENDING
+from dbversioning.osUtil import (
+    ensure_dir_exists,
+    make_data_file)
+from dbversioning.versionedDb import SqlPatch
+from dbversioning.errorUtil import (
+    VersionedDbExceptionMissingVersionTable,
+    VersionedDbExceptionBadDateSource,
+    VersionedDbExceptionNoVersionFound,
+    VersionedDbException,
+    VersionedDbExceptionTooManyVersionRecordsFound,
+    VersionedDbExceptionDatabaseAlreadyInit,
+    VersionedDbExceptionSqlExecutionError,
+    VersionedDbExceptionBadDataConfigFile,
+    VersionedDbExceptionMissingDataTable,
+)
+from dbversioning.repositoryconf import (
+    RepositoryConf,
+    ROLLBACK_FILE_ENDING)
 
 DATA_DUMP_CONFIG_NAME = 'data.json'
 RETCODE = 0
@@ -29,12 +38,14 @@ SNAPSHOT_DATE_FORMAT = '%Y%m%d%H%M%S'
 
 to_unicode = str
 
+
 class DatabaseRepositoryVersion(object):
-    def __init__(self, version=None, repo_name=None, is_production=None, version_hash=None):
+    def __init__(self, version=None, repo_name=None, is_production=None, version_hash=None, env=None):
         self.version = version
         self.repo_name = repo_name
         self.is_production = is_production
         self.version_hash = version_hash
+        self.env = env
 
 
 class VersionDbShellUtil:
@@ -43,64 +54,46 @@ class VersionDbShellUtil:
         pass
 
     @staticmethod
-    def init_db(repo_name, v_stg=None, db_conn=None, is_production=False):
+    def init_db(repo_name, v_stg=None, db_conn=None, is_production=False, env=None):
         psql = _local_psql()
         conf = RepositoryConf()
         missing_tbl = False
-        need_version = False
-        already_init = False
-        default_version = "0.0.gettingStarted"
 
         try:
             dbv = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
             if dbv:
-                already_init = True
                 warning_message("Already initialized")
                 return False
 
         except VersionedDbExceptionMissingVersionTable:
             missing_tbl = True
-        except VersionedDbExceptionNoVersionFound:
-            need_version = True
         except VersionedDbExceptionDatabaseAlreadyInit as e:
             error_message(e.message)
             return False
 
-        create_v_tbl = "CREATE TABLE IF NOT EXISTS {tbl} (" \
-                       "{v} VARCHAR NOT NULL," \
-                       "{repo} VARCHAR NOT NULL," \
-                       "{is_prod} BOOLEAN NOT NULL," \
-                       "{hash} JSONB);" \
-            .format(tbl=v_stg.tbl, v=v_stg.v, is_prod=v_stg.is_prod ,hash=v_stg.hash, repo=v_stg.repo)
+        create_v_tbl = f"CREATE TABLE IF NOT EXISTS {v_stg.tbl} (" \
+                       f"{v_stg.v} VARCHAR," \
+                       f"{v_stg.repo} VARCHAR NOT NULL," \
+                       f"{v_stg.is_prod} BOOLEAN NOT NULL," \
+                       f"{v_stg.env} VARCHAR," \
+                       f"{v_stg.hash} JSONB);"
 
-        insert_v_sql = "INSERT INTO {tbl} ({repo}, {v}, {is_prod}, {hash}) " \
-                       "VALUES ('{repo_name}', '{ver_num}', '{ver_is_prod}', '{ver_hash}');" \
-            .format(
-                tbl=v_stg.tbl,
-                repo=v_stg.repo,
-                v=v_stg.v,
-                is_prod=v_stg.is_prod,
-                hash=v_stg.hash,
-                ver_hash='null',
-                ver_is_prod=is_production,
-                repo_name=repo_name,
-                ver_num=default_version
-            )
+        if env:
+            env_var = f"'{env}'"
+        else:
+            env_var = "NULL"
+
+        insert_v_sql = f"INSERT INTO {v_stg.tbl} ({v_stg.repo}, {v_stg.v}, {v_stg.is_prod}, {v_stg.env}, {v_stg.hash}) "
+        insert_v_sql += f"VALUES ('{repo_name}', NULL, '{is_production}', {env_var}, NULL);"
+
         if missing_tbl:
             psql(db_conn, "-c", create_v_tbl, retcode=0)
 
-        if already_init:
-            VersionDbShellUtil.set_db_instance_version(db_conn, v_stg, default_version)
-        else:
-            psql(db_conn, "-c", insert_v_sql, retcode=0)
+        psql(db_conn, "-c", insert_v_sql, retcode=0)
 
         ensure_dir_exists(os.path.join(conf.root(), repo_name))
-        ensure_dir_exists(os.path.join(conf.root(), repo_name, default_version))
 
         return True
-
-        # TODO: Decided if I want to create a ff point on init.
-        # DbVersionShellHelper.dump_version_fast_forward(db_conn, v_stg)
 
     @staticmethod
     def apply_fast_forward_sql(db_conn, sql_file, repo_name):
@@ -273,6 +266,8 @@ class VersionDbShellUtil:
 
         pg_dump(db_conn, "-s", "-f", ff, retcode=0)
 
+        return True
+
     @staticmethod
     def dump_version_snapshot(db_conn, v_stg):
         pg_dump = _local_pg_dump()
@@ -300,10 +295,11 @@ class VersionDbShellUtil:
         if dbv and dbv.version is None:
             warning_message("No version found!")
         else:
-            if dbv.is_production:
-                information_message("{0}: {1} PRODUCTION".format(dbv.version, dbv.repo_name))
-            else:
-                information_message("{0}: {1}".format(dbv.version, dbv.repo_name))
+            prod_display = " PRODUCTION" if dbv.is_production else ""
+            env_display = f" environment ({dbv.env})" if dbv.env else " environment (None)"
+
+            information_message(f"{dbv.version}: {dbv.repo_name}{prod_display}{env_display}")
+
 
     @staticmethod
     def get_db_instance_version(v_tbl, db_conn):
@@ -311,18 +307,19 @@ class VersionDbShellUtil:
 
         _good_version_table(v_tbl, db_conn)
 
-        version_sql = "SELECT {v}, {repo}, {is_prod}, {hash}, 'notused' throwaway FROM {tbl};"\
-            .format(repo=v_tbl.repo, v=v_tbl.v, is_prod=v_tbl.is_prod, hash=v_tbl.hash, tbl=v_tbl.tbl)
+        version_sql = f"SELECT {v_tbl.v}, {v_tbl.repo}, {v_tbl.is_prod}, {v_tbl.env}, {v_tbl.hash}, 'notused' " \
+                      f"throwaway FROM {v_tbl.tbl};"
 
         rtn = psql(db_conn, "-t", "-A", "-c", version_sql, retcode=0)
         rtn_array = rtn.split("|")
 
         if len(rtn_array) > 1:
             return DatabaseRepositoryVersion(
-                version=rtn_array[0],
+                version=convert_str_none_if_empty(rtn_array[0]),
                 repo_name=rtn_array[1],
                 is_production=convert_str_to_bool(rtn_array[2]),
-                version_hash=rtn_array[3]
+                env=convert_str_none_if_empty(rtn_array[3]),
+                version_hash=rtn_array[4]
             )
         else:
             return None
@@ -435,23 +432,6 @@ def get_table_size(tbl, db_conn):
     return size_num, size_txt
 
 
-def ensure_dir_exists(dir_name):
-    if not os.path.isdir(dir_name):
-        os.makedirs(dir_name)
-
-
-def dir_exists(dir_name):
-    return os.path.isdir(dir_name)
-
-
-def make_data_file(file_name):
-    if not os.path.isfile(file_name):
-        with open(file_name, 'w') as outfile:
-            str_ = json.dumps([],
-                              indent=4, sort_keys=True,
-                              separators=(',', ': '), ensure_ascii=True)
-            outfile.write(to_unicode(str_))
-
 def convert_str_to_bool(value):
     if value is None:
         return None
@@ -464,6 +444,11 @@ def convert_str_to_bool(value):
     else:
         raise ValueError("convert_str_to_bool: invalid valuse {0}".format(value))
 
+
+def convert_str_none_if_empty(value):
+    return value if value else None
+
+
 def warning_message(message):
     print(colors.yellow & colors.bold | message)
 
@@ -474,6 +459,14 @@ def error_message(message):
 
 def information_message(message):
     print(colors.blue & colors.bold | message)
+
+
+def repo_version_information_message(version, env):
+    print(colors.blue & colors.bold | version, colors.green & colors.bold | env)
+
+
+def repo_unregistered_message(repo_name):
+    print(colors.blue & colors.bold | repo_name, colors.red & colors.bold | "UNREGISTERED")
 
 
 def _local_psql():

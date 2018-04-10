@@ -1,6 +1,7 @@
 .cache/
 .DS_Store
 .vscode/
+.idea/
 build/
 dist/
 pgvctrl.egg-info/
@@ -11,5 +12,6 @@ dbversioning/dbRepoConfig.json
 __pycache__
 htmlcov
 .coverage
+/test/dbRepoConfig.json
 /test/databases/_fastForward/
 /test/databases/_snapshots/
