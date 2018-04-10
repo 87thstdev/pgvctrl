@@ -13,7 +13,6 @@ NO_PROD_USE = "Production changes not allowed for: {0}\n"
 NO_USE_APPLYFF = "Fast forwards only allowed on empty databases.\n"
 
 
-# TODO: Make this happen
 class TestPgvctrlProdDb:
     def setup_method(self, test_method):
         pgv = TestUtil.local_pgvctrl()

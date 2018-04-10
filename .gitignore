@@ -11,3 +11,5 @@ dbversioning/dbRepoConfig.json
 __pycache__
 htmlcov
 .coverage
+/test/databases/_fastForward/
+/test/databases/_snapshots/
