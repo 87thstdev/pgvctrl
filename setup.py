@@ -1,12 +1,14 @@
 from setuptools import find_packages, setup
 
+
 def readme():
     with open('readme.md') as f:
         return f.read()
 
+
 setup(
     name='pgvctrl',
-    version='0.3.0',
+    version='0.5.0',
     description='postgreSQL database version control tool',
     long_description=readme(),
     keywords='postgres version control sql migrate migration patch patches',
