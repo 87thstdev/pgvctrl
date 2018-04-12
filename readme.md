@@ -82,13 +82,13 @@ In the test directory:
   e.g.: 100.AddedUserTable.sql
 
 1. List repositories and changes:
-    <pre>pgvctrl -repolist</pre>
+    <pre>pgvctrl -rl</pre>
     Output:
     <pre>mydb
         v 1.0.my_new_version</pre>
 
     Verbose:
-    <pre>pgvctrl -repolist -verbose</pre>
+    <pre>pgvctrl -rlv</pre>
     Output:
     <pre>mydb
         v 0.0.my_new_version
@@ -147,7 +147,7 @@ Output:
 <pre>Repository removed: test</pre>
 __*Notes:*__<br />
 * If this command does not remove the folder from database, you must remove it and its contents yourself.  This is a safety measure.
-* Any repository folders left behind will be displayed as UNREGISTERED when the -repolist option is used.
+* Any repository folders left behind will be displayed as UNREGISTERED when the -rl option is used.
 
 ### Fast Forward (-setff, -applyff)
 __What are Fast Forwards?__<br />

@@ -149,7 +149,7 @@ class TestPgvctrRepoList:
     def test_repo_list(self):
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-repolist"]
+        arg_list = ["-rl"]
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
@@ -161,7 +161,7 @@ class TestPgvctrRepoList:
     def test_repo_list_verbose(self):
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-repolist", "-verbose"]
+        arg_list = ["-rlv"]
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
@@ -186,7 +186,7 @@ class TestPgvctrRepoList:
         arg_list = ["-rmrepo", TestUtil.pgvctrl_test_temp_repo]
         pgv.run(arg_list, retcode=0)
 
-        arg_list = ["-repolist"]
+        arg_list = ["-rl"]
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
