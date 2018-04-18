@@ -78,6 +78,12 @@ class VersionedDbExceptionFastForwardNotAllowed(VersionedDbException):
         pass
 
 
+class VersionedDbExceptionFastForwardVersion(VersionedDbException):
+    def __init__(self, file_name=None):
+        self.message = f"Invalid fast forward file name. {file_name}"
+        pass
+
+
 class VersionedDbExceptionMissingArgs(VersionedDbException):
     def __init__(self):
         self.message = "Missing connection args"

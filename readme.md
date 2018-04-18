@@ -116,7 +116,7 @@ In the test directory:
 e.g:
 <pre>pgvctrl -chkver -repo mydb -d mylocaldb</pre>
 Output:
-<pre>mydb: 0.0</pre>
+<pre>mydb: 0.0.first.0</pre>
 
 #### -mkenv: Make environment type:
 <pre>pgvctrl -mkenv [env_name] -repo [repository name]</pre>

@@ -250,11 +250,27 @@ class VersionedDbHelper:
             VersionDbShellUtil.dump_version_snapshot(db_conn, v_stg)
 
         ver_hash = apply_repo.get_version_hash_set()
-        VersionDbShellUtil.set_db_instance_version(
-            db_conn, v_stg, apply_repo.full_name, ver_hash
-        )
 
-        information_message(f"Applied: {repo_name} v {version}")
+        increase_rev = True
+        if dbver.version_hash == json.dumps(ver_hash):
+            increase_rev = False
+
+        reset_rev = False
+        if standing > 0:
+            increase_rev = False
+            reset_rev = True
+
+        VersionDbShellUtil.set_db_instance_version(
+                db_conn=db_conn,
+                v_stg=v_stg,
+                new_version=apply_repo.full_name,
+                new_hash=ver_hash,
+                increase_rev=increase_rev,
+                reset_rev=reset_rev
+        )
+        new_dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
+
+        information_message(f"Applied: {new_dbver.repo_name} v {new_dbver.version}.{new_dbver.revision}")
         return True
 
     @staticmethod

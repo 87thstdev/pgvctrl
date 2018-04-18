@@ -35,7 +35,7 @@ class TestPgvctrlProdDb:
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
-        assert rtn[TestUtil.stdout] == f'{VERSION}: {TestUtil.pgvctrl_test_repo} PRODUCTION environment (None)\n'
+        assert rtn[TestUtil.stdout] == f'{VERSION}.0: {TestUtil.pgvctrl_test_repo} PRODUCTION environment (None)\n'
         assert rtn[TestUtil.return_code] == 0
 
     def test_apply_bad_version_no_prod_flag(self):
@@ -144,7 +144,8 @@ class TestPgvctrlProdDbEnv:
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
-        assert rtn[TestUtil.stdout] == f'{VERSION}: {TestUtil.pgvctrl_test_repo} PRODUCTION environment ({TestUtil.env_test})\n'
+        assert rtn[TestUtil.stdout] == f'{VERSION}.0: {TestUtil.pgvctrl_test_repo} PRODUCTION environment (' \
+                                       f'{TestUtil.env_test})\n'
         assert rtn[TestUtil.return_code] == 0
 
 # TODO: Make tests for

@@ -33,7 +33,7 @@ class TestUtil(object):
                  'Running: 200.AddEmailTable\n\n' \
                  'Running: 300.UserStateTable\n\n' \
                  'Running: 400.ErrorSet\n\n' \
-                 f'Applied: {pgvctrl_test_repo} v 2.0\n'
+                 f'Applied: {pgvctrl_test_repo} v {test_version}.0\n'
 
     @staticmethod
     def local_pgvctrl():

@@ -4,6 +4,7 @@
         "env": "env",
         "isProduction": "is_production",
         "repository": "repository_name",
+        "revision": "revision",
         "table": "repository_version",
         "version": "version",
         "versionHash": "version_hash"
@@ -18,6 +19,7 @@
                 "env": "env",
                 "isProduction": "is_production",
                 "repository": "repository_name",
+                "revision": "revision",
                 "table": "repository_version",
                 "version": "version",
                 "versionHash": "version_hash"

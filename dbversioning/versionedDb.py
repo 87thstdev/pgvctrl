@@ -1,6 +1,7 @@
 import hashlib
 import os
 
+from dbversioning.errorUtil import VersionedDbExceptionFastForwardVersion
 from dbversioning.repositoryconf import DATA_DUMP
 from dbversioning.versionedDbHelper import get_valid_elements
 
@@ -125,6 +126,9 @@ class Version(object):
 
 def _set_version_info(version_dir, ver):
     ver_array = version_dir.split(".")
+
+    if not ver_array:
+        raise VersionedDbExceptionFastForwardVersion(version_dir)
 
     ver.major = int(ver_array[0])
     ver.minor = int(ver_array[1])

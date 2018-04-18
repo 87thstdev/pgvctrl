@@ -24,7 +24,8 @@ class TestPgvctrTestDb:
         rtn = pgv.run(arg_list, retcode=0)
         
         print_cmd_error_details(rtn, arg_list)
-        assert rtn[TestUtil.stdout] == f'{TestUtil.test_first_version}: {TestUtil.pgvctrl_test_repo} environment (None)\n'
+        assert rtn[TestUtil.stdout] == f'{TestUtil.test_first_version}.0: {TestUtil.pgvctrl_test_repo} environment (' \
+                                       f'None)\n'
         assert rtn[TestUtil.return_code] == 0
 
     def test_apply_bad_version(self):
@@ -147,6 +148,6 @@ class TestPgvctrTestDbEnv:
 
         print_cmd_error_details(rtn, arg_list)
         assert rtn[
-                   TestUtil.stdout] == f'{TestUtil.test_first_version}: {TestUtil.pgvctrl_test_repo} environment (' \
+                   TestUtil.stdout] == f'{TestUtil.test_first_version}.0: {TestUtil.pgvctrl_test_repo} environment (' \
                                        f'{TestUtil.env_test})\n'
         assert rtn[TestUtil.return_code] == 0
