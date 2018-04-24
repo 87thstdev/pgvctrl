@@ -36,30 +36,36 @@ def test_help_help():
     assert rtn[TestUtil.return_code] == 0
 
 
-def test_mkconf_not_exists():
-    TestUtil.delete_file(DB_REPO_CONFIG_JSON)
-    pgv = TestUtil.local_pgvctrl()
+class TestPgvctrRepoMakeConf:
+    def setup_method(self, test_method):
+        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
 
-    arg_list = ["-mkconf"]
-    rtn = pgv.run(arg_list, retcode=0)
+    def teardown_method(self, test_method):
+        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
 
-    print_cmd_error_details(rtn, arg_list)
-    assert rtn[TestUtil.stdout] == 'Config file created: {0}\n'.format(DB_REPO_CONFIG_JSON)
-    assert rtn[TestUtil.return_code] == 0
+    def test_mkconf_not_exists(self):
+        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+        pgv = TestUtil.local_pgvctrl()
 
+        arg_list = ["-mkconf"]
+        rtn = pgv.run(arg_list, retcode=0)
 
-def test_mkconf_exists():
-    pgv = TestUtil.local_pgvctrl()
+        print_cmd_error_details(rtn, arg_list)
+        assert rtn[TestUtil.stdout] == 'Config file created: {0}\n'.format(DB_REPO_CONFIG_JSON)
+        assert rtn[TestUtil.return_code] == 0
 
-    arg_list = ["-mkconf"]
-    pgv.run(arg_list, retcode=0)
+    def test_mkconf_exists(self):
+        pgv = TestUtil.local_pgvctrl()
 
-    arg_list = ["-mkconf"]
-    rtn = pgv.run(arg_list, retcode=0)
+        arg_list = ["-mkconf"]
+        pgv.run(arg_list, retcode=0)
 
-    print_cmd_error_details(rtn, arg_list)
-    assert rtn[TestUtil.stdout] == 'File already exists: {0}\n'.format(DB_REPO_CONFIG_JSON)
-    assert rtn[TestUtil.return_code] == 0
+        arg_list = ["-mkconf"]
+        rtn = pgv.run(arg_list, retcode=1)
+
+        print_cmd_error_details(rtn, arg_list)
+        assert rtn[TestUtil.stdout] == 'File already exists: {0}\n'.format(DB_REPO_CONFIG_JSON)
+        assert rtn[TestUtil.return_code] == 1
 
 
 class TestPgvctrRepoMakeEnv:
@@ -110,11 +116,11 @@ class TestPgvctrRepoMakeRemove:
         pgv = TestUtil.local_pgvctrl()
 
         arg_list = ["-mkrepo", TestUtil.pgvctrl_no_files_repo]
-        rtn = pgv.run(arg_list, retcode=0)
+        rtn = pgv.run(arg_list, retcode=1)
 
         print_cmd_error_details(rtn, arg_list)
         assert rtn[TestUtil.stdout] == f'Repository already exist: {TestUtil.pgvctrl_no_files_repo}\n'
-        assert rtn[TestUtil.return_code] == 0
+        assert rtn[TestUtil.return_code] == 1
 
     def test_rmrepo_exists(self):
         pgv = TestUtil.local_pgvctrl()
@@ -130,11 +136,11 @@ class TestPgvctrRepoMakeRemove:
         pgv = TestUtil.local_pgvctrl()
 
         arg_list = ["-rmrepo", TestUtil.pgvctrl_test_temp_repo]
-        rtn = pgv.run(arg_list, retcode=0)
+        rtn = pgv.run(arg_list, retcode=1)
 
         print_cmd_error_details(rtn, arg_list)
         assert rtn[TestUtil.stdout] == f'Repository does not exist: {TestUtil.pgvctrl_test_temp_repo}\n'
-        assert rtn[TestUtil.return_code] == 0
+        assert rtn[TestUtil.return_code] == 1
 
 
 class TestPgvctrRepoList:
@@ -224,8 +230,8 @@ class TestPgvctrMakeVersion:
         pgv.run(arg_list, retcode=0)
 
         arg_list = ["-mkv", TestUtil.test_make_version, "-repo", TestUtil.pgvctrl_test_repo]
-        rtn = pgv.run(arg_list, retcode=0)
+        rtn = pgv.run(arg_list, retcode=1)
 
         print_cmd_error_details(rtn, arg_list)
         assert rtn[TestUtil.stdout] == f'Repository version already exists: {TestUtil.pgvctrl_test_repo} 3.0.0\n'
-        assert rtn[TestUtil.return_code] == 0
+        assert rtn[TestUtil.return_code] == 1

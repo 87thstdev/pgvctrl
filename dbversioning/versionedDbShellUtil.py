@@ -1,6 +1,8 @@
 import os
 
 import datetime
+import sys
+
 import simplejson as json
 
 import copy
@@ -460,6 +462,7 @@ def warning_message(message):
 
 def error_message(message):
     print(colors.red & colors.bold | message)
+    sys.exit(1)
 
 
 def information_message(message):

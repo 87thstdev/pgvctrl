@@ -21,6 +21,7 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionEnvDoesMatchDbEnv)
 from dbversioning.versionedDbShellUtil import (
     VersionDbShellUtil,
+    error_message,
     information_message,
     DATA_DUMP_CONFIG_NAME,
     repo_version_information_message,
@@ -181,7 +182,7 @@ class VersionedDbHelper:
         if fast_forward_to:
             VersionDbShellUtil.apply_fast_forward_sql(db_conn, fast_forward_to[0], repo_name)
         else:
-            information_message("Fast forward not found {0}".format(full_version))
+            error_message("Fast forward not found {0}".format(full_version))
 
     @staticmethod
     def push_data_to_database(repo_name, db_conn, force, is_production):

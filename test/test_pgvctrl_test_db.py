@@ -34,12 +34,12 @@ class TestPgvctrTestDb:
         pgv = TestUtil.local_pgvctrl()
 
         arg_list = ["-apply", "-v", "0.1.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
-        rtn = pgv.run(arg_list, retcode=0)
+        rtn = pgv.run(arg_list, retcode=1)
 
         print_cmd_error_details(rtn, arg_list)
         assert rtn[TestUtil.stdout] == 'Repository version does not exist: {0} 0.1.0\n'.format(
                 TestUtil.pgvctrl_test_repo)
-        assert rtn[TestUtil.return_code] == 0
+        assert rtn[TestUtil.return_code] == 1
 
     def test_apply_good_version(self):
         pgv = TestUtil.local_pgvctrl()
@@ -65,11 +65,11 @@ class TestPgvctrTestDb:
         pgv = TestUtil.local_pgvctrl()
 
         arg_list = ["-applyff", TestUtil.test_first_version, "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
-        rtn = pgv.run(arg_list, retcode=0)
+        rtn = pgv.run(arg_list, retcode=1)
 
         print_cmd_error_details(rtn, arg_list)
         assert rtn[TestUtil.stdout] == 'Fast forwards only allowed on empty databases.\n'
-        assert rtn[TestUtil.return_code] == 0
+        assert rtn[TestUtil.return_code] == 1
 
     def test_push_data(self):
         pgv = TestUtil.local_pgvctrl()
@@ -110,11 +110,11 @@ class TestPgvctrTestCleanDb:
         bad_ff = "BAD"
 
         arg_list = ["-applyff", bad_ff,  "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
-        rtn = pgv.run(arg_list, retcode=0)
+        rtn = pgv.run(arg_list, retcode=1)
 
         print_cmd_error_details(rtn, arg_list)
         assert rtn[TestUtil.stdout] == 'Fast forward not found {0}\n'.format(bad_ff)
-        assert rtn[TestUtil.return_code] == 0
+        assert rtn[TestUtil.return_code] == 1
 
     def test_apply_fast_forward_bad_db(self):
         pgv = TestUtil.local_pgvctrl()
@@ -122,11 +122,11 @@ class TestPgvctrTestCleanDb:
         bad_db = "asdfasdfasdfasdfa123123asdfa"
 
         arg_list = ["-applyff", good_ff,  "-repo", TestUtil.pgvctrl_test_repo, "-d", bad_db]
-        rtn = pgv.run(arg_list, retcode=0)
+        rtn = pgv.run(arg_list, retcode=1)
 
         print_cmd_error_details(rtn, arg_list)
         assert rtn[TestUtil.stdout] == "Invalid Data Connection: ['-d', '{0}']\n".format(bad_db)
-        assert rtn[TestUtil.return_code] == 0
+        assert rtn[TestUtil.return_code] == 1
 
 
 class TestPgvctrTestDbEnv:
@@ -142,6 +142,7 @@ class TestPgvctrTestDbEnv:
 
     def teardown_method(self, test_method):
         TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+        TestUtil.delete_folder(TestUtil.test_first_version_path)
         TestUtil.drop_database()
 
     def test_chkver_no_env(self):

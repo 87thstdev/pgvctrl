@@ -14,15 +14,15 @@ class TestPgvctrInitlWithOutDb:
         TestUtil.delete_file(DB_REPO_CONFIG_JSON)
         TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
 
-    def test_init(self):
+    def test_init_invalid(self):
         pgv = TestUtil.local_pgvctrl()
 
         arg_list = ["-init", "-repo", TestUtil.pgvctrl_test_temp_repo, "-d", TestUtil.pgvctrl_test_db]
-        rtn = pgv.run(arg_list, retcode=0)
+        rtn = pgv.run(arg_list, retcode=1)
 
         print_cmd_error_details(rtn, arg_list)
         assert rtn[TestUtil.stdout] == "Invalid Data Connection: ['-d', '{0}']\n".format(TestUtil.pgvctrl_test_db)
-        assert rtn[TestUtil.return_code] == 0
+        assert rtn[TestUtil.return_code] == 1
 
 
 class TestPgvctrInitlWithDb:
