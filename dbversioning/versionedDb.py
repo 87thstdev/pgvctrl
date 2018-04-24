@@ -1,7 +1,10 @@
 import hashlib
 import os
+from typing import List
 
-from dbversioning.errorUtil import VersionedDbExceptionFastForwardVersion
+from dbversioning.errorUtil import (
+    VersionedDbExceptionFastForwardVersion,
+    VersionedDbExceptionRepoVersionNumber)
 from dbversioning.repositoryconf import DATA_DUMP
 from dbversioning.versionedDbHelper import get_valid_elements
 
@@ -31,50 +34,24 @@ class FastForwardVersion(object):
         self.name = ""
         self.major = None
         self.minor = None
+        self.maintenance = None
 
         _set_version_info(os.path.basename(self._version_path), self)
 
     @property
     def full_name(self):
         if self.name == "":
-            return "{0}.{1}".format(self.major, self.minor)
+            return f"{self.major}.{self.minor}.{self.maintenance}"
 
-        return "{0}.{1}.{2}".format(self.major, self.minor, self.name)
+        return f"{self.major}.{self.minor}.{self.maintenance}.{self.name}"
 
     @property
     def version_number(self):
-        return "{0}.{1}".format(self.major, self.minor)
+        return f"{self.major}.{self.minor}.{self.maintenance}"
 
     @property
     def sql_file(self):
         return GeneratorExit(self._version_path)
-
-
-class VersionDb(object):
-    def __init__(self, repo_path):
-        """
-        init_db: Initialize a database to use dbvctrl
-        """
-        self._repo_path = repo_path
-        self.db_name = os.path.basename(repo_path)
-        self.versions = self._populate_versions()
-
-    def _populate_versions(self):
-        ver_list = []
-
-        ignored = {DATA_DUMP}
-
-        ver_locations = get_valid_elements(self._repo_path, ignored)
-
-        for v in ver_locations:
-            v_path = os.path.join(self._repo_path, v)
-            ver_list.append(Version(v_path))
-
-        return ver_list
-
-    def create_version(self, version):
-        os.mkdir(os.path.join(self._repo_path, version))
-        return True
 
 
 class Version(object):
@@ -83,20 +60,21 @@ class Version(object):
         self.name = ""
         self.major = None
         self.minor = None
+        self.maintenance = None
         self.sql_files = self._set_sql_objs(get_valid_elements(self._version_path))
-        
+
         _set_version_info(os.path.basename(self._version_path), self)
 
     @property
     def full_name(self):
         if self.name == "":
-            return "{0}.{1}".format(self.major, self.minor)
+            return f"{self.major}.{self.minor}.{self.maintenance}"
 
-        return "{0}.{1}.{2}".format(self.major, self.minor, self.name)
+        return f"{self.major}.{self.minor}.{self.maintenance}.{self.name}"
 
     @property
     def version_number(self):
-        return "{0}.{1}".format(self.major, self.minor)
+        return f"{self.major}.{self.minor}.{self.maintenance}"
 
     def get_version_hash_set(self):
         BUF_SIZE = 65536
@@ -124,16 +102,48 @@ class Version(object):
         return sorted(sql_objs, key=lambda x: x.number)
 
 
+class VersionDb(object):
+    def __init__(self, repo_path):
+        """
+        init_db: Initialize a database to use dbvctrl
+        """
+        self._repo_path = repo_path
+        self.db_name = os.path.basename(repo_path)
+        self.versions = self._populate_versions()
+
+    def _populate_versions(self) -> List[Version]:
+        ver_list = []
+
+        ignored = {DATA_DUMP}
+
+        ver_locations = get_valid_elements(self._repo_path, ignored)
+
+        for v in ver_locations:
+            v_path = os.path.join(self._repo_path, v)
+            ver_list.append(Version(v_path))
+
+        return ver_list
+
+    def create_version(self, version):
+        os.mkdir(os.path.join(self._repo_path, version))
+        return True
+
+
 def _set_version_info(version_dir, ver):
     ver_array = version_dir.split(".")
 
     if not ver_array:
         raise VersionedDbExceptionFastForwardVersion(version_dir)
 
-    ver.major = int(ver_array[0])
-    ver.minor = int(ver_array[1])
-    if len(ver_array) > 2:
-        ver.name = ver_array[2]
+    try:
+        ver.major = int(ver_array[0])
+        ver.minor = int(ver_array[1])
+        ver.maintenance = int(ver_array[2])
+    except ValueError:
+        raise VersionedDbExceptionRepoVersionNumber(version_dir)
+
+    if len(ver_array) > 3:
+        ver.name = ver_array[3]
 
 
 class SqlPatch(object):
@@ -146,7 +156,7 @@ class SqlPatch(object):
 
     @property
     def fullname(self):
-        return "{0}.{1}".format(self._number, self._name)
+        return f"{self._number}.{self.name}"
 
     @property
     def name(self):

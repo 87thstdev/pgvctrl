@@ -245,7 +245,7 @@ class DbVctrl(object):
                 # -rmrepo test_db
                 remove_repository(arg_set.rmrepo)
             elif arg_set.mkv:
-                # -mkv 2.0.new_version -repo test_db
+                # -mkv 2.0.0.new_version -repo test_db
                 create_repository_version_folder(arg_set)
             elif arg_set.mkenv:
                 # -mkenv test -repo test_db
@@ -254,16 +254,16 @@ class DbVctrl(object):
                 # -rmenv test -repo test_db
                 remove_repository_env_type(arg_set)
             elif arg_set.setenv:
-                # -setenv test -repo test_db -v 1.0
+                # -setenv test -repo test_db -v 1.0.0
                 set_repository_env_version(arg_set)
             elif arg_set.apply:
-                # -apply <-v 0.1 | -env test> -repo test_db -d postgresPlay
+                # -apply <-v 0.1.0 | -env test> -repo test_db -d postgresPlay
                 apply_repository_to_db(arg_set)
             elif arg_set.setff:
                 # -setff -repo test_db -d postgresPlay
                 set_fast_forward_pull_from_db(arg_set)
             elif arg_set.applyff:
-                # -applyff 0.1.BaseDeploy -repo test_db -d postgresPlay
+                # -applyff 0.1.0.BaseDeploy -repo test_db -d postgresPlay
                 apply_fast_forward_to_db(arg_set)
             elif arg_set.pulldata:
                 # -pulldata -t error_set -t membership.user_state -repo test_db -d postgresPlay
