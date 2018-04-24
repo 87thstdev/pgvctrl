@@ -4,8 +4,6 @@ from test.test_util import (
     print_cmd_error_details)
 
 PROD_FLG = "-production"
-VERSION = '0.0.first'
-NEW_VERSION = '2.0.NewVersion'
 NO_PROD_FLG = 'Production changes need the -production flag: {0}\n'
 NO_PROD_FLG_APPLY = NO_PROD_FLG.format("-apply")
 NO_PROD_FLG_PUSHDATA = NO_PROD_FLG.format("-pushdata")
@@ -21,7 +19,9 @@ class TestPgvctrlProdDb:
         TestUtil.create_database()
         TestUtil.get_static_config()
         pgv.run(["-init", PROD_FLG, "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db], retcode=0)
-        pgv.run(["-apply", PROD_FLG, "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db, "-v", "0.0"],
+        TestUtil.mkrepo_ver(TestUtil.pgvctrl_test_repo, TestUtil.test_first_version)
+        pgv.run(["-apply", PROD_FLG, "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db, "-v",
+                 "0.0.0"],
                 retcode=0)
 
     def teardown_method(self, test_method):
@@ -35,7 +35,8 @@ class TestPgvctrlProdDb:
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
-        assert rtn[TestUtil.stdout] == f'{VERSION}.0: {TestUtil.pgvctrl_test_repo} PRODUCTION environment (None)\n'
+        assert rtn[TestUtil.stdout] == f'{TestUtil.test_first_version}.0: ' \
+                                       f'{TestUtil.pgvctrl_test_repo} PRODUCTION environment (None)\n'
         assert rtn[TestUtil.return_code] == 0
 
     def test_apply_bad_version_no_prod_flag(self):
@@ -60,7 +61,7 @@ class TestPgvctrlProdDb:
 
     def test_apply_bad_version(self):
         pgv = TestUtil.local_pgvctrl()
-        BAD_VER = "0.1"
+        BAD_VER = "0.1.0"
 
         arg_list = ["-apply", "-v", BAD_VER, PROD_FLG, "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
@@ -72,7 +73,7 @@ class TestPgvctrlProdDb:
     def test_apply_good_version(self):
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-apply", "-v", "2.0", PROD_FLG, "-repo", TestUtil.pgvctrl_test_repo, "-d",
+        arg_list = ["-apply", "-v", "2.0.0", PROD_FLG, "-repo", TestUtil.pgvctrl_test_repo, "-d",
                     TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
 
@@ -93,7 +94,8 @@ class TestPgvctrlProdDb:
     def test_apply_fast_forward(self):
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-applyff", VERSION, PROD_FLG, "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = ["-applyff", TestUtil.test_first_version, PROD_FLG, "-repo", TestUtil.pgvctrl_test_repo, "-d",
+                    TestUtil.pgvctrl_test_db]
 
         rtn = pgv.run(arg_list, retcode=0)
         print_cmd_error_details(rtn, arg_list)
@@ -144,7 +146,8 @@ class TestPgvctrlProdDbEnv:
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
-        assert rtn[TestUtil.stdout] == f'{VERSION}.0: {TestUtil.pgvctrl_test_repo} PRODUCTION environment (' \
+        assert rtn[TestUtil.stdout] == f'{TestUtil.test_first_version}.0: ' \
+                                       f'{TestUtil.pgvctrl_test_repo} PRODUCTION environment (' \
                                        f'{TestUtil.env_test})\n'
         assert rtn[TestUtil.return_code] == 0
 

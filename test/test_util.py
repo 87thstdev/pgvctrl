@@ -14,9 +14,10 @@ class TestUtil(object):
     pgvctrl_no_files_repo = "pgvctrl_no_files"
     pgvctrl_no_files_repo_path = "databases/pgvctrl_no_files"
     pgvctrl_test_db = "pgvctrl_test_db"
-    test_first_version = "0.0.first"
-    test_version = "2.0.NewVersion"
-    test_make_version = "3.0.MakeNewVersion"
+    test_first_version = "0.0.0.first"
+    test_first_version_path = f"databases/{pgvctrl_test_repo}/{test_first_version}"
+    test_version = "2.0.0.NewVersion"
+    test_make_version = "3.0.0.MakeNewVersion"
     test_make_version_path = f"databases/{pgvctrl_test_repo}/{test_make_version}"
     test_bad_version = "999.1.bad_version"
     test_version_path = "databases/pgvctrl_temp_test/{0}".format(test_version)

@@ -140,10 +140,12 @@ class TestPgvctrRepoMakeRemove:
 class TestPgvctrRepoList:
     def setup_method(self, test_method):
         TestUtil.get_static_config()
+        TestUtil.mkrepo_ver(TestUtil.pgvctrl_test_repo, TestUtil.test_first_version)
 
     def teardown_method(self, test_method):
         TestUtil.delete_file(DB_REPO_CONFIG_JSON)
         TestUtil.delete_folder(TestUtil.test_make_version_path)
+        TestUtil.delete_folder(TestUtil.test_first_version_path)
         TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
 
     def test_repo_list(self):
@@ -155,8 +157,8 @@ class TestPgvctrRepoList:
         print_cmd_error_details(rtn, arg_list)
         assert rtn[TestUtil.return_code] == 0
         assert rtn[TestUtil.stdout] == f'{TestUtil.pgvctrl_test_repo}\n' \
-                                       f'\tv 0.0.first test\n' \
-                                       f'\tv 2.0.NewVersion \n'
+                                       f'\tv {TestUtil.test_first_version} test\n' \
+                                       f'\tv {TestUtil.test_version} \n'
 
     def test_repo_list_verbose(self):
         pgv = TestUtil.local_pgvctrl()
@@ -167,8 +169,8 @@ class TestPgvctrRepoList:
         print_cmd_error_details(rtn, arg_list)
         assert rtn[TestUtil.return_code] == 0
         assert rtn[TestUtil.stdout] == f'{TestUtil.pgvctrl_test_repo}\n' \
-                                       f'\tv 0.0.first test\n' \
-                                       f'\tv 2.0.NewVersion \n' \
+                                       f'\tv {TestUtil.test_first_version} test\n' \
+                                       f'\tv {TestUtil.test_version} \n' \
                                        f'\t\t100 AddUsersTable\n' \
                                        f'\t\t105 Notice\n' \
                                        f'\t\t110 Error\n' \
@@ -193,8 +195,8 @@ class TestPgvctrRepoList:
         assert rtn[TestUtil.return_code] == 0
         assert rtn[TestUtil.stdout] == f'{TestUtil.pgvctrl_test_temp_repo} UNREGISTERED\n' \
                                        f'{TestUtil.pgvctrl_test_repo}\n' \
-                                       f'\tv 0.0.first test\n' \
-                                       f'\tv 2.0.NewVersion \n'
+                                       f'\tv {TestUtil.test_first_version} test\n' \
+                                       f'\tv {TestUtil.test_version} \n'
 
 
 class TestPgvctrMakeVersion:
@@ -225,5 +227,5 @@ class TestPgvctrMakeVersion:
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
-        assert rtn[TestUtil.stdout] == f'Repository version already exists: {TestUtil.pgvctrl_test_repo} 3.0\n'
+        assert rtn[TestUtil.stdout] == f'Repository version already exists: {TestUtil.pgvctrl_test_repo} 3.0.0\n'
         assert rtn[TestUtil.return_code] == 0

@@ -10,10 +10,12 @@ class TestPgvctrTestDb:
         TestUtil.create_database()
         TestUtil.get_static_config()
         pgv.run(["-init", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db], retcode=0)
-        pgv.run(["-apply", "-v", "0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db],
+        TestUtil.mkrepo_ver(TestUtil.pgvctrl_test_repo, TestUtil.test_first_version)
+        pgv.run(["-apply", "-v", TestUtil.test_first_version, "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db],
                 retcode=0)
 
     def teardown_method(self, test_method):
+        TestUtil.delete_folder(TestUtil.test_first_version_path)
         TestUtil.delete_file(DB_REPO_CONFIG_JSON)
         TestUtil.drop_database()
 
@@ -31,17 +33,18 @@ class TestPgvctrTestDb:
     def test_apply_bad_version(self):
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-apply", "-v", "0.1", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = ["-apply", "-v", "0.1.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
-        assert rtn[TestUtil.stdout] == 'Repository version does not exist: {0} 0.1\n'.format(TestUtil.pgvctrl_test_repo)
+        assert rtn[TestUtil.stdout] == 'Repository version does not exist: {0} 0.1.0\n'.format(
+                TestUtil.pgvctrl_test_repo)
         assert rtn[TestUtil.return_code] == 0
 
     def test_apply_good_version(self):
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-apply", "-v", "2.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
@@ -115,7 +118,7 @@ class TestPgvctrTestCleanDb:
 
     def test_apply_fast_forward_bad_db(self):
         pgv = TestUtil.local_pgvctrl()
-        good_ff = "0.0.gettingStarted"
+        good_ff = "0.0.0.gettingStarted"
         bad_db = "asdfasdfasdfasdfa123123asdfa"
 
         arg_list = ["-applyff", good_ff,  "-repo", TestUtil.pgvctrl_test_repo, "-d", bad_db]
@@ -133,6 +136,7 @@ class TestPgvctrTestDbEnv:
         TestUtil.get_static_config()
         pgv.run(["-init", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db, "-setenv",
                  TestUtil.env_test], retcode=0)
+        TestUtil.mkrepo_ver(TestUtil.pgvctrl_test_repo, TestUtil.test_first_version)
         pgv.run(["-apply", "-env", TestUtil.env_test, "-repo", TestUtil.pgvctrl_test_repo, "-d",
                  TestUtil.pgvctrl_test_db], retcode=0)
 
