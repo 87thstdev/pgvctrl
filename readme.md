@@ -70,11 +70,11 @@ In the test directory:
        version hash for each sql update file, environment name and production flag.
        
 1. Make repository version for repository: -mkv: Make version number:
-    <pre>pgvctrl -mkv [x.x.version_name] -repo [repository name]</pre>
+    <pre>pgvctrl -mkv [x.x.x.version_name] -repo [repository name]</pre>
     e.g.:
-    <pre>pgvctrl -mkv 1.0.my_new_version -repo mydb</pre>
+    <pre>pgvctrl -mkv 1.0.0.my_new_version -repo mydb</pre>
     Output:
-    <pre>Version mydb/1.0.my_new_version created.</pre>
+    <pre>Version mydb/1.0.0.my_new_version created.</pre>
 
 1. Create sql change files in the versioned directory!  These files will be used to update your database and should
   have the naming convention of:<br />
@@ -85,19 +85,19 @@ In the test directory:
     <pre>pgvctrl -rl</pre>
     Output:
     <pre>mydb
-        v 1.0.my_new_version</pre>
+        v 1.0.0.my_new_version</pre>
 
     Verbose:
     <pre>pgvctrl -rlv</pre>
     Output:
     <pre>mydb
-        v 0.0.my_new_version
+        v 0.0.0.my_new_version
             100 AddUsersTable</pre>
 
 1. When you are ready to apply your changes to your database:
     <pre>pgvctrl -apply -v [version number] -repo [repository name] [db connection information]</pre>
     e.g.
-    <pre>pgvctrl -apply -v 0.0 -repo mydb -d mylocaldb</pre>
+    <pre>pgvctrl -apply -v 0.0.0 -repo mydb -d mylocaldb</pre>
     Output:
     <pre>Running: 100.AddUsersTable<br />...<br />Running: 500.AddStatesTable</pre>
 
@@ -116,7 +116,7 @@ In the test directory:
 e.g:
 <pre>pgvctrl -chkver -repo mydb -d mylocaldb</pre>
 Output:
-<pre>mydb: 0.0.first.0</pre>
+<pre>mydb: 0.0.0.first.0</pre>
 
 #### -mkenv: Make environment type:
 <pre>pgvctrl -mkenv [env_name] -repo [repository name]</pre>
@@ -128,9 +128,9 @@ Output:
 #### -setenv: Set environment type to a version:
 <pre>pgvctrl -setenv [env_name] -v [x.x] -repo [repository name]</pre>
 e.g.:
-<pre>pgvctrl -setenv test -v 1.0 -repo mydb</pre>
+<pre>pgvctrl -setenv test -v 1.0.0 -repo mydb</pre>
 Output:
-<pre>Repository environment set: mydb test 1.0</pre>
+<pre>Repository environment set: mydb test 1.0.0</pre>
 
 #### -rmenv: Remove environment type:
 <pre>pgvctrl -rmenv [env_name] -repo [repository name]</pre>
@@ -218,6 +218,7 @@ tells pgvctrl where to look for the repositories.
         "env": "env",
         "isProduction": "is_production",
         "repository": "repository_name",
+        "revision": "revision",
         "table": "repository_version",
         "version": "version",
         "versionHash": "version_hash"
@@ -225,15 +226,16 @@ tells pgvctrl where to look for the repositories.
     "repositories": [
         {
             "envs": { 
-                "your_test": "1.0",
-                "your_qa": "1.0",
-                "your_prod": "0.9"
+                "your_test": "1.0.1",
+                "your_qa": "1.0.0",
+                "your_prod": "0.9.0"
              },
             "name": "YouRepoName",
             "versionStorage": {
                 "env": "env",
                 "isProduction": "is_production",
                 "repository": "repository_name",
+                "revision": "revision",
                 "table": "repository_version",
                 "version": "version",
                 "versionHash": "version_hash"
