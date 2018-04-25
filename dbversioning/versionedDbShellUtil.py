@@ -299,7 +299,7 @@ class VersionDbShellUtil:
         dbv = VersionDbShellUtil.get_db_instance_version(v_tbl, db_conn)
 
         if dbv and dbv.version is None:
-            warning_message("No version found!")
+            error_message("No version found!")
         else:
             prod_display = " PRODUCTION" if dbv.is_production else ""
             env_display = f" environment ({dbv.env})" if dbv.env else " environment (None)"

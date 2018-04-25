@@ -223,6 +223,17 @@ class TestPgvctrMakeVersion:
         assert rtn[TestUtil.stdout] == f'Version {TestUtil.pgvctrl_test_repo}/{TestUtil.test_make_version} created.\n'
         assert rtn[TestUtil.return_code] == 0
 
+    def test_mkv_bad(self):
+        pgv = TestUtil.local_pgvctrl()
+
+        arg_list = ["-mkv", TestUtil.test_bad_version, "-repo", TestUtil.pgvctrl_test_repo]
+        rtn = pgv.run(arg_list, retcode=1)
+
+        print_cmd_error_details(rtn, arg_list)
+        assert rtn[TestUtil.stdout] == f'Repository version number invalid, should be [Major].[Minor].[Maintenance] ' \
+                                       f'at a minimum: {TestUtil.test_bad_version}\n'
+        assert rtn[TestUtil.return_code] == 1
+
     def test_mkv_exists(self):
         pgv = TestUtil.local_pgvctrl()
 

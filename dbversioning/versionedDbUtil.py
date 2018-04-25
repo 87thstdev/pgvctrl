@@ -18,7 +18,8 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionRepoDoesNotExits,
     VersionedDbExceptionRepoExits,
     VersionedDbExceptionNoVersionFound,
-    VersionedDbExceptionEnvDoesMatchDbEnv)
+    VersionedDbExceptionEnvDoesMatchDbEnv,
+    VersionedDbExceptionRepoVersionNumber)
 from dbversioning.versionedDbShellUtil import (
     VersionDbShellUtil,
     error_message,
@@ -414,4 +415,4 @@ class VersionedDbHelper:
 
             return Version_Numbers(int(ver_array[0]), int(ver_array[1]), int(ver_array[2]))
         except (ValueError, AttributeError):
-            return None
+            raise VersionedDbExceptionRepoVersionNumber(version=version)

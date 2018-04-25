@@ -21,10 +21,10 @@ class TestPgvctrTestDb:
 
     def test_chkver_no_env(self):
         pgv = TestUtil.local_pgvctrl()
-    
+
         arg_list = ["-chkver", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
-        
+
         print_cmd_error_details(rtn, arg_list)
         assert rtn[TestUtil.stdout] == f'{TestUtil.test_first_version}.0: {TestUtil.pgvctrl_test_repo} environment (' \
                                        f'None)\n'
@@ -134,11 +134,7 @@ class TestPgvctrTestDbEnv:
         pgv = TestUtil.local_pgvctrl()
         TestUtil.create_database()
         TestUtil.get_static_config()
-        pgv.run(["-init", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db, "-setenv",
-                 TestUtil.env_test], retcode=0)
         TestUtil.mkrepo_ver(TestUtil.pgvctrl_test_repo, TestUtil.test_first_version)
-        pgv.run(["-apply", "-env", TestUtil.env_test, "-repo", TestUtil.pgvctrl_test_repo, "-d",
-                 TestUtil.pgvctrl_test_db], retcode=0)
 
     def teardown_method(self, test_method):
         TestUtil.delete_file(DB_REPO_CONFIG_JSON)
@@ -147,12 +143,38 @@ class TestPgvctrTestDbEnv:
 
     def test_chkver_no_env(self):
         pgv = TestUtil.local_pgvctrl()
+        pgv.run(["-init", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db], retcode=0)
+        arg_list = ["-chkver", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        rtn = pgv.run(arg_list, retcode=1)
+
+        print_cmd_error_details(rtn, arg_list)
+        assert rtn[TestUtil.stdout] == f'No version found!\n'
+        assert rtn[TestUtil.return_code] == 1
+
+    def test_chkver_env(self):
+        pgv = TestUtil.local_pgvctrl()
+        pgv.run(["-init", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db,
+                 "-setenv", TestUtil.env_test], retcode=0)
+        pgv.run(["-apply", "-env", TestUtil.env_test, "-repo", TestUtil.pgvctrl_test_repo, "-d",
+                 TestUtil.pgvctrl_test_db], retcode=0)
 
         arg_list = ["-chkver", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
-        assert rtn[
-                   TestUtil.stdout] == f'{TestUtil.test_first_version}.0: {TestUtil.pgvctrl_test_repo} environment (' \
+        assert rtn[TestUtil.stdout] == f'{TestUtil.test_first_version}.0: ' \
+                                       f'{TestUtil.pgvctrl_test_repo} environment (' \
                                        f'{TestUtil.env_test})\n'
         assert rtn[TestUtil.return_code] == 0
+
+    def test_apply_good_version_env(self):
+        pgv = TestUtil.local_pgvctrl()
+        pgv.run(["-init", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db,
+                 "-setenv", TestUtil.env_test], retcode=0)
+        arg_list = ["-apply", "-env", TestUtil.env_test, "-repo", TestUtil.pgvctrl_test_repo, "-d",
+                    TestUtil.pgvctrl_test_db]
+        rtn = pgv.run(arg_list, retcode=0)
+
+        print_cmd_error_details(rtn, arg_list)
+        assert rtn[TestUtil.return_code] == 0
+        assert rtn[TestUtil.stdout] == f'Applied: {TestUtil.pgvctrl_test_repo} v {TestUtil.test_first_version}.0\n'
