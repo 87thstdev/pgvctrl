@@ -21,16 +21,21 @@ class TestUtil(object):
     test_make_version_path = f"databases/{pgvctrl_test_repo}/{test_make_version}"
     test_bad_version = "999.1.bad_version"
     test_version_path = "databases/pgvctrl_temp_test/{0}".format(test_version)
+    error_sql = '130.Error.sql'
+    error_sql_path = f'databases/pgvctrl_test/{test_version}/{error_sql}'
+    error_sql_rollback = '130.Error_rollback.sql'
+    error_sql_rollback_path = f'databases/pgvctrl_test/{test_version}/{error_sql_rollback}'
     env_test = "test"
     env_qa = "qa"
     env_prod = "prod"
 
     sql_return = 'Running: 100.AddUsersTable\n\n' \
-                 'Running: 105.Notice\n' \
+                 'Running: 110.Notice\n' \
                  '\t8: NOTICE:  WHO DAT? 87admin\n' \
                  '\t8: NOTICE:  Just me, 87admin\n' \
                  '\t8: NOTICE:  Guess we are talking to ourselves!  87admin\n\n' \
-                 'Running: 110.Error\n\n' \
+                 'Running: 120.ItemTable\n\n' \
+                 'Running: 140.ItemsAddMore\n\n' \
                  'Running: 200.AddEmailTable\n\n' \
                  'Running: 300.UserStateTable\n\n' \
                  'Running: 400.ErrorSet\n\n' \
@@ -88,6 +93,18 @@ class TestUtil(object):
     @staticmethod
     def get_static_config():
         copy2('dbRepoConfig.json.default', 'dbRepoConfig.json')
+
+    @staticmethod
+    def get_error_sql():
+        copy2(f'{TestUtil.error_sql_path}.default', TestUtil.error_sql_path)
+
+    @staticmethod
+    def get_error_rollback_bad_sql():
+        copy2(f'{TestUtil.error_sql_rollback_path}.bad.default', TestUtil.error_sql_rollback_path)
+
+    @staticmethod
+    def get_error_rollback_good_sql():
+        copy2(f'{TestUtil.error_sql_rollback_path}.good.default', TestUtil.error_sql_rollback_path)
 
 
 def print_cmd_error_details(rtn, arg_list):

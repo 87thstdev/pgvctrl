@@ -6,7 +6,9 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionFastForwardVersion,
     VersionedDbExceptionRepoVersionNumber)
 from dbversioning.repositoryconf import DATA_DUMP
-from dbversioning.versionedDbHelper import get_valid_elements
+from dbversioning.versionedDbHelper import (
+    get_valid_elements,
+    get_valid_sql_elements)
 
 
 class FastForwardDb(object):
@@ -61,7 +63,7 @@ class Version(object):
         self.major = None
         self.minor = None
         self.maintenance = None
-        self.sql_files = self._set_sql_objs(get_valid_elements(self._version_path))
+        self.sql_files = self._set_sql_objs(get_valid_sql_elements(self._version_path))
 
         _set_version_info(os.path.basename(self._version_path), self)
 

@@ -200,7 +200,7 @@ class VersionDbShellUtil:
         try:
             VersionDbShellUtil._execute_sql_on_db(psql, psql_parm_list, sql_file)
         except VersionedDbExceptionSqlExecutionError as e:
-            error_message("SQL ERROR {0}".format(e.message))
+            error_message_non_terminating("SQL ERROR {0}".format(e.message))
             VersionDbShellUtil._attempt_rollback(db_conn, sql_file)
 
     @staticmethod
@@ -463,6 +463,10 @@ def warning_message(message):
 def error_message(message):
     print(colors.red & colors.bold | message)
     sys.exit(1)
+
+
+def error_message_non_terminating(message):
+    print(colors.red & colors.bold | message)
 
 
 def information_message(message):

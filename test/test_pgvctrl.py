@@ -143,7 +143,7 @@ class TestPgvctrRepoMakeRemove:
         assert rtn[TestUtil.return_code] == 1
 
 
-class TestPgvctrRepoList:
+class TestPgvctrlRepoList:
     def setup_method(self, test_method):
         TestUtil.get_static_config()
         TestUtil.mkrepo_ver(TestUtil.pgvctrl_test_repo, TestUtil.test_first_version)
@@ -178,8 +178,9 @@ class TestPgvctrRepoList:
                                        f'\tv {TestUtil.test_first_version} test\n' \
                                        f'\tv {TestUtil.test_version} \n' \
                                        f'\t\t100 AddUsersTable\n' \
-                                       f'\t\t105 Notice\n' \
-                                       f'\t\t110 Error\n' \
+                                       f'\t\t110 Notice\n' \
+                                       f'\t\t120 ItemTable\n' \
+                                       f'\t\t140 ItemsAddMore\n' \
                                        f'\t\t200 AddEmailTable\n' \
                                        f'\t\t300 UserStateTable\n' \
                                        f'\t\t400 ErrorSet\n' \
