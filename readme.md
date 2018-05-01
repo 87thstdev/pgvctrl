@@ -52,6 +52,8 @@ In the test directory:
     <pre>pgvctrl -init [db connection information] -repo [repository name] -production</pre>
     __NOTE:__<br />
     __Database connection information should include at a minimum.__
+    
+    _Standard Information_
     <pre>-d [database name on server]</pre>
     e.g.
     <pre>pgvctrl -init -d mylocaldb -repo mydb</pre>
@@ -62,12 +64,20 @@ In the test directory:
     -u [database username]
     -pwd [password]
     </pre>
-
+    
+    *Or*
+    
+    _Service Information [.pg_service](https://www.postgresql.org/docs/9.6/static/libpq-pgservice.html)_
+    <pre>-svc [pg service information]</pre>
+    e.g.
+    <pre>pgvctrl -svc mydatabase:test -repo mydb</pre>
+    
     __What just happened?__<br />
     After initialization is complete:
     * There will be a new table in your database named repository_version.
       This is where pbvctrl stores your repository name, version number with a
-       version hash for each sql update file, environment name and production flag.
+       version hash for each sql update file, environment name, revision (number of times
+       the same version has been applied with different sql hash) and production flag.
        
 1. Make repository version for repository: -mkv: Make version number:
     <pre>pgvctrl -mkv [x.x.x.version_name] -repo [repository name]</pre>
@@ -109,14 +119,12 @@ In the test directory:
     * If you have "autoSnapshots" set to true, a snapshot was created in the _snapshots/[repository] directory
     * The repository_version table was update with the new version hash.
 
+#### Working with environments:
 
-## What else can pgvctrl do?
-#### -chkver: Check the version and repo on a database:
-<pre>pgvctrl -chkver -repo [repository name] [db connection information]</pre>
-e.g:
-<pre>pgvctrl -chkver -repo mydb -d mylocaldb</pre>
-Output:
-<pre>mydb: 0.0.0.first.0</pre>
+Setting up environment versions in repositories help ensure versions get deployed to the proper
+database.
+
+#### Making and setting environments.
 
 #### -mkenv: Make environment type:
 <pre>pgvctrl -mkenv [env_name] -repo [repository name]</pre>
@@ -131,6 +139,28 @@ e.g.:
 <pre>pgvctrl -setenv test -v 1.0.0 -repo mydb</pre>
 Output:
 <pre>Repository environment set: mydb test 1.0.0</pre>
+
+#### -init database with environment:
+<pre>pgvctrl -init [db connection information] -repo [repository name] -setenv [env_name]</pre>
+For production databases:
+<pre>pgvctrl -init [db connection information] -repo [repository name] -setenv [env_name] -production</pre>
+Output:
+<pre>Database initialized environment [env_name]</pre>
+
+#### -apply using -env:
+<pre>pgvctrl -apply -env [env_name] -repo [repository name] [db connection information]</pre>
+e.g.
+<pre>pgvctrl -apply -env test -repo mydb -d mylocaldb</pre>
+Output:
+<pre>Running: 100.AddUsersTable<br />...<br />Running: 500.AddStatesTable<br />Applied: mydb v 1.1.0.MyVersion.0</pre>
+
+## What else can pgvctrl do?
+#### -chkver: Check the version and repo on a database:
+<pre>pgvctrl -chkver -repo [repository name] [db connection information]</pre>
+e.g:
+<pre>pgvctrl -chkver -repo mydb -d mylocaldb</pre>
+Output:
+<pre>mydb: 0.0.0.first.0</pre>
 
 #### -rmenv: Remove environment type:
 <pre>pgvctrl -rmenv [env_name] -repo [repository name]</pre>
