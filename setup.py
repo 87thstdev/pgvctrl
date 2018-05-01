@@ -1,16 +1,15 @@
 from setuptools import find_packages, setup
+from os import path
 
+here = path.abspath(path.dirname(__file__))
 
-def readme():
-    with open('readme.md') as f:
-        return f.read()
-
+with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(
     name='pgvctrl',
-    version='0.5.0',
+    version='0.6.0',
     description='postgreSQL database version control tool',
-    long_description=readme(),
     keywords='postgres version control sql migrate migration patch patches',
     author='Heath Sutton',
     author_email='87thstreetdevelopment@gmail.com',
