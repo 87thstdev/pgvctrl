@@ -119,6 +119,20 @@ In the test directory:
     * If you have "autoSnapshots" set to true, a snapshot was created in the _snapshots/[repository] directory
     * The repository_version table was update with the new version hash.
 
+    #### SQL Error handling on -apply
+    In the event of an SQL error, pgvctrl will attempt to run the rollback version of 
+    your sql.
+    
+    e.g
+    <pre>
+    100.AddUsers.sql 
+    100.AddUsers_rollback.sql - rollback file for 100.AddUsers.sql</pre>
+    
+    - If your rollback file does not exist or fails, the -apply command fails and 
+    no sql after the first failing sql file will be ran. 
+    - If the rollback file succeeds, all other sql files will be ran until all files have 
+    been applied if they can be.
+
 #### Working with environments:
 
 Setting up environment versions in repositories help ensure versions get deployed to the proper
