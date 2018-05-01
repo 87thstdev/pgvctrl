@@ -4,43 +4,47 @@ from test.test_util import (
     print_cmd_error_details)
 
 
-class TestPgvctrTestDb:
+class TestPgvctrlTestDb:
     def setup_method(self, test_method):
         pgv = TestUtil.local_pgvctrl()
         TestUtil.create_database()
         TestUtil.get_static_config()
         pgv.run(["-init", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db], retcode=0)
-        pgv.run(["-apply", "-v", "0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db],
+        TestUtil.mkrepo_ver(TestUtil.pgvctrl_test_repo, TestUtil.test_first_version)
+        pgv.run(["-apply", "-v", TestUtil.test_first_version, "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db],
                 retcode=0)
 
     def teardown_method(self, test_method):
+        TestUtil.delete_folder(TestUtil.test_first_version_path)
         TestUtil.delete_file(DB_REPO_CONFIG_JSON)
         TestUtil.drop_database()
 
     def test_chkver_no_env(self):
         pgv = TestUtil.local_pgvctrl()
-    
+
         arg_list = ["-chkver", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
-        
+
         print_cmd_error_details(rtn, arg_list)
-        assert rtn[TestUtil.stdout] == f'{TestUtil.test_first_version}: {TestUtil.pgvctrl_test_repo} environment (None)\n'
+        assert rtn[TestUtil.stdout] == f'{TestUtil.test_first_version}.0: {TestUtil.pgvctrl_test_repo} environment (' \
+                                       f'None)\n'
         assert rtn[TestUtil.return_code] == 0
 
     def test_apply_bad_version(self):
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-apply", "-v", "0.1", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
-        rtn = pgv.run(arg_list, retcode=0)
+        arg_list = ["-apply", "-v", "0.1.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        rtn = pgv.run(arg_list, retcode=1)
 
         print_cmd_error_details(rtn, arg_list)
-        assert rtn[TestUtil.stdout] == 'Repository version does not exist: {0} 0.1\n'.format(TestUtil.pgvctrl_test_repo)
-        assert rtn[TestUtil.return_code] == 0
+        assert rtn[TestUtil.stdout] == 'Repository version does not exist: {0} 0.1.0\n'.format(
+                TestUtil.pgvctrl_test_repo)
+        assert rtn[TestUtil.return_code] == 1
 
     def test_apply_good_version(self):
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-apply", "-v", "2.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
@@ -61,11 +65,11 @@ class TestPgvctrTestDb:
         pgv = TestUtil.local_pgvctrl()
 
         arg_list = ["-applyff", TestUtil.test_first_version, "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
-        rtn = pgv.run(arg_list, retcode=0)
+        rtn = pgv.run(arg_list, retcode=1)
 
         print_cmd_error_details(rtn, arg_list)
         assert rtn[TestUtil.stdout] == 'Fast forwards only allowed on empty databases.\n'
-        assert rtn[TestUtil.return_code] == 0
+        assert rtn[TestUtil.return_code] == 1
 
     def test_push_data(self):
         pgv = TestUtil.local_pgvctrl()
@@ -82,7 +86,7 @@ class TestPgvctrTestDb:
 # -pulldata -t error_set -t membership.user_state -repo test_db -d postgresPlay
 
 
-class TestPgvctrTestCleanDb:
+class TestPgvctrlTestCleanDb:
     def setup_method(self):
         TestUtil.create_database()
         TestUtil.get_static_config()
@@ -106,47 +110,128 @@ class TestPgvctrTestCleanDb:
         bad_ff = "BAD"
 
         arg_list = ["-applyff", bad_ff,  "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
-        rtn = pgv.run(arg_list, retcode=0)
+        rtn = pgv.run(arg_list, retcode=1)
 
         print_cmd_error_details(rtn, arg_list)
         assert rtn[TestUtil.stdout] == 'Fast forward not found {0}\n'.format(bad_ff)
-        assert rtn[TestUtil.return_code] == 0
+        assert rtn[TestUtil.return_code] == 1
 
     def test_apply_fast_forward_bad_db(self):
         pgv = TestUtil.local_pgvctrl()
-        good_ff = "0.0.gettingStarted"
+        good_ff = "0.0.0.gettingStarted"
         bad_db = "asdfasdfasdfasdfa123123asdfa"
 
         arg_list = ["-applyff", good_ff,  "-repo", TestUtil.pgvctrl_test_repo, "-d", bad_db]
-        rtn = pgv.run(arg_list, retcode=0)
+        rtn = pgv.run(arg_list, retcode=1)
 
         print_cmd_error_details(rtn, arg_list)
         assert rtn[TestUtil.stdout] == "Invalid Data Connection: ['-d', '{0}']\n".format(bad_db)
-        assert rtn[TestUtil.return_code] == 0
+        assert rtn[TestUtil.return_code] == 1
 
 
-class TestPgvctrTestDbEnv:
+class TestPgvctrlTestDbEnv:
     def setup_method(self, test_method):
         pgv = TestUtil.local_pgvctrl()
         TestUtil.create_database()
         TestUtil.get_static_config()
-        pgv.run(["-init", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db, "-setenv",
-                 TestUtil.env_test], retcode=0)
-        pgv.run(["-apply", "-env", TestUtil.env_test, "-repo", TestUtil.pgvctrl_test_repo, "-d",
-                 TestUtil.pgvctrl_test_db], retcode=0)
+        TestUtil.mkrepo_ver(TestUtil.pgvctrl_test_repo, TestUtil.test_first_version)
 
     def teardown_method(self, test_method):
         TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+        TestUtil.delete_folder(TestUtil.test_first_version_path)
         TestUtil.drop_database()
 
     def test_chkver_no_env(self):
         pgv = TestUtil.local_pgvctrl()
+        pgv.run(["-init", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db], retcode=0)
+        arg_list = ["-chkver", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        rtn = pgv.run(arg_list, retcode=1)
+
+        print_cmd_error_details(rtn, arg_list)
+        assert rtn[TestUtil.stdout] == f'No version found!\n'
+        assert rtn[TestUtil.return_code] == 1
+
+    def test_chkver_env(self):
+        pgv = TestUtil.local_pgvctrl()
+        pgv.run(["-init", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db,
+                 "-setenv", TestUtil.env_test], retcode=0)
+        pgv.run(["-apply", "-env", TestUtil.env_test, "-repo", TestUtil.pgvctrl_test_repo, "-d",
+                 TestUtil.pgvctrl_test_db], retcode=0)
 
         arg_list = ["-chkver", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
-        assert rtn[
-                   TestUtil.stdout] == f'{TestUtil.test_first_version}: {TestUtil.pgvctrl_test_repo} environment (' \
+        assert rtn[TestUtil.stdout] == f'{TestUtil.test_first_version}.0: ' \
+                                       f'{TestUtil.pgvctrl_test_repo} environment (' \
                                        f'{TestUtil.env_test})\n'
         assert rtn[TestUtil.return_code] == 0
+
+    def test_apply_good_version_env(self):
+        pgv = TestUtil.local_pgvctrl()
+        pgv.run(["-init", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db,
+                 "-setenv", TestUtil.env_test], retcode=0)
+        arg_list = ["-apply", "-env", TestUtil.env_test, "-repo", TestUtil.pgvctrl_test_repo, "-d",
+                    TestUtil.pgvctrl_test_db]
+        rtn = pgv.run(arg_list, retcode=0)
+
+        print_cmd_error_details(rtn, arg_list)
+        assert rtn[TestUtil.return_code] == 0
+        assert rtn[TestUtil.stdout] == f'Applied: {TestUtil.pgvctrl_test_repo} v {TestUtil.test_first_version}.0\n'
+
+
+class TestPgvctrlTestDbError:
+    def setup_method(self, test_method):
+        pgv = TestUtil.local_pgvctrl()
+        TestUtil.create_database()
+        TestUtil.get_static_config()
+        TestUtil.get_error_sql()
+        pgv.run(["-init", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db], retcode=0)
+
+    def teardown_method(self, test_method):
+        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+        TestUtil.delete_file(TestUtil.error_sql_path)
+        TestUtil.delete_file(TestUtil.error_sql_rollback_path)
+        TestUtil.delete_folder(TestUtil.test_first_version_path)
+        TestUtil.drop_database()
+
+    def test_apply_version_error_no_rollback(self):
+        pgv = TestUtil.local_pgvctrl()
+
+        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        rtn = pgv.run(arg_list, retcode=1)
+
+        print_cmd_error_details(rtn, arg_list)
+        assert rtn[TestUtil.return_code] == 1
+        assert 'AN ERROR WAS THROWN IN SQL' in rtn[TestUtil.stdout]
+        assert 'Attempting to rollback' in rtn[TestUtil.stdout]
+        assert '130.Error_rollback.sql: No such file or directory' in rtn[TestUtil.stdout]
+
+    def test_apply_version_error_good_rollback(self):
+        TestUtil.get_error_rollback_good_sql()
+        pgv = TestUtil.local_pgvctrl()
+
+        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        rtn = pgv.run(arg_list, retcode=0)
+
+        print_cmd_error_details(rtn, arg_list)
+        assert rtn[TestUtil.return_code] == 0
+        assert 'AN ERROR WAS THROWN IN SQL' in rtn[TestUtil.stdout]
+        assert 'Attempting to rollback' in rtn[TestUtil.stdout]
+        assert '130.Error_rollback' in rtn[TestUtil.stdout]
+        assert '140.ItemsAddMore' in rtn[TestUtil.stdout]
+
+    def test_apply_version_error_bad_rollback(self):
+        TestUtil.get_error_rollback_bad_sql()
+        pgv = TestUtil.local_pgvctrl()
+
+        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        rtn = pgv.run(arg_list, retcode=1)
+
+        print_cmd_error_details(rtn, arg_list)
+        assert rtn[TestUtil.return_code] == 1
+        assert 'AN ERROR WAS THROWN IN SQL' in rtn[TestUtil.stdout]
+        assert 'Attempting to rollback' in rtn[TestUtil.stdout]
+        assert '130.Error_rollback' in rtn[TestUtil.stdout]
+        assert 'AN ERROR WAS THROWN IN THE ROLLBACK SQL' in rtn[TestUtil.stdout]
+        assert '140.ItemsAddMore' not in rtn[TestUtil.stdout]

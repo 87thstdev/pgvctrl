@@ -4,6 +4,7 @@
         "env": "env",
         "isProduction": "is_production",
         "repository": "repository_name",
+        "revision": "revision",
         "table": "repository_version",
         "version": "version",
         "versionHash": "version_hash"
@@ -11,13 +12,14 @@
     "repositories": [
         {
            "envs": {
-                "test": "0.0"
+                "test": "0.0.0"
             },
             "name": "pgvctrl_test",
             "versionStorage": {
                 "env": "env",
                 "isProduction": "is_production",
                 "repository": "repository_name",
+                "revision": "revision",
                 "table": "repository_version",
                 "version": "version",
                 "versionHash": "version_hash"

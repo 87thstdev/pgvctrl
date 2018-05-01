@@ -1,6 +1,8 @@
 import os
 
 import datetime
+import sys
+
 import simplejson as json
 
 import copy
@@ -40,8 +42,9 @@ to_unicode = str
 
 
 class DatabaseRepositoryVersion(object):
-    def __init__(self, version=None, repo_name=None, is_production=None, version_hash=None, env=None):
+    def __init__(self, version=None, revision=None, repo_name=None, is_production=None, version_hash=None, env=None):
         self.version = version
+        self.revision = revision
         self.repo_name = repo_name
         self.is_production = is_production
         self.version_hash = version_hash
@@ -76,6 +79,7 @@ class VersionDbShellUtil:
                        f"{v_stg.repo} VARCHAR NOT NULL," \
                        f"{v_stg.is_prod} BOOLEAN NOT NULL," \
                        f"{v_stg.env} VARCHAR," \
+                       f"{v_stg.rev} INTEGER NOT NULL DEFAULT(0)," \
                        f"{v_stg.hash} JSONB);"
 
         if env:
@@ -83,8 +87,8 @@ class VersionDbShellUtil:
         else:
             env_var = "NULL"
 
-        insert_v_sql = f"INSERT INTO {v_stg.tbl} ({v_stg.repo}, {v_stg.v}, {v_stg.is_prod}, {v_stg.env}, {v_stg.hash}) "
-        insert_v_sql += f"VALUES ('{repo_name}', NULL, '{is_production}', {env_var}, NULL);"
+        insert_v_sql = f"INSERT INTO {v_stg.tbl} ({v_stg.repo}, {v_stg.is_prod}, {v_stg.env}) "
+        insert_v_sql += f"VALUES ('{repo_name}', '{is_production}', {env_var});"
 
         if missing_tbl:
             psql(db_conn, "-c", create_v_tbl, retcode=0)
@@ -111,7 +115,7 @@ class VersionDbShellUtil:
             msg_formatted = msg.replace("psql:{0}:".format(sql_file.full_name), "\t")
             information_message("{0}".format(msg_formatted))
 
-            # TODO: Make this happen
+            # TODO: Make this happen, could be an -init call?
             # v_stg = VersionedDbHelper._get_v_stg(repo_name)
             # DbVersionShellHelper.set_db_instance_version(db_conn, v_stg, sql_file.full_name)
 
@@ -196,7 +200,7 @@ class VersionDbShellUtil:
         try:
             VersionDbShellUtil._execute_sql_on_db(psql, psql_parm_list, sql_file)
         except VersionedDbExceptionSqlExecutionError as e:
-            error_message("SQL ERROR {0}".format(e.message))
+            error_message_non_terminating("SQL ERROR {0}".format(e.message))
             VersionDbShellUtil._attempt_rollback(db_conn, sql_file)
 
     @staticmethod
@@ -233,19 +237,21 @@ class VersionDbShellUtil:
             raise VersionedDbExceptionSqlExecutionError(e.stderr)
 
     @staticmethod
-    def set_db_instance_version(db_conn, v_stg, new_version, new_hash=None):
+    def set_db_instance_version(db_conn, v_stg, new_version, new_hash=None, increase_rev=False, reset_rev=False):
         psql = _local_psql()
-        hash_val = 'Null' if new_hash is None else "'{0}'".format(json.dumps(new_hash))
-        update_version_sql = "UPDATE {table} " \
-                             "SET {v} = '{ver}'," \
-                             " {ver_hash} = {hash};" \
-            .format(
-                table=v_stg.tbl,
-                v=v_stg.v,
-                ver=new_version,
-                ver_hash=v_stg.hash,
-                hash=hash_val
-            )
+        rev_sql = ''
+
+        hash_val = 'Null' if new_hash is None else f"'{json.dumps(new_hash)}'"
+        if increase_rev:
+            rev_sql = f'{v_stg.rev} = {v_stg.rev} + 1,'
+
+        if reset_rev:
+            rev_sql = f'{v_stg.rev} = 0,'
+
+        update_version_sql = f"UPDATE {v_stg.tbl} " \
+                             f"SET {v_stg.v} = '{new_version}'," \
+                             f"{rev_sql}" \
+                             f" {v_stg.hash} = {hash_val};" \
 
         psql(db_conn, "-c", update_version_sql, retcode=0)
 
@@ -293,13 +299,12 @@ class VersionDbShellUtil:
         dbv = VersionDbShellUtil.get_db_instance_version(v_tbl, db_conn)
 
         if dbv and dbv.version is None:
-            warning_message("No version found!")
+            error_message("No version found!")
         else:
             prod_display = " PRODUCTION" if dbv.is_production else ""
             env_display = f" environment ({dbv.env})" if dbv.env else " environment (None)"
 
-            information_message(f"{dbv.version}: {dbv.repo_name}{prod_display}{env_display}")
-
+            information_message(f"{dbv.version}.{dbv.revision}: {dbv.repo_name}{prod_display}{env_display}")
 
     @staticmethod
     def get_db_instance_version(v_tbl, db_conn):
@@ -307,7 +312,8 @@ class VersionDbShellUtil:
 
         _good_version_table(v_tbl, db_conn)
 
-        version_sql = f"SELECT {v_tbl.v}, {v_tbl.repo}, {v_tbl.is_prod}, {v_tbl.env}, {v_tbl.hash}, 'notused' " \
+        version_sql = f"SELECT {v_tbl.v}, {v_tbl.rev}, {v_tbl.repo}, {v_tbl.is_prod}, {v_tbl.env}, {v_tbl.hash}, " \
+                      f"'notused' " \
                       f"throwaway FROM {v_tbl.tbl};"
 
         rtn = psql(db_conn, "-t", "-A", "-c", version_sql, retcode=0)
@@ -316,10 +322,11 @@ class VersionDbShellUtil:
         if len(rtn_array) > 1:
             return DatabaseRepositoryVersion(
                 version=convert_str_none_if_empty(rtn_array[0]),
-                repo_name=rtn_array[1],
-                is_production=convert_str_to_bool(rtn_array[2]),
-                env=convert_str_none_if_empty(rtn_array[3]),
-                version_hash=rtn_array[4]
+                revision=int(rtn_array[1]),
+                repo_name=rtn_array[2],
+                is_production=convert_str_to_bool(rtn_array[3]),
+                env=convert_str_none_if_empty(rtn_array[4]),
+                version_hash=rtn_array[5]
             )
         else:
             return None
@@ -454,6 +461,11 @@ def warning_message(message):
 
 
 def error_message(message):
+    print(colors.red & colors.bold | message)
+    sys.exit(1)
+
+
+def error_message_non_terminating(message):
     print(colors.red & colors.bold | message)
 
 

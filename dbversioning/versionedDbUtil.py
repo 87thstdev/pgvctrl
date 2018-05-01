@@ -18,9 +18,11 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionRepoDoesNotExits,
     VersionedDbExceptionRepoExits,
     VersionedDbExceptionNoVersionFound,
-    VersionedDbExceptionEnvDoesMatchDbEnv)
+    VersionedDbExceptionEnvDoesMatchDbEnv,
+    VersionedDbExceptionRepoVersionNumber)
 from dbversioning.versionedDbShellUtil import (
     VersionDbShellUtil,
+    error_message,
     information_message,
     DATA_DUMP_CONFIG_NAME,
     repo_version_information_message,
@@ -39,7 +41,7 @@ from dbversioning.repositoryconf import (
 
 to_unicode = str
 
-Version_Numbers = namedtuple("version_numbers", ["major", "minor"])
+Version_Numbers = namedtuple("version_numbers", ["major", "minor", "maintenance"])
 
 DB_INIT_DISPLAY = "Database initialized"
 DB_INIT_PRODUCTION_DISPLAY = DB_INIT_DISPLAY + " (PRODUCTION)"
@@ -68,7 +70,7 @@ class VersionedDbHelper:
             db_repos.append(VersionDb(join(os.getcwd(), root, repo_location)))
 
         for db_repo in db_repos:
-            v_sorted = sorted(db_repo.versions, key=lambda vs: (vs.major, vs.minor))
+            v_sorted = sorted(db_repo.versions, key=lambda vs: (vs.major, vs.minor, vs.maintenance))
             repo_conf = conf.get_repo(db_repo.db_name)
             if repo_conf:
                 information_message(db_repo.db_name)
@@ -110,7 +112,7 @@ class VersionedDbHelper:
             raise VersionedDbExceptionNoVersionFound()
 
         rtn = [v for v in vdb.versions
-               if v.major == version.major and v.minor == version.minor]
+               if v.major == version.major and v.minor == version.minor and v.maintenance == version.maintenance]
 
         if len(rtn) == 0:
             return None
@@ -181,7 +183,7 @@ class VersionedDbHelper:
         if fast_forward_to:
             VersionDbShellUtil.apply_fast_forward_sql(db_conn, fast_forward_to[0], repo_name)
         else:
-            information_message("Fast forward not found {0}".format(full_version))
+            error_message("Fast forward not found {0}".format(full_version))
 
     @staticmethod
     def push_data_to_database(repo_name, db_conn, force, is_production):
@@ -250,11 +252,27 @@ class VersionedDbHelper:
             VersionDbShellUtil.dump_version_snapshot(db_conn, v_stg)
 
         ver_hash = apply_repo.get_version_hash_set()
-        VersionDbShellUtil.set_db_instance_version(
-            db_conn, v_stg, apply_repo.full_name, ver_hash
-        )
 
-        information_message(f"Applied: {repo_name} v {version}")
+        increase_rev = True
+        if dbver.version_hash == json.dumps(ver_hash):
+            increase_rev = False
+
+        reset_rev = False
+        if standing > 0:
+            increase_rev = False
+            reset_rev = True
+
+        VersionDbShellUtil.set_db_instance_version(
+                db_conn=db_conn,
+                v_stg=v_stg,
+                new_version=apply_repo.full_name,
+                new_hash=ver_hash,
+                increase_rev=increase_rev,
+                reset_rev=reset_rev
+        )
+        new_dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
+
+        information_message(f"Applied: {new_dbver.repo_name} v {new_dbver.version}.{new_dbver.revision}")
         return True
 
     @staticmethod
@@ -280,10 +298,18 @@ class VersionedDbHelper:
         if v_l is None or v_h.major > v_l.major:
             return 1
 
-        if v_h.major == v_l.major and v_h.minor > v_l.minor:
+        if v_h.major == v_l.major \
+                and v_h.minor > v_l.minor:
             return 1
 
-        if v_h.major == v_l.major and v_h.minor == v_l.minor:
+        if v_h.major == v_l.major \
+                and v_h.minor == v_l.minor \
+                and v_h.maintenance >= v_l.maintenance:
+            return 1
+
+        if v_h.major == v_l.major and \
+                v_h.minor == v_l.minor and \
+                v_h.maintenance == v_l.maintenance:
             return 0
 
         return -1
@@ -373,20 +399,20 @@ class VersionedDbHelper:
     @staticmethod
     def _get_v_stg(repo_name):
         repo = RepositoryConf.get_repo(repo_name)
+        v_stg = None
 
         if repo:
             v_stg = repo[VERSION_STORAGE]
         else:
-            conf = RepositoryConf()
-            v_stg = conf.default_version_storage()
+            raise VersionedDbExceptionRepoDoesNotExits(repo_name)
 
         return v_stg
 
     @staticmethod
-    def get_version_numbers(version_string):
+    def get_version_numbers(version: str):
         try:
-            ver_array = version_string.split(".")
+            ver_array = version.split(".")
 
-            return Version_Numbers(int(ver_array[0]), int(ver_array[1]))
+            return Version_Numbers(int(ver_array[0]), int(ver_array[1]), int(ver_array[2]))
         except (ValueError, AttributeError):
-            return None
+            raise VersionedDbExceptionRepoVersionNumber(version=version)

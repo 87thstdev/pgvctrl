@@ -52,6 +52,8 @@ In the test directory:
     <pre>pgvctrl -init [db connection information] -repo [repository name] -production</pre>
     __NOTE:__<br />
     __Database connection information should include at a minimum.__
+    
+    _Standard Information_
     <pre>-d [database name on server]</pre>
     e.g.
     <pre>pgvctrl -init -d mylocaldb -repo mydb</pre>
@@ -62,19 +64,27 @@ In the test directory:
     -u [database username]
     -pwd [password]
     </pre>
-
+    
+    *Or*
+    
+    _Service Information [.pg_service](https://www.postgresql.org/docs/9.6/static/libpq-pgservice.html)_
+    <pre>-svc [pg service information]</pre>
+    e.g.
+    <pre>pgvctrl -svc mydatabase:test -repo mydb</pre>
+    
     __What just happened?__<br />
     After initialization is complete:
     * There will be a new table in your database named repository_version.
       This is where pbvctrl stores your repository name, version number with a
-       version hash for each sql update file, environment name and production flag.
+       version hash for each sql update file, environment name, revision (number of times
+       the same version has been applied with different sql hash) and production flag.
        
 1. Make repository version for repository: -mkv: Make version number:
-    <pre>pgvctrl -mkv [x.x.version_name] -repo [repository name]</pre>
+    <pre>pgvctrl -mkv [x.x.x.version_name] -repo [repository name]</pre>
     e.g.:
-    <pre>pgvctrl -mkv 1.0.my_new_version -repo mydb</pre>
+    <pre>pgvctrl -mkv 1.0.0.my_new_version -repo mydb</pre>
     Output:
-    <pre>Version mydb/1.0.my_new_version created.</pre>
+    <pre>Version mydb/1.0.0.my_new_version created.</pre>
 
 1. Create sql change files in the versioned directory!  These files will be used to update your database and should
   have the naming convention of:<br />
@@ -82,22 +92,22 @@ In the test directory:
   e.g.: 100.AddedUserTable.sql
 
 1. List repositories and changes:
-    <pre>pgvctrl -repolist</pre>
+    <pre>pgvctrl -rl</pre>
     Output:
     <pre>mydb
-        v 1.0.my_new_version</pre>
+        v 1.0.0.my_new_version</pre>
 
     Verbose:
-    <pre>pgvctrl -repolist -verbose</pre>
+    <pre>pgvctrl -rlv</pre>
     Output:
     <pre>mydb
-        v 0.0.my_new_version
+        v 0.0.0.my_new_version
             100 AddUsersTable</pre>
 
 1. When you are ready to apply your changes to your database:
     <pre>pgvctrl -apply -v [version number] -repo [repository name] [db connection information]</pre>
     e.g.
-    <pre>pgvctrl -apply -v 0.0 -repo mydb -d mylocaldb</pre>
+    <pre>pgvctrl -apply -v 0.0.0 -repo mydb -d mylocaldb</pre>
     Output:
     <pre>Running: 100.AddUsersTable<br />...<br />Running: 500.AddStatesTable</pre>
 
@@ -109,14 +119,26 @@ In the test directory:
     * If you have "autoSnapshots" set to true, a snapshot was created in the _snapshots/[repository] directory
     * The repository_version table was update with the new version hash.
 
+    #### SQL Error handling on -apply
+    In the event of an SQL error, pgvctrl will attempt to run the rollback version of 
+    your sql.
+    
+    e.g
+    <pre>
+    100.AddUsers.sql 
+    100.AddUsers_rollback.sql - rollback file for 100.AddUsers.sql</pre>
+    
+    - If your rollback file does not exist or fails, the -apply command fails and 
+    no sql after the first failing sql file will be ran. 
+    - If the rollback file succeeds, all other sql files will be ran until all files have 
+    been applied if they can be.
 
-## What else can pgvctrl do?
-#### -chkver: Check the version and repo on a database:
-<pre>pgvctrl -chkver -repo [repository name] [db connection information]</pre>
-e.g:
-<pre>pgvctrl -chkver -repo mydb -d mylocaldb</pre>
-Output:
-<pre>mydb: 0.0</pre>
+#### Working with environments:
+
+Setting up environment versions in repositories help ensure versions get deployed to the proper
+database.
+
+#### Making and setting environments.
 
 #### -mkenv: Make environment type:
 <pre>pgvctrl -mkenv [env_name] -repo [repository name]</pre>
@@ -128,9 +150,31 @@ Output:
 #### -setenv: Set environment type to a version:
 <pre>pgvctrl -setenv [env_name] -v [x.x] -repo [repository name]</pre>
 e.g.:
-<pre>pgvctrl -setenv test -v 1.0 -repo mydb</pre>
+<pre>pgvctrl -setenv test -v 1.0.0 -repo mydb</pre>
 Output:
-<pre>Repository environment set: mydb test 1.0</pre>
+<pre>Repository environment set: mydb test 1.0.0</pre>
+
+#### -init database with environment:
+<pre>pgvctrl -init [db connection information] -repo [repository name] -setenv [env_name]</pre>
+For production databases:
+<pre>pgvctrl -init [db connection information] -repo [repository name] -setenv [env_name] -production</pre>
+Output:
+<pre>Database initialized environment [env_name]</pre>
+
+#### -apply using -env:
+<pre>pgvctrl -apply -env [env_name] -repo [repository name] [db connection information]</pre>
+e.g.
+<pre>pgvctrl -apply -env test -repo mydb -d mylocaldb</pre>
+Output:
+<pre>Running: 100.AddUsersTable<br />...<br />Running: 500.AddStatesTable<br />Applied: mydb v 1.1.0.MyVersion.0</pre>
+
+## What else can pgvctrl do?
+#### -chkver: Check the version and repo on a database:
+<pre>pgvctrl -chkver -repo [repository name] [db connection information]</pre>
+e.g:
+<pre>pgvctrl -chkver -repo mydb -d mylocaldb</pre>
+Output:
+<pre>mydb: 0.0.0.first.0</pre>
 
 #### -rmenv: Remove environment type:
 <pre>pgvctrl -rmenv [env_name] -repo [repository name]</pre>
@@ -147,7 +191,7 @@ Output:
 <pre>Repository removed: test</pre>
 __*Notes:*__<br />
 * If this command does not remove the folder from database, you must remove it and its contents yourself.  This is a safety measure.
-* Any repository folders left behind will be displayed as UNREGISTERED when the -repolist option is used.
+* Any repository folders left behind will be displayed as UNREGISTERED when the -rl option is used.
 
 ### Fast Forward (-setff, -applyff)
 __What are Fast Forwards?__<br />
@@ -218,6 +262,7 @@ tells pgvctrl where to look for the repositories.
         "env": "env",
         "isProduction": "is_production",
         "repository": "repository_name",
+        "revision": "revision",
         "table": "repository_version",
         "version": "version",
         "versionHash": "version_hash"
@@ -225,15 +270,16 @@ tells pgvctrl where to look for the repositories.
     "repositories": [
         {
             "envs": { 
-                "your_test": "1.0",
-                "your_qa": "1.0",
-                "your_prod": "0.9"
+                "your_test": "1.0.1",
+                "your_qa": "1.0.0",
+                "your_prod": "0.9.0"
              },
             "name": "YouRepoName",
             "versionStorage": {
                 "env": "env",
                 "isProduction": "is_production",
                 "repository": "repository_name",
+                "revision": "revision",
                 "table": "repository_version",
                 "version": "version",
                 "versionHash": "version_hash"
