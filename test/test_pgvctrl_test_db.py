@@ -1,7 +1,16 @@
-from test.test_pgvctrl import DB_REPO_CONFIG_JSON
+from dbversioning.dbvctrl import (
+    parse_args,
+    INCLUDE_SCHEMA_ARG,
+    EXCLUDE_SCHEMA_ARG
+)
+from dbversioning.dbvctrlConst import (
+    INCLUDE_TABLE_ARG,
+    EXCLUDE_TABLE_ARG)
+from test.test_pgvctrl_config import DB_REPO_CONFIG_JSON
 from test.test_util import (
     TestUtil,
-    print_cmd_error_details)
+    print_cmd_error_details,
+    capture_dbvctrl_out)
 
 
 class TestPgvctrlTestDb:
@@ -61,7 +70,247 @@ class TestPgvctrlTestDb:
         assert rtn[TestUtil.stdout] == f'Fast forward set: {TestUtil.pgvctrl_test_repo}\n'
         assert rtn[TestUtil.return_code] == 0
 
-    def test_apply_fast_forward(self):
+    def test_set_fast_forward_include_schema(self):
+        arg_list = [INCLUDE_SCHEMA_ARG, TestUtil.schema_membership, "-repo", TestUtil.pgvctrl_test_repo]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        args = parse_args(arg_list)
+        out_rtn, errors = capture_dbvctrl_out(args=args)
+        has_member_sch = TestUtil.file_contains(
+                TestUtil.test_version_ff_path,
+                f"CREATE SCHEMA {TestUtil.schema_membership}")
+        has_public_sch = TestUtil.file_contains(
+                TestUtil.test_version_ff_path,
+                f"CREATE SCHEMA {TestUtil.schema_public}")
+        print_cmd_error_details(out_rtn, arg_list)
+        assert out_rtn == f'Fast forward set: {TestUtil.pgvctrl_test_repo}\n'
+        assert errors is None
+        assert has_member_sch is True
+        assert has_public_sch is False
+
+    def test_set_fast_forward_include_schema_bad(self):
+        arg_list = [INCLUDE_SCHEMA_ARG, TestUtil.schema_bad, "-repo", TestUtil.pgvctrl_test_repo]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        args = parse_args(arg_list)
+        out_rtn, errors = capture_dbvctrl_out(args=args)
+        print_cmd_error_details(out_rtn, arg_list)
+        assert out_rtn == f'DB Error pg_dump: no matching schemas were found\n\n'
+        assert errors.code == 1
+
+    def test_set_fast_forward_exclude_schema(self):
+        arg_list = [EXCLUDE_SCHEMA_ARG, TestUtil.schema_membership, "-repo", TestUtil.pgvctrl_test_repo]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        args = parse_args(arg_list)
+        out_rtn, errors = capture_dbvctrl_out(args=args)
+
+        has_member = TestUtil.file_contains(TestUtil.test_version_ff_path, TestUtil.schema_membership)
+        has_public = TestUtil.file_contains(TestUtil.test_version_ff_path, TestUtil.schema_public)
+
+        print_cmd_error_details(out_rtn, arg_list)
+        assert out_rtn == f'Fast forward set: {TestUtil.pgvctrl_test_repo}\n'
+        assert errors is None
+        assert has_member is False
+        assert has_public is True
+
+    def test_set_fast_forward_exclude_schema_bad(self):
+        arg_list = [EXCLUDE_SCHEMA_ARG, TestUtil.schema_bad, "-repo", TestUtil.pgvctrl_test_repo]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        args = parse_args(arg_list)
+        out_rtn, errors = capture_dbvctrl_out(args=args)
+        print_cmd_error_details(out_rtn, arg_list)
+
+        # Excluding schemas that don't exist is not an issue
+        assert out_rtn == f'Fast forward set: {TestUtil.pgvctrl_test_repo}\n'
+        assert errors is None
+
+    def test_set_fast_forward_include_exclude_schema(self):
+        arg_list = [INCLUDE_SCHEMA_ARG, TestUtil.schema_public, "-repo", TestUtil.pgvctrl_test_repo]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = [EXCLUDE_SCHEMA_ARG, TestUtil.schema_membership, "-repo", TestUtil.pgvctrl_test_repo]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        args = parse_args(arg_list)
+        out_rtn, errors = capture_dbvctrl_out(args=args)
+        print_cmd_error_details(out_rtn, arg_list)
+        assert out_rtn == f'{TestUtil.pgvctrl_test_repo} cannot have both included and excluded schemas!\n'
+        assert errors.code == 1
+
+    def test_set_fast_forward_include_table(self):
+        arg_list = [INCLUDE_TABLE_ARG, TestUtil.table_membership_user_state, "-repo", TestUtil.pgvctrl_test_repo]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        args = parse_args(arg_list)
+        out_rtn, errors = capture_dbvctrl_out(args=args)
+        has_member_tbl = TestUtil.file_contains(
+                TestUtil.test_version_ff_path,
+                f"CREATE TABLE {TestUtil.table_membership_user_state}")
+        has_public_tbl = TestUtil.file_contains(
+                TestUtil.test_version_ff_path,
+                f"CREATE TABLE {TestUtil.table_public_item}")
+        print_cmd_error_details(out_rtn, arg_list)
+        assert out_rtn == f'Fast forward set: {TestUtil.pgvctrl_test_repo}\n'
+        assert errors is None
+        assert has_member_tbl is True
+        assert has_public_tbl is False
+
+    def test_set_fast_forward_include_table_bad(self):
+        arg_list = [INCLUDE_TABLE_ARG, TestUtil.table_bad, "-repo", TestUtil.pgvctrl_test_repo]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        args = parse_args(arg_list)
+        out_rtn, errors = capture_dbvctrl_out(args=args)
+        print_cmd_error_details(out_rtn, arg_list)
+        assert out_rtn == f'DB Error pg_dump: no matching tables were found\n\n'
+        assert errors.code == 1
+
+    def test_set_fast_forward_exclude_table(self):
+        arg_list = [EXCLUDE_TABLE_ARG, TestUtil.table_membership_user_state, "-repo", TestUtil.pgvctrl_test_repo]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        args = parse_args(arg_list)
+        out_rtn, errors = capture_dbvctrl_out(args=args)
+
+        has_member = TestUtil.file_contains(
+                TestUtil.test_version_ff_path,
+                f"CREATE TABLE {TestUtil.table_membership_user_state}")
+        has_public = TestUtil.file_contains(TestUtil.test_version_ff_path, TestUtil.table_public_item)
+
+        print_cmd_error_details(out_rtn, arg_list)
+        assert out_rtn == f'Fast forward set: {TestUtil.pgvctrl_test_repo}\n'
+        assert errors is None
+        assert has_member is False
+        assert has_public is True
+
+    def test_set_fast_forward_exclude_table_bad(self):
+        arg_list = [EXCLUDE_TABLE_ARG, TestUtil.table_bad, "-repo", TestUtil.pgvctrl_test_repo]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        args = parse_args(arg_list)
+        out_rtn, errors = capture_dbvctrl_out(args=args)
+        print_cmd_error_details(out_rtn, arg_list)
+
+        # Excluding tables that don't exist is not an issue
+        assert out_rtn == f'Fast forward set: {TestUtil.pgvctrl_test_repo}\n'
+        assert errors is None
+
+    def test_set_fast_forward_include_schema_exclude_table(self):
+        arg_list = [INCLUDE_SCHEMA_ARG, TestUtil.schema_membership, "-repo", TestUtil.pgvctrl_test_repo]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = [EXCLUDE_TABLE_ARG, TestUtil.table_membership_user_state, "-repo", TestUtil.pgvctrl_test_repo]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        args = parse_args(arg_list)
+        out_rtn, errors = capture_dbvctrl_out(args=args)
+        has_member_sch = TestUtil.file_contains(
+                TestUtil.test_version_ff_path,
+                f"CREATE SCHEMA {TestUtil.schema_membership}")
+        has_member_tbl = TestUtil.file_contains(
+                TestUtil.test_version_ff_path,
+                f"CREATE TABLE {TestUtil.table_membership_user_state}")
+
+        print_cmd_error_details(out_rtn, arg_list)
+        assert out_rtn == f'Fast forward set: {TestUtil.pgvctrl_test_repo}\n'
+        assert errors is None
+        assert has_member_sch is True
+        assert has_member_tbl is False
+
+    def test_set_fast_forward_exclude_schema_include_table(self):
+        arg_list = [EXCLUDE_SCHEMA_ARG, TestUtil.schema_membership, "-repo", TestUtil.pgvctrl_test_repo]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = [INCLUDE_TABLE_ARG, TestUtil.table_membership_user_state, "-repo", TestUtil.pgvctrl_test_repo]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        args = parse_args(arg_list)
+        out_rtn, errors = capture_dbvctrl_out(args=args)
+        has_member_sch = TestUtil.file_contains(
+                TestUtil.test_version_ff_path,
+                f"CREATE SCHEMA {TestUtil.schema_membership}")
+        has_member_tbl = TestUtil.file_contains(
+                TestUtil.test_version_ff_path,
+                f"CREATE TABLE {TestUtil.table_membership_user_state}")
+
+        print_cmd_error_details(out_rtn, arg_list)
+        assert out_rtn == f'Fast forward set: {TestUtil.pgvctrl_test_repo}\n'
+        assert errors is None
+        assert has_member_sch is False
+        assert has_member_tbl is True
+
+    def test_apply_fast_forward_fail(self):
         pgv = TestUtil.local_pgvctrl()
 
         arg_list = ["-applyff", TestUtil.test_first_version, "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]

@@ -1,4 +1,6 @@
 import os
+from typing import List, Dict, Union
+
 import simplejson as json
 from simplejson import JSONDecodeError
 
@@ -12,7 +14,8 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionRepoDoesNotExits,
     VersionedDbExceptionRepoExits,
     VersionedDbExceptionRepoEnvDoesNotExits,
-    VersionedDbExceptionBadConfigVersionFound)
+    VersionedDbExceptionBadConfigVersionFound,
+    VersionedDbExceptionIncludeExcludeSchema)
 from dbversioning.osUtil import ensure_dir_exists
 
 Version_Table = namedtuple("version_table", ["tbl", "v", "rev", "hash", "repo", "is_prod", "env"])
@@ -36,6 +39,10 @@ IS_PRODUCTION = "isProduction"
 ENV = "env"
 NAME = "name"
 ENVS = "envs"
+INCLUDE_TABLES = 'includeTables'
+INCLUDE_SCHEMAS = 'includeSchemas'
+EXCLUDE_TABLES = 'excludeTables'
+EXCLUDE_SCHEMAS = 'excludeSchemas'
 
 
 class RepositoryConf(object):
@@ -88,7 +95,7 @@ class RepositoryConf(object):
             except JSONDecodeError:
                 raise VersionedDbExceptionBadConfigFile()
         else:
-            raise VersionedDbExceptionFileMissing(RepositoryConf.config_file_name)
+            raise VersionedDbExceptionFileMissing(RepositoryConf.config_file_name())
 
         return d
 
@@ -142,7 +149,7 @@ class RepositoryConf(object):
     def repo_list():
         conf = RepositoryConf._get_repo_dict()
         repos = conf[REPOSITORIES]
-        cust_repos = []
+        rtn_repos = []
 
         for repo in repos:
             vs = repo[VERSION_STORAGE]
@@ -155,13 +162,10 @@ class RepositoryConf(object):
                 is_prod=vs[IS_PRODUCTION],
                 env=vs[ENV]
             )
-            cust_repos.append({
-                NAME: repo[NAME],
-                VERSION_STORAGE: ver_tbl,
-                ENVS: repo[ENVS]
-            })
+            repo[VERSION_STORAGE] = ver_tbl
+            rtn_repos.append(repo)
 
-        return cust_repos
+        return rtn_repos
 
     @staticmethod
     def get_repo(repo_name):
@@ -390,3 +394,116 @@ class RepositoryConf(object):
             raise VersionedDbExceptionFileMissing(RepositoryConf.config_file_name())
 
         return None
+
+    @staticmethod
+    def convert_dict_to_config_json_str(conf: Dict) -> str:
+        return json.dumps(
+                conf,
+                indent=4,
+                sort_keys=True,
+                separators=(',', ': '),
+                ensure_ascii=True)
+
+    @staticmethod
+    def save_config(out_str: str):
+        with open(RepositoryConf.config_file_name(), 'w') as outfile:
+            outfile.write(out_str)
+
+    @staticmethod
+    def get_repo_include_schemas(repo_name: str) -> Union[None, List[str]]:
+        repo_dict = RepositoryConf.get_repo(repo_name)
+
+        if INCLUDE_SCHEMAS in repo_dict:
+            return repo_dict[INCLUDE_SCHEMAS]
+
+        return None
+
+    @staticmethod
+    def get_repo_exclude_schemas(repo_name: str) -> Union[None, List[str]]:
+        repo_dict = RepositoryConf.get_repo(repo_name)
+
+        if EXCLUDE_SCHEMAS in repo_dict:
+            return repo_dict[EXCLUDE_SCHEMAS]
+
+        return None
+
+    @staticmethod
+    def get_repo_list(repo_name: str, list_name: str) -> Union[None, List[str]]:
+        repo_dict = RepositoryConf.get_repo(repo_name)
+
+        if list_name in repo_dict:
+            return repo_dict[list_name]
+
+        return None
+
+    @staticmethod
+    def check_include_exclude_violation(repo_name: str):
+        inc_sch = RepositoryConf.get_repo_include_schemas(repo_name)
+        exc_sch = RepositoryConf.get_repo_exclude_schemas(repo_name)
+
+        if inc_sch and exc_sch and len(inc_sch) > 0 and len(exc_sch) > 0:
+            raise VersionedDbExceptionIncludeExcludeSchema(repo_name)
+
+    @staticmethod
+    def balance_repo_lists(repo_name: str, add_list: List[str], add_to: str, remove_from: str):
+        conf = RepositoryConf._get_repo_dict()
+        add_set = set(add_list)
+
+        if not os.path.isfile(RepositoryConf.config_file_name()):
+            raise VersionedDbExceptionFileMissing(RepositoryConf.config_file_name())
+
+        try:
+            with open(RepositoryConf.config_file_name()):
+                repos = conf[REPOSITORIES]
+                rp = [r for r in repos if r[NAME] == repo_name]
+
+                if not rp:
+                    raise VersionedDbExceptionRepoDoesNotExits(repo_name)
+
+                if add_to in rp[0]:
+                    current_set = set(rp[0][add_to])
+                    add_set.union(current_set)
+
+                rp[0][add_to] = list(add_set)
+
+                if remove_from in rp[0]:
+                    new_removes = set(rp[0][remove_from])
+                    rp[0][remove_from] = list(new_removes.difference(add_set))
+
+                out_str = RepositoryConf.convert_dict_to_config_json_str(conf)
+
+        except JSONDecodeError:
+            raise VersionedDbExceptionBadConfigFile()
+
+        RepositoryConf.save_config(out_str)
+
+        return True
+
+    @staticmethod
+    def remove_from_repo_list(repo_name: str, remove_list: List[str], remove_from: str):
+        conf = RepositoryConf._get_repo_dict()
+        remove_set = set(remove_list)
+
+        if not os.path.isfile(RepositoryConf.config_file_name()):
+            raise VersionedDbExceptionFileMissing(RepositoryConf.config_file_name())
+
+        try:
+            with open(RepositoryConf.config_file_name()):
+                repos = conf[REPOSITORIES]
+                rp = [r for r in repos if r[NAME] == repo_name]
+
+                if not rp:
+                    raise VersionedDbExceptionRepoDoesNotExits(repo_name)
+
+                if remove_from in rp[0]:
+                    current_set = set(rp[0][remove_from])
+                    rp[0][remove_from] = list(current_set.difference(remove_set))
+
+                out_str = RepositoryConf.convert_dict_to_config_json_str(conf)
+
+        except JSONDecodeError:
+            raise VersionedDbExceptionBadConfigFile()
+
+        RepositoryConf.save_config(out_str)
+
+        return True

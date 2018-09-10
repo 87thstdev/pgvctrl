@@ -132,6 +132,12 @@ class VersionedDbExceptionInvalidRepo(VersionedDbException):
         pass
 
 
+class VersionedDbExceptionIncludeExcludeSchema(VersionedDbException):
+    def __init__(self, repo: str):
+        self.message = f"{repo} cannot have both included and excluded schemas!"
+        pass
+
+
 class VersionedDbExceptionDatabaseAlreadyInit(VersionedDbException):
     def __init__(self):
         self.message = "Database already initialized!"

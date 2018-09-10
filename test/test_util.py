@@ -1,7 +1,15 @@
+import mmap
 import os
+import io
+import sys
+from contextlib import redirect_stdout
 from shutil import copy2
+import simplejson as json
 
 from plumbum import local
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from dbversioning.dbvctrl import DbVctrl
 
 
 class TestUtil(object):
@@ -17,6 +25,7 @@ class TestUtil(object):
     test_first_version = "0.0.0.first"
     test_first_version_path = f"databases/{pgvctrl_test_repo}/{test_first_version}"
     test_version = "2.0.0.NewVersion"
+    test_version_ff_path = f"databases/_fastForward/{pgvctrl_test_repo}/{test_version}.sql"
     test_make_version = "3.0.0.MakeNewVersion"
     test_make_version_path = f"databases/{pgvctrl_test_repo}/{test_make_version}"
     test_bad_version = "999.1.bad_version"
@@ -28,6 +37,13 @@ class TestUtil(object):
     env_test = "test"
     env_qa = "qa"
     env_prod = "prod"
+    schema_membership = "membership"
+    schema_public = "public"
+    schema_bad = "badschemaname"
+    table_membership_user_state = f"{schema_membership}.user_state"
+    table_public_item = f"{schema_public}.item"
+    table_bad = "badtablename"
+    config_file = 'dbRepoConfig.json'
 
     sql_return = 'Running: 100.AddUsersTable\n\n' \
                  'Running: 110.Notice\n' \
@@ -92,7 +108,7 @@ class TestUtil(object):
 
     @staticmethod
     def get_static_config():
-        copy2('dbRepoConfig.json.default', 'dbRepoConfig.json')
+        copy2(f'{TestUtil.config_file}.default', TestUtil.config_file)
 
     @staticmethod
     def get_error_sql():
@@ -105,6 +121,36 @@ class TestUtil(object):
     @staticmethod
     def get_error_rollback_good_sql():
         copy2(f'{TestUtil.error_sql_rollback_path}.good.default', TestUtil.error_sql_rollback_path)
+
+    @staticmethod
+    def get_repo_dict():
+        d = None
+        if os.path.isfile(TestUtil.config_file):
+            with open(TestUtil.config_file) as json_data:
+                d = json.load(json_data)
+
+        return d
+
+    @staticmethod
+    def file_contains(file_path, key):
+        with open(file_path, 'rb', 0) as file, \
+                mmap.mmap(file.fileno(), 0, access=mmap.ACCESS_READ) as s:
+            if s.find(key.encode()) != -1:
+                return True
+
+        return False
+
+
+def capture_dbvctrl_out(args):
+    out = io.StringIO()
+    errors = None
+    with redirect_stdout(out):
+        try:
+            DbVctrl.run(args)
+        except BaseException as e:
+            errors = e
+
+    return out.getvalue(), errors
 
 
 def print_cmd_error_details(rtn, arg_list):

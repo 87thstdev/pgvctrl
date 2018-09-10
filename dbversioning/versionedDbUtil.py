@@ -37,7 +37,11 @@ from dbversioning.repositoryconf import (
     SNAPSHOTS,
     FAST_FORWARD,
     ROLLBACK_FILE_ENDING,
-    ENVS)
+    ENVS,
+    INCLUDE_SCHEMAS,
+    EXCLUDE_SCHEMAS,
+    INCLUDE_TABLES,
+    EXCLUDE_TABLES)
 
 to_unicode = str
 
@@ -90,16 +94,22 @@ class VersionedDbHelper:
                         information_message(f"\t\t{s.number} {s.name}")
 
     @staticmethod
-    def valid_repository(repository):
+    def valid_repository(repository: str):
         found = True
         conf = RepositoryConf()
         root = conf.root()
         try:
             VersionDb(join(os.getcwd(), root, repository))
-        except OSError:
+        except (OSError, TypeError):
             found = False
 
         return found
+
+    @staticmethod
+    def valid_repository_throwing(repository: str):
+        repo_found = VersionedDbHelper.valid_repository(repository)
+        if not repo_found:
+            raise VersionedDbExceptionRepoDoesNotExits(repository)
 
     @staticmethod
     def get_repository_version(repository, version):
@@ -279,7 +289,7 @@ class VersionedDbHelper:
     def set_repository_fast_forward(repo_name, db_conn):
         v_stg = VersionedDbHelper._get_v_stg(repo_name)
 
-        if VersionDbShellUtil.dump_version_fast_forward(db_conn, v_stg):
+        if VersionDbShellUtil.dump_version_fast_forward(db_conn, v_stg, repo_name):
             information_message(f"Fast forward set: {repo_name}")
 
     @staticmethod
@@ -335,53 +345,126 @@ class VersionedDbHelper:
 
     @staticmethod
     def remove_repository(repo_name):
-        repo_found = VersionedDbHelper.valid_repository(repo_name)
-        if not repo_found:
-            raise VersionedDbExceptionRepoDoesNotExits(repo_name)
+        VersionedDbHelper.valid_repository_throwing(repo_name)
 
         if RepositoryConf.remove_repo(repo_name=repo_name):
             information_message(f"Repository removed: {repo_name}")
 
     @staticmethod
     def create_repository_environment(repo_name, env):
-        repo_found = VersionedDbHelper.valid_repository(repo_name)
-        if not repo_found:
-            raise VersionedDbExceptionRepoDoesNotExits(repo_name)
+        VersionedDbHelper.valid_repository_throwing(repo_name)
 
         if RepositoryConf.create_repo_env(repo_name=repo_name, env=env):
             information_message(f"Repository environment created: {repo_name} {env}")
 
     @staticmethod
     def remove_repository_environment(repo_name, env):
-        repo_found = VersionedDbHelper.valid_repository(repo_name)
-        if not repo_found:
-            raise VersionedDbExceptionRepoDoesNotExits(repo_name)
+        VersionedDbHelper.valid_repository_throwing(repo_name)
 
         if RepositoryConf.remove_repo_env(repo_name=repo_name, env=env):
             information_message(f"Repository environment removed: {repo_name} {env}")
 
     @staticmethod
     def get_repository_environment(repo_name, env):
-        repo_found = VersionedDbHelper.valid_repository(repo_name)
-        if not repo_found:
-            raise VersionedDbExceptionRepoDoesNotExits(repo_name)
+        VersionedDbHelper.valid_repository_throwing(repo_name)
 
         return RepositoryConf.get_repo_env(repo_name=repo_name, env=env)
 
     @staticmethod
     def set_repository_environment_version(repo_name, env, version):
-        repo_found = VersionedDbHelper.valid_repository(repo_name)
+        VersionedDbHelper.valid_repository_throwing(repo_name)
         version_nums = VersionedDbHelper.get_version_numbers(version)
         version_found = VersionedDbHelper.get_repository_version(repo_name, version_nums)
-
-        if not repo_found:
-            raise VersionedDbExceptionRepoDoesNotExits(repo_name)
 
         if not version_found:
             raise VersionedDbExceptionRepoVersionDoesNotExits(repo_name, version)
 
         if RepositoryConf.set_repo_env(repo_name=repo_name, env=env, version=version):
             information_message(f"Repository environment set: {repo_name} {env} {version}")
+
+    @staticmethod
+    def add_repository_include_schemas(repo_name, include_schemas):
+        VersionedDbHelper.valid_repository_throwing(repo_name)
+
+        if RepositoryConf.balance_repo_lists(
+                repo_name=repo_name,
+                add_list=include_schemas,
+                add_to=INCLUDE_SCHEMAS,
+                remove_from=EXCLUDE_SCHEMAS):
+            information_message(f"Repository added: {repo_name} include-schemas {include_schemas}")
+
+    @staticmethod
+    def remove_repository_include_schemas(repo_name, rminclude_schemas):
+        VersionedDbHelper.valid_repository_throwing(repo_name)
+
+        if RepositoryConf.remove_from_repo_list(
+                repo_name=repo_name,
+                remove_list=rminclude_schemas,
+                remove_from=INCLUDE_SCHEMAS):
+            information_message(f"Repository removed: {repo_name} include-schemas {rminclude_schemas}")
+
+    @staticmethod
+    def add_repository_exclude_schemas(repo_name, exclude_schemas):
+        VersionedDbHelper.valid_repository_throwing(repo_name)
+
+        if RepositoryConf.balance_repo_lists(
+                repo_name=repo_name,
+                add_list=exclude_schemas,
+                add_to=EXCLUDE_SCHEMAS,
+                remove_from=INCLUDE_SCHEMAS):
+            information_message(f"Repository added: {repo_name} exclude-schemas {exclude_schemas}")
+
+    @staticmethod
+    def remove_repository_exclude_schemas(repo_name, rmexclude_schemas):
+        VersionedDbHelper.valid_repository_throwing(repo_name)
+
+        if RepositoryConf.remove_from_repo_list(
+                repo_name=repo_name,
+                remove_list=rmexclude_schemas,
+                remove_from=EXCLUDE_SCHEMAS):
+            information_message(f"Repository removed: {repo_name} exclude-schemas {rmexclude_schemas}")
+
+    @staticmethod
+    def add_repository_include_table(repo_name, include_tables):
+        VersionedDbHelper.valid_repository_throwing(repo_name)
+
+        if RepositoryConf.balance_repo_lists(
+                repo_name=repo_name,
+                add_list=include_tables,
+                add_to=INCLUDE_TABLES,
+                remove_from=EXCLUDE_TABLES):
+            information_message(f"Repository added: {repo_name} include-table {include_tables}")
+
+    @staticmethod
+    def remove_repository_include_table(repo_name, rminclude_table):
+        VersionedDbHelper.valid_repository_throwing(repo_name)
+
+        if RepositoryConf.remove_from_repo_list(
+                repo_name=repo_name,
+                remove_list=rminclude_table,
+                remove_from=INCLUDE_TABLES):
+            information_message(f"Repository removed: {repo_name} include-table {rminclude_table}")
+
+    @staticmethod
+    def add_repository_exclude_table(repo_name, exclude_tables):
+        VersionedDbHelper.valid_repository_throwing(repo_name)
+
+        if RepositoryConf.balance_repo_lists(
+                repo_name=repo_name,
+                add_list=exclude_tables,
+                add_to=EXCLUDE_TABLES,
+                remove_from=INCLUDE_TABLES):
+            information_message(f"Repository added: {repo_name} exclude-table {exclude_tables}")
+
+    @staticmethod
+    def remove_repository_exclude_table(repo_name, rmexclude_table):
+        VersionedDbHelper.valid_repository_throwing(repo_name)
+
+        if RepositoryConf.remove_from_repo_list(
+                repo_name=repo_name,
+                remove_list=rmexclude_table,
+                remove_from=EXCLUDE_TABLES):
+            information_message(f"Repository removed: {repo_name} exclude-table {rmexclude_table}")
 
     @staticmethod
     def create_config():

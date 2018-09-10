@@ -2,6 +2,7 @@ import os
 
 import datetime
 import sys
+from typing import List, Union
 
 import simplejson as json
 
@@ -12,6 +13,11 @@ from plumbum import (
     ProcessExecutionError)
 from simplejson import JSONDecodeError
 
+from dbversioning.dbvctrlConst import (
+    PG_INCLUDE_SCHEMA_ARG,
+    PG_EXCLUDE_SCHEMA_ARG,
+    PG_INCLUDE_TABLE_ARG,
+    PG_EXCLUDE_TABLE_ARG)
 from dbversioning.osUtil import (
     ensure_dir_exists,
     make_data_file)
@@ -29,7 +35,9 @@ from dbversioning.errorUtil import (
 )
 from dbversioning.repositoryconf import (
     RepositoryConf,
-    ROLLBACK_FILE_ENDING)
+    ROLLBACK_FILE_ENDING,
+    INCLUDE_TABLES,
+    EXCLUDE_TABLES)
 
 DATA_DUMP_CONFIG_NAME = 'data.json'
 RETCODE = 0
@@ -256,9 +264,10 @@ class VersionDbShellUtil:
         psql(db_conn, "-c", update_version_sql, retcode=0)
 
     @staticmethod
-    def dump_version_fast_forward(db_conn, v_stg):
+    def dump_version_fast_forward(db_conn, v_stg, repo_name):
         pg_dump = _local_pg_dump()
         conf = RepositoryConf()
+        conf.check_include_exclude_violation(repo_name)
 
         dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
 
@@ -269,8 +278,27 @@ class VersionDbShellUtil:
         ensure_dir_exists(repo_ff)
 
         ff = os.path.join(repo_ff, "{0}.sql".format(dbver.version))
+        inc_sch = conf.get_repo_include_schemas(repo_name)
+        exc_sch = conf.get_repo_exclude_schemas(repo_name)
 
-        pg_dump(db_conn, "-s", "-f", ff, retcode=0)
+        inc_tbl = conf.get_repo_list(repo_name=repo_name, list_name=INCLUDE_TABLES)
+        exc_tbl = conf.get_repo_list(repo_name=repo_name, list_name=EXCLUDE_TABLES)
+        tbl_args = []
+        schema_args = []
+
+        if inc_sch:
+            schema_args = _build_arg_list(inc_sch, PG_INCLUDE_SCHEMA_ARG)
+
+        if exc_sch:
+            schema_args = _build_arg_list(exc_sch, PG_EXCLUDE_SCHEMA_ARG)
+
+        if inc_tbl:
+            tbl_args = _build_arg_list(inc_tbl, PG_INCLUDE_TABLE_ARG)
+
+        if exc_tbl:
+            tbl_args = _build_arg_list(exc_tbl, PG_EXCLUDE_TABLE_ARG)
+
+        pg_dump(db_conn, "-s", "-f", ff, schema_args, tbl_args, retcode=0)
 
         return True
 
@@ -382,6 +410,17 @@ class VersionDbShellUtil:
         conf = RepositoryConf()
 
         return os.path.join(conf.get_data_dump_dir(repo_name), DATA_DUMP_CONFIG_NAME)
+
+
+def _build_arg_list(args: List[str], arg_type: str) -> Union[List[str], None]:
+    arg_list = []
+
+    if args:
+        for i in args:
+            arg_list.append(arg_type)
+            arg_list.append(i)
+
+    return arg_list
 
 
 def _good_version_table(v_tbl, db_conn):

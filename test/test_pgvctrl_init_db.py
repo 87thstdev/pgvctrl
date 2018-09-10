@@ -1,4 +1,4 @@
-from test.test_pgvctrl import DB_REPO_CONFIG_JSON
+from test.test_pgvctrl_config import DB_REPO_CONFIG_JSON
 from test.test_util import (
     TestUtil,
     print_cmd_error_details)
