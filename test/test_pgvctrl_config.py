@@ -3,19 +3,9 @@ import io
 import sys
 from contextlib import redirect_stdout
 
-from dbversioning.dbvctrlConst import (
-    RMINCLUDE_SCHEMA_ARG,
-    RMEXCLUDE_SCHEMA_ARG,
-    INCLUDE_TABLE_ARG,
-    EXCLUDE_TABLE_ARG,
-    RMINCLUDE_TABLE_ARG,
-    RMEXCLUDE_TABLE_ARG)
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from dbversioning.dbvctrl import (
-    parse_args,
-    INCLUDE_SCHEMA_ARG,
-    EXCLUDE_SCHEMA_ARG)
+import dbversioning.dbvctrlConst as Const
+from dbversioning.dbvctrl import parse_args
 from dbversioning.repositoryconf import (
     RepositoryConf,
     INCLUDE_TABLES,
@@ -29,7 +19,7 @@ DB_REPO_CONFIG_JSON = 'dbRepoConfig.json'
 
 
 def test_version():
-    arg_list = ['-version']
+    arg_list = [Const.VERSION_ARG]
     args = parse_args(arg_list)
     out_rtn, errors = capture_dbvctrl_out(args=args)
 
@@ -84,16 +74,16 @@ class TestPgvctrlRepoMakeConf:
     def test_mkconf_not_exists(self):
         TestUtil.delete_file(DB_REPO_CONFIG_JSON)
 
-        arg_list = ['-mkconf']
+        arg_list = [Const.MKCONF_ARG]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
         print_cmd_error_details(out_rtn, arg_list)
-        assert out_rtn == 'Config file created: {0}\n'.format(DB_REPO_CONFIG_JSON)
+        assert out_rtn == f'Config file created: {DB_REPO_CONFIG_JSON}\n'
         assert errors is None
 
     def test_mkconf_exists(self):
-        arg_list = ["-mkconf"]
+        arg_list = [Const.MKCONF_ARG]
         args = parse_args(arg_list)
 
         # Make config first
@@ -115,8 +105,8 @@ class TestPgvctrlRepoMakeEnv:
 
     def test_mkenv(self):
         arg_list = [
-            "-mkenv", TestUtil.env_qa,
-            "-repo", TestUtil.pgvctrl_test_repo
+            Const.MAKE_ENV_ARG, TestUtil.env_qa,
+            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
         ]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
@@ -137,7 +127,7 @@ class TestPgvctrlRepoMakeRemove:
         TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
 
     def test_mkrepo_not_exists(self):
-        arg_list = ["-mkrepo", TestUtil.pgvctrl_test_temp_repo]
+        arg_list = [Const.MAKE_REPO_ARG, TestUtil.pgvctrl_test_temp_repo]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
@@ -146,7 +136,7 @@ class TestPgvctrlRepoMakeRemove:
         assert errors is None
 
     def test_mkrepo_exists(self):
-        arg_list = ["-mkrepo", TestUtil.pgvctrl_no_files_repo]
+        arg_list = [Const.MAKE_REPO_ARG, TestUtil.pgvctrl_no_files_repo]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
@@ -155,7 +145,7 @@ class TestPgvctrlRepoMakeRemove:
         assert errors.code == 1
 
     def test_rmrepo_exists(self):
-        arg_list = ["-rmrepo", TestUtil.pgvctrl_no_files_repo]
+        arg_list = [Const.REMOVE_REPO_ARG, TestUtil.pgvctrl_no_files_repo]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
@@ -164,7 +154,7 @@ class TestPgvctrlRepoMakeRemove:
         assert errors is None
 
     def test_rmrepo_not_exists(self):
-        arg_list = ["-rmrepo", TestUtil.pgvctrl_test_temp_repo]
+        arg_list = [Const.REMOVE_REPO_ARG, TestUtil.pgvctrl_test_temp_repo]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
@@ -185,7 +175,7 @@ class TestPgvctrlRepoList:
         TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
 
     def test_repo_list(self):
-        arg_list = ["-rl"]
+        arg_list = [Const.LIST_REPOS_ARG]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
@@ -196,7 +186,7 @@ class TestPgvctrlRepoList:
         assert errors is None
 
     def test_repo_list_verbose(self):
-        arg_list = ["-rlv"]
+        arg_list = [Const.LIST_REPOS_VERBOSE_ARG]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
@@ -214,15 +204,15 @@ class TestPgvctrlRepoList:
         assert errors is None
 
     def test_repo_list_unregistered(self):
-        arg_list = ["-mkrepo", TestUtil.pgvctrl_test_temp_repo]
+        arg_list = [Const.MAKE_REPO_ARG, TestUtil.pgvctrl_test_temp_repo]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-rmrepo", TestUtil.pgvctrl_test_temp_repo]
+        arg_list = [Const.REMOVE_REPO_ARG, TestUtil.pgvctrl_test_temp_repo]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-rl"]
+        arg_list = [Const.LIST_REPOS_ARG]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
@@ -231,6 +221,27 @@ class TestPgvctrlRepoList:
                           f'{TestUtil.pgvctrl_test_repo}\n' \
                           f'\tv {TestUtil.test_first_version} test\n' \
                           f'\tv {TestUtil.test_version} \n'
+        assert errors is None
+
+
+class TestPgvctrRepoMakeEnv:
+    def setup_method(self, test_method):
+        TestUtil.get_static_config()
+
+    def teardown_method(self, test_method):
+        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+
+    def test_mkenv(self):
+        arg_list = [
+            Const.MAKE_ENV_ARG,
+            TestUtil.env_qa,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo]
+        args = parse_args(arg_list)
+        out_rtn, errors = capture_dbvctrl_out(args=args)
+
+        print_cmd_error_details(out_rtn, arg_list)
+        assert out_rtn == f"Repository environment created: {TestUtil.pgvctrl_test_repo} {TestUtil.env_qa}\n"
         assert errors is None
 
 
@@ -243,7 +254,7 @@ class TestPgvctrlMakeVersion:
         TestUtil.delete_folder(TestUtil.test_make_version_path)
 
     def test_mkv(self):
-        arg_list = ["-mkv", TestUtil.test_make_version, "-repo", TestUtil.pgvctrl_test_repo]
+        arg_list = [Const.MAKE_V_ARG, TestUtil.test_make_version, Const.REPO_ARG, TestUtil.pgvctrl_test_repo]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
@@ -252,7 +263,7 @@ class TestPgvctrlMakeVersion:
         assert errors is None
 
     def test_mkv_bad(self):
-        arg_list = ["-mkv", TestUtil.test_bad_version, "-repo", TestUtil.pgvctrl_test_repo]
+        arg_list = [Const.MAKE_V_ARG, TestUtil.test_bad_version, Const.REPO_ARG, TestUtil.pgvctrl_test_repo]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
@@ -262,11 +273,11 @@ class TestPgvctrlMakeVersion:
         assert errors.code == 1
 
     def test_mkv_exists(self):
-        arg_list = ["-mkv", TestUtil.test_make_version, "-repo", TestUtil.pgvctrl_test_repo]
+        arg_list = [Const.MAKE_V_ARG, TestUtil.test_make_version, Const.REPO_ARG, TestUtil.pgvctrl_test_repo]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-mkv", TestUtil.test_make_version, "-repo", TestUtil.pgvctrl_test_repo]
+        arg_list = [Const.MAKE_V_ARG, TestUtil.test_make_version, Const.REPO_ARG, TestUtil.pgvctrl_test_repo]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
@@ -284,8 +295,8 @@ class TestPgvctrlRepoIncludeSchema:
 
     def test_include_schema(self):
         arg_list = [
-            INCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
-            "-repo", TestUtil.pgvctrl_test_repo
+            Const.INCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
+            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
         ]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
@@ -308,15 +319,15 @@ class TestPgvctrlRepoRemoveIncludeSchema:
 
     def test_include_schema(self):
         arg_list = [
-            INCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
-            "-repo", TestUtil.pgvctrl_test_repo
+            Const.INCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
+            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
         ]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
         arg_list = [
-            RMINCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
-            "-repo", TestUtil.pgvctrl_test_repo
+            Const.RMINCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
+            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
         ]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
@@ -339,8 +350,8 @@ class TestPgvctrlRepoExcludeSchema:
 
     def test_exclude_schema(self):
         arg_list = [
-            EXCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
-            "-repo", TestUtil.pgvctrl_test_repo
+            Const.EXCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
+            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
         ]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
@@ -363,15 +374,15 @@ class TestPgvctrlRepoRemoveExcludeSchema:
 
     def test_remove_exclude_schema(self):
         ex_arg_list = [
-            EXCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
-            "-repo", TestUtil.pgvctrl_test_repo
+            Const.EXCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
+            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
         ]
         args = parse_args(ex_arg_list)
         capture_dbvctrl_out(args=args)
 
         arg_list = [
-            RMEXCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
-            "-repo", TestUtil.pgvctrl_test_repo
+            Const.RMEXCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
+            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
         ]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
@@ -394,16 +405,16 @@ class TestPgvctrlRepoExcludeIncludedSchema:
 
     def test_exclude_schema(self):
         arg_list = [
-            EXCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
-            "-repo", TestUtil.pgvctrl_test_repo
+            Const.EXCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
+            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
         ]
         args = parse_args(arg_list)
         # Exclude first
         capture_dbvctrl_out(args=args)
 
         arg_list = [
-            INCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
-            "-repo", TestUtil.pgvctrl_test_repo
+            Const.INCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
+            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
         ]
         args = parse_args(arg_list)
         # Include second
@@ -429,16 +440,16 @@ class TestPgvctrlRepoIncludeExcludedSchema:
 
     def test_exclude_schema(self):
         arg_list = [
-            INCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
-            "-repo", TestUtil.pgvctrl_test_repo
+            Const.INCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
+            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
         ]
         args = parse_args(arg_list)
         # Include first
         capture_dbvctrl_out(args=args)
 
         arg_list = [
-            EXCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
-            "-repo", TestUtil.pgvctrl_test_repo
+            Const.EXCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
+            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
         ]
         args = parse_args(arg_list)
         # Exclude second
@@ -464,9 +475,9 @@ class TestPgvctrlRepoIncludeTable:
 
     def test_include_table(self):
         arg_list = [
-            INCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
-            INCLUDE_TABLE_ARG, TestUtil.table_public_item,
-            "-repo", TestUtil.pgvctrl_test_repo
+            Const.INCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
+            Const.INCLUDE_TABLE_ARG, TestUtil.table_public_item,
+            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
         ]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
@@ -491,15 +502,19 @@ class TestPgvctrlRepoRemoveIncludeTable:
 
     def test_remove_include_schema(self):
         arg_list = [
-            INCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
-            "-repo", TestUtil.pgvctrl_test_repo
+            Const.INCLUDE_TABLE_ARG,
+            TestUtil.table_membership_user_state,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo
         ]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
         arg_list = [
-            RMINCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
-            "-repo", TestUtil.pgvctrl_test_repo
+            Const.RMINCLUDE_TABLE_ARG,
+            TestUtil.table_membership_user_state,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo
         ]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
@@ -511,8 +526,8 @@ class TestPgvctrlRepoRemoveIncludeTable:
         print_cmd_error_details(out_rtn, arg_list)
         assert errors is None
         assert inc_table_name == []
-        assert out_rtn == f"Repository removed: {TestUtil.pgvctrl_test_repo} " \
-                          f"include-table ['{TestUtil.table_membership_user_state}']\n"
+        assert out_rtn == f'Repository removed: {TestUtil.pgvctrl_test_repo} ' \
+                          f'include-table [\'{TestUtil.table_membership_user_state}\']\n'
 
 
 class TestPgvctrlRepoExcludeTable:
@@ -524,8 +539,8 @@ class TestPgvctrlRepoExcludeTable:
 
     def test_exclude_table(self):
         arg_list = [
-            EXCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
-            "-repo", TestUtil.pgvctrl_test_repo
+            Const.EXCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
+            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
         ]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
@@ -537,8 +552,8 @@ class TestPgvctrlRepoExcludeTable:
         print_cmd_error_details(out_rtn, arg_list)
         assert errors is None
         assert name_list == [TestUtil.table_membership_user_state]
-        assert out_rtn == f"Repository added: {TestUtil.pgvctrl_test_repo} " \
-                          f"exclude-table ['{TestUtil.table_membership_user_state}']\n"
+        assert out_rtn == f'Repository added: {TestUtil.pgvctrl_test_repo} ' \
+                          f'exclude-table [\'{TestUtil.table_membership_user_state}\']\n'
 
 
 class TestPgvctrlRepoRemoveExcludeTable:
@@ -550,15 +565,15 @@ class TestPgvctrlRepoRemoveExcludeTable:
 
     def test_remove_exclude_schema(self):
         arg_list = [
-            EXCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
-            "-repo", TestUtil.pgvctrl_test_repo
+            Const.EXCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
+            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
         ]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
         arg_list = [
-            RMEXCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
-            "-repo", TestUtil.pgvctrl_test_repo
+            Const.RMEXCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
+            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
         ]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
@@ -570,8 +585,8 @@ class TestPgvctrlRepoRemoveExcludeTable:
         print_cmd_error_details(out_rtn, arg_list)
         assert errors is None
         assert exc_table_name == []
-        assert out_rtn == f"Repository removed: {TestUtil.pgvctrl_test_repo} " \
-                          f"exclude-table ['{TestUtil.table_membership_user_state}']\n"
+        assert out_rtn == f'Repository removed: {TestUtil.pgvctrl_test_repo} ' \
+                          f'exclude-table [\'{TestUtil.table_membership_user_state}\']\n'
 
 
 class TestPgvctrlRepoIncludeExcludedTable:
@@ -583,16 +598,16 @@ class TestPgvctrlRepoIncludeExcludedTable:
 
     def test_exclude_schema(self):
         arg_list = [
-            INCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
-            "-repo", TestUtil.pgvctrl_test_repo
+            Const.INCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
+            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
         ]
         args = parse_args(arg_list)
         # Include first
         capture_dbvctrl_out(args=args)
 
         arg_list = [
-            EXCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
-            "-repo", TestUtil.pgvctrl_test_repo
+            Const.EXCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
+            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
         ]
         args = parse_args(arg_list)
         # Exclude second
@@ -610,8 +625,8 @@ class TestPgvctrlRepoIncludeExcludedTable:
         assert errors is None
         assert inc_tbl_name == []
         assert exc_tbl_name == [TestUtil.table_membership_user_state]
-        assert out_rtn == f"Repository added: {TestUtil.pgvctrl_test_repo} " \
-                          f"exclude-table ['{TestUtil.table_membership_user_state}']\n"
+        assert out_rtn == f'Repository added: {TestUtil.pgvctrl_test_repo} ' \
+                          f'exclude-table [\'{TestUtil.table_membership_user_state}\']\n'
 
 
 class TestPgvctrlRepoExcludedIncludeTable:
@@ -623,16 +638,16 @@ class TestPgvctrlRepoExcludedIncludeTable:
 
     def test_exclude_schema(self):
         arg_list = [
-            EXCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
-            "-repo", TestUtil.pgvctrl_test_repo
+            Const.EXCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
+            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
         ]
         args = parse_args(arg_list)
         # Exclude first
         capture_dbvctrl_out(args=args)
 
         arg_list = [
-            INCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
-            "-repo", TestUtil.pgvctrl_test_repo
+            Const.INCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
+            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
         ]
         args = parse_args(arg_list)
         # Include second

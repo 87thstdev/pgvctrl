@@ -13,11 +13,7 @@ from plumbum import (
     ProcessExecutionError)
 from simplejson import JSONDecodeError
 
-from dbversioning.dbvctrlConst import (
-    PG_INCLUDE_SCHEMA_ARG,
-    PG_EXCLUDE_SCHEMA_ARG,
-    PG_INCLUDE_TABLE_ARG,
-    PG_EXCLUDE_TABLE_ARG)
+import dbversioning.dbvctrlConst as Const
 from dbversioning.osUtil import (
     ensure_dir_exists,
     make_data_file)
@@ -114,14 +110,14 @@ class VersionDbShellUtil:
 
         psql_parm_list.append("-f")
         psql_parm_list.append(sql_file.sql_file)
-        psql_parm_list.append("-v")
+        psql_parm_list.append(Const.V_ARG)
         psql_parm_list.append("ON_ERROR_STOP=1")
         try:
-            information_message("Applying: {0}".format(sql_file.full_name))
+            information_message(f"Applying: {sql_file.full_name}")
             rtn = psql.run(psql_parm_list, retcode=0)
             msg = rtn[2]
-            msg_formatted = msg.replace("psql:{0}:".format(sql_file.full_name), "\t")
-            information_message("{0}".format(msg_formatted))
+            msg_formatted = msg.replace(f"psql:{sql_file.full_name}:", "\t")
+            information_message(f"{msg_formatted}")
 
             # TODO: Make this happen, could be an -init call?
             # v_stg = VersionedDbHelper._get_v_stg(repo_name)
@@ -138,7 +134,7 @@ class VersionDbShellUtil:
         ensure_dir_exists(conf.get_data_dump_dir(repo_name))
 
         for tbl in table_list:
-            sql_loc = conf.get_data_dump_sql_dir(repo_name, "{0}.sql".format(tbl))
+            sql_loc = conf.get_data_dump_sql_dir(repo_name, f"{tbl}.sql")
 
             pg_dump_parm_list = copy.copy(db_conn)
             if VersionDbShellUtil.get_col_inserts_setting(repo_name, tbl):
@@ -146,13 +142,13 @@ class VersionDbShellUtil:
             pg_dump_parm_list.append("--disable-triggers")
             pg_dump_parm_list.append("--if-exists")
             pg_dump_parm_list.append("-c")
-            pg_dump_parm_list.append("-t")
+            pg_dump_parm_list.append(Const.TBL_ARG)
             pg_dump_parm_list.append(tbl)
             pg_dump_parm_list.append("-f")
             pg_dump_parm_list.append(sql_loc)
 
             try:
-                information_message("Pulling: {0}".format(tbl))
+                information_message(f"Pulling: {tbl}")
                 pg_dump(pg_dump_parm_list, retcode=0)
             except ProcessExecutionError as e:
                 raise VersionedDbExceptionSqlExecutionError(e.stderr)
@@ -170,7 +166,7 @@ class VersionDbShellUtil:
             return
 
         for tbl in table_list:
-            sql_loc = conf.get_data_dump_sql_dir(repo_name, "{0}.sql".format(tbl['table']))
+            sql_loc = conf.get_data_dump_sql_dir(repo_name, f"{tbl['table']}.sql")
 
             pg_dump_parm_list = copy.copy(db_conn)
             if tbl['column-inserts']:
@@ -178,14 +174,14 @@ class VersionDbShellUtil:
             pg_dump_parm_list.append("--disable-triggers")
             pg_dump_parm_list.append("--if-exists")
             pg_dump_parm_list.append("-c")
-            pg_dump_parm_list.append("-t")
+            pg_dump_parm_list.append(Const.TBL_ARG)
             pg_dump_parm_list.append(tbl['table'])
             pg_dump_parm_list.append("-f")
             pg_dump_parm_list.append(sql_loc)
 
             try:
                 size_num, size_txt = get_table_size(tbl, db_conn)
-                information_message("Pulling: {0}, {1}".format(tbl['table'], size_txt))
+                information_message(f"Pulling: {tbl['table']}, {size_txt}")
                 pg_dump(pg_dump_parm_list, retcode=0)
             except ProcessExecutionError as e:
                 raise VersionedDbExceptionSqlExecutionError(e.stderr)
@@ -198,7 +194,7 @@ class VersionDbShellUtil:
         psql_parm_list.append("-f")
         psql_parm_list.append(sql_file.path)
 
-        psql_parm_list.append("-v")
+        psql_parm_list.append(Const.V_ARG)
         psql_parm_list.append("ON_ERROR_STOP=1")
 
         if break_on_error:
@@ -208,13 +204,13 @@ class VersionDbShellUtil:
         try:
             VersionDbShellUtil._execute_sql_on_db(psql, psql_parm_list, sql_file)
         except VersionedDbExceptionSqlExecutionError as e:
-            error_message_non_terminating("SQL ERROR {0}".format(e.message))
+            error_message_non_terminating(f"SQL ERROR {e.message}")
             VersionDbShellUtil._attempt_rollback(db_conn, sql_file)
 
     @staticmethod
     def _attempt_rollback(db_conn, sql_file):
         warning_message("Attempting to rollback")
-        file_path = "{0}{1}".format(sql_file.path[:-4], ROLLBACK_FILE_ENDING)
+        file_path = f"{sql_file.path[:-4]}{ROLLBACK_FILE_ENDING}"
         rollback = SqlPatch(file_path)
         VersionDbShellUtil.apply_sql_file(db_conn, rollback, break_on_error=True)
 
@@ -227,19 +223,19 @@ class VersionDbShellUtil:
         psql_parm_list.append(sql_file.path)
 
         if force is not True:
-            psql_parm_list.append("-v")
-            psql_parm_list.append("ON_ERROR_STOP=1")
+            psql_parm_list.append(Const.V_ARG)
+            psql_parm_list.append('ON_ERROR_STOP=1')
 
         VersionDbShellUtil._execute_sql_on_db(psql, psql_parm_list, sql_file)
 
     @staticmethod
     def _execute_sql_on_db(psql, psql_parm_list, sql_file):
         try:
-            information_message("Running: {0}".format(sql_file.fullname))
+            information_message(f'Running: {sql_file.fullname}')
             rtn = psql.run(psql_parm_list, retcode=0)
             msg = rtn[2]
-            msg_formatted = msg.replace("psql:{0}:".format(sql_file.path), "\t")
-            information_message("{0}".format(msg_formatted))
+            msg_formatted = msg.replace(f'psql:{sql_file.path}:', '\t')
+            information_message(f'{msg_formatted}')
 
         except ProcessExecutionError as e:
             raise VersionedDbExceptionSqlExecutionError(e.stderr)
@@ -277,7 +273,7 @@ class VersionDbShellUtil:
 
         ensure_dir_exists(repo_ff)
 
-        ff = os.path.join(repo_ff, "{0}.sql".format(dbver.version))
+        ff = os.path.join(repo_ff, f"{dbver.version}.sql")
         inc_sch = conf.get_repo_include_schemas(repo_name)
         exc_sch = conf.get_repo_exclude_schemas(repo_name)
 
@@ -287,16 +283,16 @@ class VersionDbShellUtil:
         schema_args = []
 
         if inc_sch:
-            schema_args = _build_arg_list(inc_sch, PG_INCLUDE_SCHEMA_ARG)
+            schema_args = _build_arg_list(inc_sch, Const.PG_INCLUDE_SCHEMA_ARG)
 
         if exc_sch:
-            schema_args = _build_arg_list(exc_sch, PG_EXCLUDE_SCHEMA_ARG)
+            schema_args = _build_arg_list(exc_sch, Const.PG_EXCLUDE_SCHEMA_ARG)
 
         if inc_tbl:
-            tbl_args = _build_arg_list(inc_tbl, PG_INCLUDE_TABLE_ARG)
+            tbl_args = _build_arg_list(inc_tbl, Const.PG_INCLUDE_TABLE_ARG)
 
         if exc_tbl:
-            tbl_args = _build_arg_list(exc_tbl, PG_EXCLUDE_TABLE_ARG)
+            tbl_args = _build_arg_list(exc_tbl, Const.PG_EXCLUDE_TABLE_ARG)
 
         pg_dump(db_conn, "-s", "-f", ff, schema_args, tbl_args, retcode=0)
 
@@ -317,8 +313,7 @@ class VersionDbShellUtil:
 
         d = datetime.datetime.now().strftime(SNAPSHOT_DATE_FORMAT)
 
-        ss = os.path.join(repo_sh, "{0}.{1}.sql"
-                          .format(dbver.version, d))
+        ss = os.path.join(repo_sh, f'{dbver.version}.{d}.sql')
 
         pg_dump(db_conn, "-s", "-f", ss, retcode=0)
 
@@ -344,7 +339,7 @@ class VersionDbShellUtil:
                       f"'notused' " \
                       f"throwaway FROM {v_tbl.tbl};"
 
-        rtn = psql(db_conn, "-t", "-A", "-c", version_sql, retcode=0)
+        rtn = psql(db_conn, Const.TBL_ARG, "-A", "-c", version_sql, retcode=0)
         rtn_array = rtn.split("|")
 
         if len(rtn_array) > 1:
@@ -427,12 +422,11 @@ def _good_version_table(v_tbl, db_conn):
     good_table = False
     psql = _local_psql()
 
-    version_sql = "SELECT COUNT(*) cnt, 'notused' throwaway FROM {tbl};" \
-        .format(tbl=v_tbl.tbl)
+    version_sql = f"SELECT COUNT(*) cnt, 'notused' throwaway FROM {v_tbl.tbl};"
 
     psql_parm_list = copy.copy(db_conn)
 
-    psql_parm_list.append("-t")
+    psql_parm_list.append(Const.TBL_ARG)
     psql_parm_list.append("-A")
     psql_parm_list.append("-c")
     psql_parm_list.append(version_sql)
@@ -463,12 +457,12 @@ def _good_version_table(v_tbl, db_conn):
 def get_table_size(tbl, db_conn):
     psql = _local_psql()
 
-    tbl_sql = "SELECT pg_size_pretty(pg_total_relation_size('{0}')) " \
-        "As tbl_size, pg_total_relation_size('{0}') num_size;" \
-        .format(tbl['table'])
+    tbl_sql = f"SELECT pg_size_pretty(pg_total_relation_size('{tbl['table']}')) " \
+        f"As tbl_size, pg_total_relation_size('{tbl['table']}') num_size;"
 
-    rtn = psql[db_conn, "-t", "-A", "-c", tbl_sql].run()
+    rtn = psql[db_conn, Const.TBL_ARG, "-A", "-c", tbl_sql].run()
     if rtn[RETCODE] > 0:
+
         raise VersionedDbExceptionMissingDataTable(tbl['table'])
 
     rtn_array = rtn[STDOUT].split("|")
@@ -488,7 +482,7 @@ def convert_str_to_bool(value):
     elif val == 'f' or val == 'false':
         return False
     else:
-        raise ValueError("convert_str_to_bool: invalid valuse {0}".format(value))
+        raise ValueError(f'convert_str_to_bool: invalid values {value}')
 
 
 def convert_str_none_if_empty(value):

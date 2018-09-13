@@ -1,11 +1,5 @@
-from dbversioning.dbvctrl import (
-    parse_args,
-    INCLUDE_SCHEMA_ARG,
-    EXCLUDE_SCHEMA_ARG
-)
-from dbversioning.dbvctrlConst import (
-    INCLUDE_TABLE_ARG,
-    EXCLUDE_TABLE_ARG)
+from dbversioning.dbvctrl import parse_args
+import dbversioning.dbvctrlConst as Const
 from test.test_pgvctrl_config import DB_REPO_CONFIG_JSON
 from test.test_util import (
     TestUtil,
@@ -18,9 +12,9 @@ class TestPgvctrlTestDb:
         pgv = TestUtil.local_pgvctrl()
         TestUtil.create_database()
         TestUtil.get_static_config()
-        pgv.run(["-init", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db], retcode=0)
+        pgv.run([Const.INIT_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db], retcode=0)
         TestUtil.mkrepo_ver(TestUtil.pgvctrl_test_repo, TestUtil.test_first_version)
-        pgv.run(["-apply", "-v", TestUtil.test_first_version, "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db],
+        pgv.run([Const.APPLY_ARG, Const.V_ARG, TestUtil.test_first_version, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db],
                 retcode=0)
 
     def teardown_method(self, test_method):
@@ -31,7 +25,7 @@ class TestPgvctrlTestDb:
     def test_chkver_no_env(self):
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-chkver", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.CHECK_VER_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
@@ -42,18 +36,17 @@ class TestPgvctrlTestDb:
     def test_apply_bad_version(self):
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-apply", "-v", "0.1.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.APPLY_ARG, Const.V_ARG, "0.1.0", Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=1)
 
         print_cmd_error_details(rtn, arg_list)
-        assert rtn[TestUtil.stdout] == 'Repository version does not exist: {0} 0.1.0\n'.format(
-                TestUtil.pgvctrl_test_repo)
+        assert rtn[TestUtil.stdout] == f'Repository version does not exist: {TestUtil.pgvctrl_test_repo} 0.1.0\n'
         assert rtn[TestUtil.return_code] == 1
 
     def test_apply_good_version(self):
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.APPLY_ARG, Const.V_ARG, "2.0.0", Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
@@ -63,7 +56,7 @@ class TestPgvctrlTestDb:
     def test_set_fast_forward(self):
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.SETFF_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
@@ -71,15 +64,15 @@ class TestPgvctrlTestDb:
         assert rtn[TestUtil.return_code] == 0
 
     def test_set_fast_forward_include_schema(self):
-        arg_list = [INCLUDE_SCHEMA_ARG, TestUtil.schema_membership, "-repo", TestUtil.pgvctrl_test_repo]
+        arg_list = [Const.INCLUDE_SCHEMA_ARG, TestUtil.schema_membership, Const.REPO_ARG, TestUtil.pgvctrl_test_repo]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.APPLY_ARG, Const.V_ARG, "2.0.0", Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.SETFF_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
         has_member_sch = TestUtil.file_contains(
@@ -95,15 +88,15 @@ class TestPgvctrlTestDb:
         assert has_public_sch is False
 
     def test_set_fast_forward_include_schema_bad(self):
-        arg_list = [INCLUDE_SCHEMA_ARG, TestUtil.schema_bad, "-repo", TestUtil.pgvctrl_test_repo]
+        arg_list = [Const.INCLUDE_SCHEMA_ARG, TestUtil.schema_bad, Const.REPO_ARG, TestUtil.pgvctrl_test_repo]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.APPLY_ARG, Const.V_ARG, "2.0.0", Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.SETFF_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
         print_cmd_error_details(out_rtn, arg_list)
@@ -111,15 +104,15 @@ class TestPgvctrlTestDb:
         assert errors.code == 1
 
     def test_set_fast_forward_exclude_schema(self):
-        arg_list = [EXCLUDE_SCHEMA_ARG, TestUtil.schema_membership, "-repo", TestUtil.pgvctrl_test_repo]
+        arg_list = [Const.EXCLUDE_SCHEMA_ARG, TestUtil.schema_membership, Const.REPO_ARG, TestUtil.pgvctrl_test_repo]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.APPLY_ARG, Const.V_ARG, "2.0.0", Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.SETFF_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
@@ -133,15 +126,15 @@ class TestPgvctrlTestDb:
         assert has_public is True
 
     def test_set_fast_forward_exclude_schema_bad(self):
-        arg_list = [EXCLUDE_SCHEMA_ARG, TestUtil.schema_bad, "-repo", TestUtil.pgvctrl_test_repo]
+        arg_list = [Const.EXCLUDE_SCHEMA_ARG, TestUtil.schema_bad, Const.REPO_ARG, TestUtil.pgvctrl_test_repo]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.APPLY_ARG, Const.V_ARG, "2.0.0", Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.SETFF_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
         print_cmd_error_details(out_rtn, arg_list)
@@ -151,19 +144,19 @@ class TestPgvctrlTestDb:
         assert errors is None
 
     def test_set_fast_forward_include_exclude_schema(self):
-        arg_list = [INCLUDE_SCHEMA_ARG, TestUtil.schema_public, "-repo", TestUtil.pgvctrl_test_repo]
+        arg_list = [Const.INCLUDE_SCHEMA_ARG, TestUtil.schema_public, Const.REPO_ARG, TestUtil.pgvctrl_test_repo]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = [EXCLUDE_SCHEMA_ARG, TestUtil.schema_membership, "-repo", TestUtil.pgvctrl_test_repo]
+        arg_list = [Const.EXCLUDE_SCHEMA_ARG, TestUtil.schema_membership, Const.REPO_ARG, TestUtil.pgvctrl_test_repo]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.APPLY_ARG, Const.V_ARG, "2.0.0", Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.SETFF_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
         print_cmd_error_details(out_rtn, arg_list)
@@ -171,15 +164,15 @@ class TestPgvctrlTestDb:
         assert errors.code == 1
 
     def test_set_fast_forward_include_table(self):
-        arg_list = [INCLUDE_TABLE_ARG, TestUtil.table_membership_user_state, "-repo", TestUtil.pgvctrl_test_repo]
+        arg_list = [Const.INCLUDE_TABLE_ARG, TestUtil.table_membership_user_state, Const.REPO_ARG, TestUtil.pgvctrl_test_repo]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.APPLY_ARG, Const.V_ARG, "2.0.0", Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.SETFF_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
         has_member_tbl = TestUtil.file_contains(
@@ -195,15 +188,15 @@ class TestPgvctrlTestDb:
         assert has_public_tbl is False
 
     def test_set_fast_forward_include_table_bad(self):
-        arg_list = [INCLUDE_TABLE_ARG, TestUtil.table_bad, "-repo", TestUtil.pgvctrl_test_repo]
+        arg_list = [Const.INCLUDE_TABLE_ARG, TestUtil.table_bad, Const.REPO_ARG, TestUtil.pgvctrl_test_repo]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.APPLY_ARG, Const.V_ARG, "2.0.0", Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.SETFF_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
         print_cmd_error_details(out_rtn, arg_list)
@@ -211,15 +204,15 @@ class TestPgvctrlTestDb:
         assert errors.code == 1
 
     def test_set_fast_forward_exclude_table(self):
-        arg_list = [EXCLUDE_TABLE_ARG, TestUtil.table_membership_user_state, "-repo", TestUtil.pgvctrl_test_repo]
+        arg_list = [Const.EXCLUDE_TABLE_ARG, TestUtil.table_membership_user_state, Const.REPO_ARG, TestUtil.pgvctrl_test_repo]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.APPLY_ARG, Const.V_ARG, "2.0.0", Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.SETFF_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
@@ -235,15 +228,15 @@ class TestPgvctrlTestDb:
         assert has_public is True
 
     def test_set_fast_forward_exclude_table_bad(self):
-        arg_list = [EXCLUDE_TABLE_ARG, TestUtil.table_bad, "-repo", TestUtil.pgvctrl_test_repo]
+        arg_list = [Const.EXCLUDE_TABLE_ARG, TestUtil.table_bad, Const.REPO_ARG, TestUtil.pgvctrl_test_repo]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.APPLY_ARG, Const.V_ARG, "2.0.0", Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.SETFF_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
         print_cmd_error_details(out_rtn, arg_list)
@@ -253,19 +246,19 @@ class TestPgvctrlTestDb:
         assert errors is None
 
     def test_set_fast_forward_include_schema_exclude_table(self):
-        arg_list = [INCLUDE_SCHEMA_ARG, TestUtil.schema_membership, "-repo", TestUtil.pgvctrl_test_repo]
+        arg_list = [Const.INCLUDE_SCHEMA_ARG, TestUtil.schema_membership, Const.REPO_ARG, TestUtil.pgvctrl_test_repo]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.APPLY_ARG, Const.V_ARG, "2.0.0", Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = [EXCLUDE_TABLE_ARG, TestUtil.table_membership_user_state, "-repo", TestUtil.pgvctrl_test_repo]
+        arg_list = [Const.EXCLUDE_TABLE_ARG, TestUtil.table_membership_user_state, Const.REPO_ARG, TestUtil.pgvctrl_test_repo]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.SETFF_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
         has_member_sch = TestUtil.file_contains(
@@ -282,19 +275,19 @@ class TestPgvctrlTestDb:
         assert has_member_tbl is False
 
     def test_set_fast_forward_exclude_schema_include_table(self):
-        arg_list = [EXCLUDE_SCHEMA_ARG, TestUtil.schema_membership, "-repo", TestUtil.pgvctrl_test_repo]
+        arg_list = [Const.EXCLUDE_SCHEMA_ARG, TestUtil.schema_membership,Const. REPO_ARG, TestUtil.pgvctrl_test_repo]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.APPLY_ARG, Const.V_ARG, "2.0.0", Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = [INCLUDE_TABLE_ARG, TestUtil.table_membership_user_state, "-repo", TestUtil.pgvctrl_test_repo]
+        arg_list = [Const.INCLUDE_TABLE_ARG, TestUtil.table_membership_user_state, Const.REPO_ARG, TestUtil.pgvctrl_test_repo]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = ["-setff", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.SETFF_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
         has_member_sch = TestUtil.file_contains(
@@ -313,7 +306,7 @@ class TestPgvctrlTestDb:
     def test_apply_fast_forward_fail(self):
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-applyff", TestUtil.test_first_version, "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.APPLY_FF_ARG, TestUtil.test_first_version, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=1)
 
         print_cmd_error_details(rtn, arg_list)
@@ -323,7 +316,8 @@ class TestPgvctrlTestDb:
     def test_push_data(self):
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-pushdata", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.PUSH_DATA_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
@@ -347,7 +341,8 @@ class TestPgvctrlTestCleanDb:
     def test_apply_fast_forward(self):
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-applyff", TestUtil.test_first_version,  "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.APPLY_FF_ARG, TestUtil.test_first_version, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
@@ -358,11 +353,11 @@ class TestPgvctrlTestCleanDb:
         pgv = TestUtil.local_pgvctrl()
         bad_ff = "BAD"
 
-        arg_list = ["-applyff", bad_ff,  "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.APPLY_FF_ARG, bad_ff,  Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=1)
 
         print_cmd_error_details(rtn, arg_list)
-        assert rtn[TestUtil.stdout] == 'Fast forward not found {0}\n'.format(bad_ff)
+        assert rtn[TestUtil.stdout] == f'Fast forward not found {bad_ff}\n'
         assert rtn[TestUtil.return_code] == 1
 
     def test_apply_fast_forward_bad_db(self):
@@ -370,11 +365,11 @@ class TestPgvctrlTestCleanDb:
         good_ff = "0.0.0.gettingStarted"
         bad_db = "asdfasdfasdfasdfa123123asdfa"
 
-        arg_list = ["-applyff", good_ff,  "-repo", TestUtil.pgvctrl_test_repo, "-d", bad_db]
+        arg_list = [Const.APPLY_FF_ARG, good_ff,  Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, bad_db]
         rtn = pgv.run(arg_list, retcode=1)
 
         print_cmd_error_details(rtn, arg_list)
-        assert rtn[TestUtil.stdout] == "Invalid Data Connection: ['-d', '{0}']\n".format(bad_db)
+        assert rtn[TestUtil.stdout] == f"Invalid Data Connection: ['{Const.DATABASE_ARG}', '{bad_db}']\n"
         assert rtn[TestUtil.return_code] == 1
 
 
@@ -392,8 +387,8 @@ class TestPgvctrlTestDbEnv:
 
     def test_chkver_no_env(self):
         pgv = TestUtil.local_pgvctrl()
-        pgv.run(["-init", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db], retcode=0)
-        arg_list = ["-chkver", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        pgv.run([Const.INIT_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db], retcode=0)
+        arg_list = [Const.CHECK_VER_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=1)
 
         print_cmd_error_details(rtn, arg_list)
@@ -402,12 +397,12 @@ class TestPgvctrlTestDbEnv:
 
     def test_chkver_env(self):
         pgv = TestUtil.local_pgvctrl()
-        pgv.run(["-init", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db,
-                 "-setenv", TestUtil.env_test], retcode=0)
-        pgv.run(["-apply", "-env", TestUtil.env_test, "-repo", TestUtil.pgvctrl_test_repo, "-d",
+        pgv.run([Const.INIT_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db,
+                 Const.SET_ENV_ARG, TestUtil.env_test], retcode=0)
+        pgv.run([Const.APPLY_ARG, Const.ENV_ARG, TestUtil.env_test, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG,
                  TestUtil.pgvctrl_test_db], retcode=0)
 
-        arg_list = ["-chkver", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.CHECK_VER_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
@@ -418,9 +413,9 @@ class TestPgvctrlTestDbEnv:
 
     def test_apply_good_version_env(self):
         pgv = TestUtil.local_pgvctrl()
-        pgv.run(["-init", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db,
-                 "-setenv", TestUtil.env_test], retcode=0)
-        arg_list = ["-apply", "-env", TestUtil.env_test, "-repo", TestUtil.pgvctrl_test_repo, "-d",
+        pgv.run([Const.INIT_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db,
+                 Const.SET_ENV_ARG, TestUtil.env_test], retcode=0)
+        arg_list = [Const.APPLY_ARG, Const.ENV_ARG, TestUtil.env_test, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
 
@@ -435,7 +430,7 @@ class TestPgvctrlTestDbError:
         TestUtil.create_database()
         TestUtil.get_static_config()
         TestUtil.get_error_sql()
-        pgv.run(["-init", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db], retcode=0)
+        pgv.run([Const.INIT_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db], retcode=0)
 
     def teardown_method(self, test_method):
         TestUtil.delete_file(DB_REPO_CONFIG_JSON)
@@ -447,7 +442,7 @@ class TestPgvctrlTestDbError:
     def test_apply_version_error_no_rollback(self):
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.APPLY_ARG, Const.V_ARG, "2.0.0", Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=1)
 
         print_cmd_error_details(rtn, arg_list)
@@ -460,7 +455,7 @@ class TestPgvctrlTestDbError:
         TestUtil.get_error_rollback_good_sql()
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.APPLY_ARG, Const.V_ARG, "2.0.0", Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
@@ -474,7 +469,7 @@ class TestPgvctrlTestDbError:
         TestUtil.get_error_rollback_bad_sql()
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-apply", "-v", "2.0.0", "-repo", TestUtil.pgvctrl_test_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.APPLY_ARG, Const.V_ARG, "2.0.0", Const.REPO_ARG, TestUtil.pgvctrl_test_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=1)
 
         print_cmd_error_details(rtn, arg_list)

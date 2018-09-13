@@ -1,12 +1,15 @@
+import dbversioning.dbvctrlConst as Const
+
+
 class VersionedDbException(Exception):
     def __init__(self, message=None):
-        self.message = "General VersionedDbException: {0}".format(message)
+        self.message = f"General VersionedDbException: {message}"
         pass
 
 
 class VersionedDbExceptionFileExits(VersionedDbException):
     def __init__(self, file_name):
-        self.message = "File already exists: {0}".format(file_name)
+        self.message = f"File already exists: {file_name}"
         pass
 
 
@@ -26,9 +29,7 @@ class VersionedDbExceptionRepoVersionExits(VersionedDbException):
 
 class VersionedDbExceptionRepoVersionDoesNotExits(VersionedDbException):
     def __init__(self, repo_name, version_name):
-        self.message = "Repository version does not exist: {0} {1}".format(
-            repo_name, version_name
-        )
+        self.message = f"Repository version does not exist: {repo_name} {version_name}"
         pass
 
 
@@ -64,17 +65,13 @@ class VersionedDbExceptionRepoDoesNotExits(VersionedDbException):
 
 class VersionedDbExceptionProductionChangeNoProductionFlag(VersionedDbException):
     def __init__(self, action_name=None):
-        self.message = "Production changes need the -production flag: {0}".format(
-            action_name
-        )
+        self.message = f"Production changes need the {Const.PRODUCTION_ARG} flag: {action_name}"
         pass
 
 
 class VersionedDbExceptionProductionChangeNotAllowed(VersionedDbException):
     def __init__(self, action_name=None):
-        self.message = "Production changes not allowed for: {0}".format(
-            action_name
-        )
+        self.message = f"Production changes not allowed for: {action_name}"
         pass
 
 
@@ -98,31 +95,31 @@ class VersionedDbExceptionMissingArgs(VersionedDbException):
 
 class VersionedDbExceptionFolderMissing(VersionedDbException):
     def __init__(self, folder_name):
-        self.message = "Folder missing: {0}".format(folder_name)
+        self.message = f"Folder missing: {folder_name}"
         pass
 
 
 class VersionedDbExceptionFileMissing(VersionedDbException):
     def __init__(self, file_name):
-        self.message = "File missing: {0}".format(file_name)
+        self.message = f"File missing: {file_name}"
         pass
 
 
 class VersionedDbExceptionMissingVersionTable(VersionedDbException):
     def __init__(self, table_name):
-        self.message = "Missing Versioning Table: {0}".format(table_name)
+        self.message = f"Missing Versioning Table: {table_name}"
         pass
 
 
 class VersionedDbExceptionMissingDataTable(VersionedDbException):
     def __init__(self, table_name):
-        self.message = "Missing Data Table: {0}".format(table_name)
+        self.message = f"Missing Data Table: {table_name}"
         pass
 
 
 class VersionedDbExceptionBadDateSource(VersionedDbException):
     def __init__(self, dbconn):
-        self.message = "Invalid Data Connection: {0}".format(dbconn)
+        self.message = f"Invalid Data Connection: {dbconn}"
         pass
 
 
@@ -146,7 +143,7 @@ class VersionedDbExceptionDatabaseAlreadyInit(VersionedDbException):
 
 class VersionedDbExceptionSqlExecutionError(VersionedDbException):
     def __init__(self, stderr):
-        self.message = "Sql Error: {0}".format(stderr)
+        self.message = f"Sql Error: {stderr}"
         pass
 
 
@@ -182,5 +179,5 @@ class VersionedDbExceptionTooManyVersionRecordsFound(VersionedDbException):
 
 class VersionedDbExceptionVersionIsHigherThanApplying(VersionedDbException):
     def __init__(self, current, new):
-        self.message = "Version is higher then applying {0} > {1}!".format(current, new)
+        self.message = f"Version is higher then applying {current} > {new}!"
         pass

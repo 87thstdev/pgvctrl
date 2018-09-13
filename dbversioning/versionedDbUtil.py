@@ -4,6 +4,7 @@ from collections import namedtuple
 import simplejson as json
 from os.path import join
 
+import dbversioning.dbvctrlConst as Const
 from dbversioning.osUtil import dir_exists
 from dbversioning.versionedDbHelper import get_valid_elements
 from dbversioning.errorUtil import (
@@ -135,7 +136,7 @@ class VersionedDbHelper:
         root = conf.root()
         vdb = VersionDb(join(os.getcwd(), root, repository))
         if vdb.create_version(version):
-            information_message("Version {0}/{1} created.".format(repository, version))
+            information_message(f"Version {repository}/{version} created.")
 
     @staticmethod
     def get_repository_fast_forward_version(repository, version):
@@ -193,7 +194,7 @@ class VersionedDbHelper:
         if fast_forward_to:
             VersionDbShellUtil.apply_fast_forward_sql(db_conn, fast_forward_to[0], repo_name)
         else:
-            error_message("Fast forward not found {0}".format(full_version))
+            error_message(f"Fast forward not found {full_version}")
 
     @staticmethod
     def push_data_to_database(repo_name, db_conn, force, is_production):
@@ -201,7 +202,7 @@ class VersionedDbHelper:
         dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
 
         if is_production != dbver.is_production:
-            raise VersionedDbExceptionProductionChangeNoProductionFlag('-pushdata')
+            raise VersionedDbExceptionProductionChangeNoProductionFlag(Const.PULL_DATA_ARG)
 
         conf = RepositoryConf()
         data_files = []
@@ -234,7 +235,7 @@ class VersionedDbHelper:
         repo_nums = None
 
         if is_production != dbver.is_production:
-            raise VersionedDbExceptionProductionChangeNoProductionFlag('-apply')
+            raise VersionedDbExceptionProductionChangeNoProductionFlag(Const.APPLY_ARG)
 
         if f"{env}" != f"{dbver.env}":
             raise VersionedDbExceptionEnvDoesMatchDbEnv(env=env, db_env=dbver.env)
@@ -475,7 +476,7 @@ class VersionedDbHelper:
                                   indent=4, sort_keys=True,
                                   separators=(',', ': '), ensure_ascii=True)
                 outfile.write(to_unicode(str_))
-            information_message("Config file created: {0}".format(conf.config_file_name()))
+            information_message(f"Config file created: {conf.config_file_name()}")
         else:
             raise VersionedDbExceptionFileExits(conf.config_file_name())
 

@@ -1,3 +1,4 @@
+import dbversioning.dbvctrlConst as Const
 from test.test_pgvctrl_config import DB_REPO_CONFIG_JSON
 from test.test_util import (
     TestUtil,
@@ -17,11 +18,12 @@ class TestPgvctrInitlWithOutDb:
     def test_init_invalid(self):
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-init", "-repo", TestUtil.pgvctrl_test_temp_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.INIT_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_temp_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=1)
 
         print_cmd_error_details(rtn, arg_list)
-        assert rtn[TestUtil.stdout] == "Invalid Data Connection: ['-d', '{0}']\n".format(TestUtil.pgvctrl_test_db)
+        assert rtn[TestUtil.stdout] == f"Invalid Data Connection: ['{Const.DATABASE_ARG}', " \
+                                       f"'{TestUtil.pgvctrl_test_db}']\n"
         assert rtn[TestUtil.return_code] == 1
 
 
@@ -39,7 +41,7 @@ class TestPgvctrInitlWithDb:
     def test_init(self):
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-init", "-repo", TestUtil.pgvctrl_test_temp_repo, "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.INIT_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_temp_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
@@ -49,7 +51,7 @@ class TestPgvctrInitlWithDb:
     def test_init_production(self):
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-init", "-repo", TestUtil.pgvctrl_test_temp_repo, "-production",  "-d", TestUtil.pgvctrl_test_db]
+        arg_list = [Const.INIT_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_temp_repo, Const.PRODUCTION_ARG,  Const.DATABASE_ARG, TestUtil.pgvctrl_test_db]
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)
@@ -59,7 +61,7 @@ class TestPgvctrInitlWithDb:
     def test_init_env(self):
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-init", "-repo", TestUtil.pgvctrl_test_temp_repo, "-d", TestUtil.pgvctrl_test_db, "-setenv",
+        arg_list = [Const.INIT_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_temp_repo, Const.DATABASE_ARG, TestUtil.pgvctrl_test_db, Const.SET_ENV_ARG,
                     TestUtil.env_test]
         rtn = pgv.run(arg_list, retcode=0)
 
@@ -70,8 +72,8 @@ class TestPgvctrInitlWithDb:
     def test_init_production_with_env(self):
         pgv = TestUtil.local_pgvctrl()
 
-        arg_list = ["-init", "-repo", TestUtil.pgvctrl_test_temp_repo, "-production",  "-d",
-                    TestUtil.pgvctrl_test_db, "-setenv", TestUtil.env_test]
+        arg_list = [Const.INIT_ARG, Const.REPO_ARG, TestUtil.pgvctrl_test_temp_repo, Const.PRODUCTION_ARG,  Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db, Const.SET_ENV_ARG, TestUtil.env_test]
         rtn = pgv.run(arg_list, retcode=0)
 
         print_cmd_error_details(rtn, arg_list)

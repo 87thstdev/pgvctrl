@@ -3,16 +3,7 @@ import sys
 
 from plumbum import ProcessExecutionError
 import pkg_resources
-
-from dbversioning.dbvctrlConst import (
-    INCLUDE_SCHEMA_ARG,
-    INCLUDE_TABLE_ARG,
-    EXCLUDE_SCHEMA_ARG,
-    EXCLUDE_TABLE_ARG,
-    RMINCLUDE_SCHEMA_ARG,
-    RMINCLUDE_TABLE_ARG,
-    RMEXCLUDE_SCHEMA_ARG,
-    RMEXCLUDE_TABLE_ARG)
+import dbversioning.dbvctrlConst as Const
 from dbversioning.errorUtil import (
     VersionedDbException,
     VersionedDbExceptionProductionChangeNoProductionFlag)
@@ -26,52 +17,52 @@ from dbversioning.versionedDbUtil import VersionedDbHelper
 def parse_args(args):
     parser = argparse.ArgumentParser(description='Postgres db version control.')
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-version', help='Show vbctrl version number', action='store_true')
-    group.add_argument('-init', help='Initialize database on server for version control', action='store_true')
-    group.add_argument('-rl', help='List repositories', action='store_true')
-    group.add_argument('-rlv', help='List repositories verbose', action='store_true')
-    group.add_argument('-chkver', help='Check database version', action='store_true')
-    group.add_argument('-mkconf', help='Create dbRepoConfig.json', action='store_true')
-    group.add_argument('-apply', help='Apply sql version', action='store_true')
-    group.add_argument('-setff', help='Set version fast forward', action='store_true')
-    group.add_argument('-applyff', help='Apply version fast forward')
-    group.add_argument('-pulldata', help='Pull data from repository by table', action='store_true')
-    group.add_argument('-pushdata', help='Push data from repository to database', action='store_true')
+    group.add_argument(Const.VERSION_ARG, help='Show dbvctrl version number', action='store_true')
+    group.add_argument(Const.INIT_ARG, help='Initialize database on server for version control', action='store_true')
+    group.add_argument(Const.LIST_REPOS_ARG, help='List repositories', action='store_true')
+    group.add_argument(Const.LIST_REPOS_VERBOSE_ARG, help='List repositories verbose', action='store_true')
+    group.add_argument(Const.CHECK_VER_ARG, help='Check database version', action='store_true')
+    group.add_argument(Const.MKCONF_ARG, help='Create dbRepoConfig.json', action='store_true')
+    group.add_argument(Const.APPLY_ARG, help='Apply sql version', action='store_true')
+    group.add_argument(Const.SETFF_ARG, help='Set version fast forward', action='store_true')
+    group.add_argument(Const.APPLY_FF_ARG, help='Apply version fast forward')
+    group.add_argument(Const.PULL_DATA_ARG, help='Pull data from repository by table', action='store_true')
+    group.add_argument(Const.PUSH_DATA_ARG, help='Push data from repository to database', action='store_true')
 
-    parser.add_argument('-force', help='Force push data from repository to database', action='store_true')
+    parser.add_argument(Const.FORCE_ARG, help='Force push data from repository to database', action='store_true')
 
-    parser.add_argument('-t', metavar='', help='Pull table for data', action='append')
+    parser.add_argument(Const.TBL_ARG, metavar='', help='Pull table for data', action='append')
 
-    parser.add_argument('-v', metavar='', help='Version number')
-    parser.add_argument('-mkrepo', metavar='', help='Make Repository')
-    parser.add_argument('-rmrepo', metavar='', help='Remove Repository')
-    parser.add_argument('-mkv', metavar='', help='Make version number')
-    parser.add_argument('-mkenv', metavar='', help='Make environment type')
-    parser.add_argument('-rmenv', metavar='', help='Remove environment type')
-    parser.add_argument('-setenv', metavar='', help='Set environment type to a version')
-    parser.add_argument('-env', metavar='', help='Repository environment name')
-    parser.add_argument('-repo', metavar='', help='Repository name')
-    parser.add_argument('-production', help='Database production flag', action='store_true')
+    parser.add_argument(Const.V_ARG, metavar='', help='Version number')
+    parser.add_argument(Const.MAKE_REPO_ARG, metavar='', help='Make Repository')
+    parser.add_argument(Const.REMOVE_REPO_ARG, metavar='', help='Remove Repository')
+    parser.add_argument(Const.MAKE_V_ARG, metavar='', help='Make version number')
+    parser.add_argument(Const.MAKE_ENV_ARG, metavar='', help='Make environment type')
+    parser.add_argument(Const.REMOVE_ENV_ARG, metavar='', help='Remove environment type')
+    parser.add_argument(Const.SET_ENV_ARG, metavar='', help='Set environment type to a version')
+    parser.add_argument(Const.ENV_ARG, metavar='', help='Repository environment name')
+    parser.add_argument(Const.REPO_ARG, metavar='', help='Repository name')
+    parser.add_argument(Const.PRODUCTION_ARG, help='Database production flag', action='store_true')
 
-    parser.add_argument('-svc', metavar='', help='pg service')
+    parser.add_argument(Const.SERVICE_ARG, metavar='', help='pg service')
 
-    parser.add_argument('-d', metavar='', help='database name on server')
-    parser.add_argument('-host', metavar='', help='postgres server host')
-    parser.add_argument('-p', metavar='', help='port')
-    parser.add_argument('-u', metavar='', help='database username')
-    parser.add_argument('-pwd', metavar='', help='password')
+    parser.add_argument(Const.DATABASE_ARG, metavar='', help='database name on server')
+    parser.add_argument(Const.HOST_ARG, metavar='', help='postgres server host')
+    parser.add_argument(Const.PORT_ARG, metavar='', help='port')
+    parser.add_argument(Const.USER_ARG, metavar='', help='database username')
+    parser.add_argument(Const.PWD_ARG, metavar='', help='password')
 
-    parser.add_argument(INCLUDE_SCHEMA_ARG, '-is', metavar='', help='Add schema to include schema list', action='append')
-    parser.add_argument(INCLUDE_TABLE_ARG, '-it', metavar='', help='Add table to include table list', action='append')
-    parser.add_argument(EXCLUDE_SCHEMA_ARG, '-es', metavar='', help='Add schema to exclude schema list', action='append')
-    parser.add_argument(EXCLUDE_TABLE_ARG, '-et', metavar='', help='Add table to exclude table list', action='append')
-    parser.add_argument(RMINCLUDE_SCHEMA_ARG, '-rmis', metavar='', help='Remove schema from include schema list',
+    parser.add_argument(Const.INCLUDE_SCHEMA_ARG, '-is', metavar='', help='Add schema to include schema list', action='append')
+    parser.add_argument(Const.INCLUDE_TABLE_ARG, '-it', metavar='', help='Add table to include table list', action='append')
+    parser.add_argument(Const.EXCLUDE_SCHEMA_ARG, '-es', metavar='', help='Add schema to exclude schema list', action='append')
+    parser.add_argument(Const.EXCLUDE_TABLE_ARG, '-et', metavar='', help='Add table to exclude table list', action='append')
+    parser.add_argument(Const.RMINCLUDE_SCHEMA_ARG, '-rmis', metavar='', help='Remove schema from include schema list',
                         action='append')
-    parser.add_argument(RMINCLUDE_TABLE_ARG, '-rmit', metavar='', help='Remove table from include table list',
+    parser.add_argument(Const.RMINCLUDE_TABLE_ARG, '-rmit', metavar='', help='Remove table from include table list',
                         action='append')
-    parser.add_argument(RMEXCLUDE_SCHEMA_ARG, '-rmes', metavar='', help='Remove schema from exclude schema list',
+    parser.add_argument(Const.RMEXCLUDE_SCHEMA_ARG, '-rmes', metavar='', help='Remove schema from exclude schema list',
                         action='append')
-    parser.add_argument(RMEXCLUDE_TABLE_ARG, '-rmet', metavar='', help='Remove table from exclude table list',
+    parser.add_argument(Const.RMEXCLUDE_TABLE_ARG, '-rmet', metavar='', help='Remove table from exclude table list',
                         action='append')
 
     return parser.parse_args(args)
@@ -223,9 +214,9 @@ def set_repository_env_version(arg_set):
         )
     else:
         if arg_set.setenv is None:
-            error_message(f"Missing -setenv")
+            error_message(f"Missing {Const.SET_ENV_ARG}")
         if arg_set.v is None:
-            error_message(f"Missing -v")
+            error_message(f"Missing {Const.V_ARG}")
 
 
 def set_repository_include_schema(arg_set):
@@ -237,7 +228,7 @@ def set_repository_include_schema(arg_set):
                 include_schemas=arg_set.include_schema,
         )
     else:
-        error_message(f"Missing {INCLUDE_SCHEMA_ARG}")
+        error_message(f"Missing {Const.INCLUDE_SCHEMA_ARG}")
 
 
 def remove_repository_include_schema(arg_set):
@@ -249,7 +240,7 @@ def remove_repository_include_schema(arg_set):
                 rminclude_schemas=arg_set.rminclude_schema,
         )
     else:
-        error_message(f"Missing {RMINCLUDE_SCHEMA_ARG}")
+        error_message(f"Missing {Const.RMINCLUDE_SCHEMA_ARG}")
 
 
 def set_repository_exclude_schema(arg_set):
@@ -261,7 +252,7 @@ def set_repository_exclude_schema(arg_set):
                 exclude_schemas=arg_set.exclude_schema,
         )
     else:
-        error_message(f"Missing {EXCLUDE_SCHEMA_ARG}")
+        error_message(f"Missing {Const.EXCLUDE_SCHEMA_ARG}")
 
 
 def remove_repository_rmexclude_schema(arg_set):
@@ -273,7 +264,7 @@ def remove_repository_rmexclude_schema(arg_set):
                 rmexclude_schemas=arg_set.rmexclude_schema,
         )
     else:
-        error_message(f"Missing {EXCLUDE_SCHEMA_ARG}")
+        error_message(f"Missing {Const.EXCLUDE_SCHEMA_ARG}")
 
 
 def set_repository_include_table(arg_set):
@@ -285,7 +276,7 @@ def set_repository_include_table(arg_set):
                 include_tables=arg_set.include_table,
         )
     else:
-        error_message(f"Missing {INCLUDE_TABLE_ARG}")
+        error_message(f"Missing {Const.INCLUDE_TABLE_ARG}")
 
 
 def remove_repository_include_table(arg_set):
@@ -297,7 +288,7 @@ def remove_repository_include_table(arg_set):
                 rminclude_table=arg_set.rminclude_table,
         )
     else:
-        error_message(f"Missing {RMINCLUDE_SCHEMA_ARG}")
+        error_message(f"Missing {Const.RMINCLUDE_SCHEMA_ARG}")
 
 
 def set_repository_exclude_table(arg_set):
@@ -309,7 +300,7 @@ def set_repository_exclude_table(arg_set):
                 exclude_tables=arg_set.exclude_table,
         )
     else:
-        error_message(f"Missing {INCLUDE_TABLE_ARG}")
+        error_message(f"Missing {Const.INCLUDE_TABLE_ARG}")
 
 
 def remove_repository_exclude_table(arg_set):
@@ -321,12 +312,12 @@ def remove_repository_exclude_table(arg_set):
                 rmexclude_table=arg_set.rmexclude_table,
         )
     else:
-        error_message(f"Missing {RMEXCLUDE_SCHEMA_ARG}")
+        error_message(f"Missing {Const.RMEXCLUDE_SCHEMA_ARG}")
 
 
 def show_version():
-    pkg = pkg_resources.require("pgvctrl")[0]
-    information_message("{0}: {1}".format(pkg.project_name, pkg.version))
+    pkg = pkg_resources.require(Const.PGVCTRL)[0]
+    information_message(f"{pkg.project_name}: {pkg.version}")
 
 
 def create_config_file():
@@ -419,18 +410,18 @@ class DbVctrl(object):
                 # -version
                 show_version()
             else:
-                prj_name = pkg_resources.require("pgvctrl")[0].project_name
+                prj_name = pkg_resources.require(Const.PGVCTRL)[0].project_name
                 error_message(f"{prj_name}: No operation specified\nTry \"{prj_name} --help\" for more information.")
         except VersionedDbExceptionProductionChangeNoProductionFlag as e:
             error_message(e.message)
         except VersionedDbException as e:
             error_message(e.message)
         except KeyError as e:
-            error_message("Invalid key in config, expected {0}".format(e))
+            error_message(f"Invalid key in config, expected {e}")
         except ProcessExecutionError as e:
-            error_message("DB Error {0}".format(e.stderr))
+            error_message(f"DB Error {e.stderr}")
         except OSError as e:
-            error_message("OSError: {0} ({1})".format(e.strerror, e.filename))
+            error_message(f"OSError: {e.strerror} ({e.filename})")
 
 
 def main():

@@ -8,6 +8,8 @@ import simplejson as json
 
 from plumbum import local
 
+import dbversioning.dbvctrlConst as Const
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dbversioning.dbvctrl import DbVctrl
 
@@ -29,7 +31,7 @@ class TestUtil(object):
     test_make_version = "3.0.0.MakeNewVersion"
     test_make_version_path = f"databases/{pgvctrl_test_repo}/{test_make_version}"
     test_bad_version = "999.1.bad_version"
-    test_version_path = "databases/pgvctrl_temp_test/{0}".format(test_version)
+    test_version_path = f"databases/pgvctrl_temp_test/{test_version}"
     error_sql = '130.Error.sql'
     error_sql_path = f'databases/pgvctrl_test/{test_version}/{error_sql}'
     error_sql_rollback = '130.Error_rollback.sql'
@@ -59,7 +61,7 @@ class TestUtil(object):
 
     @staticmethod
     def local_pgvctrl():
-        return local["pgvctrl"]
+        return local[Const.PGVCTRL]
 
     @staticmethod
     def local_psql():
@@ -68,13 +70,13 @@ class TestUtil(object):
     @staticmethod
     def create_database():
         psql = TestUtil.local_psql()
-        rtn = psql.run(["-c", "CREATE DATABASE {0}".format(TestUtil.pgvctrl_test_db)], retcode=0)
+        rtn = psql.run(["-c", f"CREATE DATABASE {TestUtil.pgvctrl_test_db}"], retcode=0)
         print(rtn)
 
     @staticmethod
     def drop_database():
         psql = TestUtil.local_psql()
-        rtn = psql.run(["-c", "DROP DATABASE IF EXISTS {0}".format(TestUtil.pgvctrl_test_db)], retcode=0)
+        rtn = psql.run(["-c", f"DROP DATABASE IF EXISTS {TestUtil.pgvctrl_test_db}"], retcode=0)
         print(rtn)
 
     @staticmethod
@@ -90,20 +92,20 @@ class TestUtil(object):
     @staticmethod
     def create_config():
         pgv = TestUtil.local_pgvctrl()
-        rtn = pgv.run(["-mkconf"], retcode=0)
+        rtn = pgv.run([Const.MKCONF_ARG], retcode=0)
         print(rtn)
 
     @staticmethod
     def mkrepo(repo_name):
         pgv = TestUtil.local_pgvctrl()
-        rtn = pgv.run(["-mkrepo", repo_name], retcode=0)
+        rtn = pgv.run([Const.MAKE_REPO_ARG, repo_name], retcode=0)
         print(rtn)
 
 
     @staticmethod
     def mkrepo_ver(repo_name, ver):
         pgv = TestUtil.local_pgvctrl()
-        rtn = pgv.run(["-repo", repo_name, '-mkv', ver], retcode=0)
+        rtn = pgv.run([Const.REPO_ARG, repo_name, Const.MAKE_V_ARG, ver], retcode=0)
         print(rtn)
 
     @staticmethod
@@ -154,5 +156,5 @@ def capture_dbvctrl_out(args):
 
 
 def print_cmd_error_details(rtn, arg_list):
-    print(":pgvctrl {0}".format(' '.join(arg_list)))
-    print("return: {0}".format(rtn))
+    print(f":pgvctrl {' '.join(arg_list)}")
+    print(f"return: {rtn}")
