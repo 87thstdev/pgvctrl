@@ -37,6 +37,7 @@ class TestUtil(object):
     test_version_ff_path = (
         f"databases/_fastForward/{pgvctrl_test_repo}/{test_version}.sql"
     )
+    test_version_data_path = f"databases/{pgvctrl_test_repo}/data/data.json"
     test_make_version = "3.0.0.MakeNewVersion"
     test_make_version_path = (
         f"databases/{pgvctrl_test_repo}/{test_make_version}"
@@ -62,6 +63,8 @@ class TestUtil(object):
     custom_error_message = "WHY WOULD YOU DO THAT!"
     error_set_data_path = f"databases/pgvctrl_test/data/error_set.sql"
     config_file = "dbRepoConfig.json"
+    data_file_default = "data.json.default"
+    error_set_file_default = "error_set.sql.default"
 
     sql_return = 'Running: 100.AddUsersTable\n\n' \
                  'Running: 110.Notice\n' \
@@ -140,6 +143,14 @@ class TestUtil(object):
     @staticmethod
     def get_static_config():
         copy2(f"{TestUtil.config_file}.default", TestUtil.config_file)
+
+    @staticmethod
+    def get_static_data_config():
+        copy2(TestUtil.data_file_default, TestUtil.test_version_data_path)
+
+    @staticmethod
+    def get_static_error_set_data():
+        copy2(TestUtil.error_set_file_default, TestUtil.error_set_data_path)
 
     @staticmethod
     def get_static_bad_config():

@@ -647,6 +647,50 @@ class TestPgvctrlTestDb:
         )
         assert rtn[TestUtil.return_code] == 1
 
+
+class TestPgvctrlTestPushPullDb:
+    def setup_method(self):
+        pgv = TestUtil.local_pgvctrl()
+        TestUtil.get_static_data_config()
+        TestUtil.get_static_error_set_data()
+        TestUtil.drop_database()
+        TestUtil.create_database()
+        TestUtil.get_static_config()
+        pgv.run(
+                [
+                    Const.INIT_ARG,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ],
+                retcode=0,
+        )
+        TestUtil.mkrepo_ver(
+                TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
+        )
+        pgv.run(
+                [
+                    Const.APPLY_ARG,
+                    Const.V_ARG,
+                    TestUtil.test_first_version,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ],
+                retcode=0,
+        )
+
+    def teardown_method(self):
+        TestUtil.delete_folder(TestUtil.test_first_version_path)
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
+        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.delete_file(TestUtil.test_version_data_path)
+        TestUtil.delete_file(TestUtil.error_set_data_path)
+
+        TestUtil.drop_database()
+
     def test_push_data(self):
         arg_list = [
             Const.PUSH_DATA_ARG,
