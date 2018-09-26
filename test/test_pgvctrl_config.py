@@ -9,13 +9,23 @@ from dbversioning.dbvctrl import parse_args
 from dbversioning.repositoryconf import (
     RepositoryConf,
     INCLUDE_TABLES,
-    EXCLUDE_TABLES)
+    EXCLUDE_TABLES,
+)
 from test.test_util import (
     TestUtil,
     print_cmd_error_details,
-    capture_dbvctrl_out)
+    capture_dbvctrl_out,
+)
 
-DB_REPO_CONFIG_JSON = 'dbRepoConfig.json'
+
+def test_no_args():
+    arg_list = []
+    args = parse_args(arg_list)
+    out_rtn, errors = capture_dbvctrl_out(args=args)
+
+    print_cmd_error_details(out_rtn, arg_list)
+    assert errors.code == 1
+    assert f"pgvctrl: No operation specified\nTry \"{Const.PGVCTRL} --help\" for more information.\n" == out_rtn
 
 
 def test_version():
@@ -25,7 +35,7 @@ def test_version():
 
     print_cmd_error_details(out_rtn, arg_list)
     assert errors is None
-    assert out_rtn[:8] == 'pgvctrl:'
+    assert out_rtn[:8] == "pgvctrl:"
 
 
 def test_help_h():
@@ -43,7 +53,7 @@ def test_help_h():
 
     print_cmd_error_details(out_rtn, arg_list)
     assert errors.code == 0
-    assert 'Postgres db version control.' in out_rtn
+    assert "Postgres db version control." in out_rtn
 
 
 def test_help_help():
@@ -61,25 +71,60 @@ def test_help_help():
 
     print_cmd_error_details(out_rtn, arg_list)
     assert errors.code == 0
-    assert 'Postgres db version control.' in out_rtn
+    assert "Postgres db version control." in out_rtn
+
+
+class TestPgvctrlBadConf:
+    def setup_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.get_static_bad_config()
+
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
+
+    def test_conf_bad_mkconf(self):
+        arg_list = [Const.LIST_REPOS_ARG]
+        args = parse_args(arg_list)
+        out_rtn, errors = capture_dbvctrl_out(args=args)
+
+        print_cmd_error_details(out_rtn, arg_list)
+        assert out_rtn == f"Bad config file!\n"
+        assert errors.code == 1
+
+
+class TestPgvctrlNoConf:
+    def setup_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
+
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
+
+    def test_conf_no_mkconf(self):
+        arg_list = [Const.LIST_REPOS_ARG]
+        args = parse_args(arg_list)
+        out_rtn, errors = capture_dbvctrl_out(args=args)
+
+        print_cmd_error_details(out_rtn, arg_list)
+        assert out_rtn == f"File missing: {TestUtil.config_file}\n"
+        assert errors.code == 1
 
 
 class TestPgvctrlRepoMakeConf:
-    def setup_method(self, test_method):
-        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+    def setup_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
 
-    def teardown_method(self, test_method):
-        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
 
     def test_mkconf_not_exists(self):
-        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+        TestUtil.delete_file(TestUtil.config_file)
 
         arg_list = [Const.MKCONF_ARG]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
         print_cmd_error_details(out_rtn, arg_list)
-        assert out_rtn == f'Config file created: {DB_REPO_CONFIG_JSON}\n'
+        assert out_rtn == f"Config file created: {TestUtil.config_file}\n"
         assert errors is None
 
     def test_mkconf_exists(self):
@@ -92,37 +137,92 @@ class TestPgvctrlRepoMakeConf:
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
         print_cmd_error_details(out_rtn, arg_list)
-        assert out_rtn == f'File already exists: {DB_REPO_CONFIG_JSON}\n'
+        assert out_rtn == f"File already exists: {TestUtil.config_file}\n"
         assert errors.code == 1
 
 
 class TestPgvctrlRepoMakeEnv:
-    def setup_method(self, test_method):
+    def setup_method(self):
         TestUtil.get_static_config()
 
-    def teardown_method(self, test_method):
-        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
 
     def test_mkenv(self):
         arg_list = [
-            Const.MAKE_ENV_ARG, TestUtil.env_qa,
-            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
+            Const.MAKE_ENV_ARG,
+            TestUtil.env_qa,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
         ]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
         print_cmd_error_details(out_rtn, arg_list)
-        assert out_rtn == f"Repository environment created: {TestUtil.pgvctrl_test_repo} {TestUtil.env_qa}\n"
+        assert (
+            out_rtn
+            == f"Repository environment created: {TestUtil.pgvctrl_test_repo} {TestUtil.env_qa}\n"
+        )
         assert errors is None
 
 
+class TestPgvctrlSetRepoEnv:
+    def setup_method(self):
+        TestUtil.get_static_config()
+
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
+
+    def test_set_repo_env(self):
+        arg_make_env_list = [
+            Const.MAKE_ENV_ARG,
+            TestUtil.env_qa,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+        ]
+        args = parse_args(arg_make_env_list)
+        capture_dbvctrl_out(args=args)
+
+        arg_list = [
+            Const.SET_ENV_ARG,
+            TestUtil.env_qa,
+            Const.V_ARG,
+            TestUtil.test_version,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+        ]
+        args = parse_args(arg_list)
+        out_rtn, errors = capture_dbvctrl_out(args=args)
+
+        print_cmd_error_details(out_rtn, arg_list)
+        assert (
+            out_rtn
+            == f"Repository environment set: {TestUtil.pgvctrl_test_repo} {TestUtil.env_qa} {TestUtil.test_version}\n"
+        )
+        assert errors is None
+
+    def test_set_repo_env_no_v_fail(self):
+        arg_list = [
+            Const.SET_ENV_ARG,
+            TestUtil.env_qa,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+        ]
+        args = parse_args(arg_list)
+        out_rtn, errors = capture_dbvctrl_out(args=args)
+
+        print_cmd_error_details(out_rtn, arg_list)
+        assert out_rtn == f"Missing {Const.V_ARG}\n"
+        assert errors.code == 1
+
+
 class TestPgvctrlRepoMakeRemove:
-    def setup_method(self, test_method):
+    def setup_method(self):
         TestUtil.get_static_config()
         TestUtil.mkrepo(TestUtil.pgvctrl_no_files_repo)
 
-    def teardown_method(self, test_method):
-        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
         TestUtil.delete_folder(TestUtil.pgvctrl_no_files_repo_path)
         TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
 
@@ -132,7 +232,10 @@ class TestPgvctrlRepoMakeRemove:
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
         print_cmd_error_details(out_rtn, arg_list)
-        assert out_rtn == f'Repository created: {TestUtil.pgvctrl_test_temp_repo}\n'
+        assert (
+            out_rtn
+            == f"Repository created: {TestUtil.pgvctrl_test_temp_repo}\n"
+        )
         assert errors is None
 
     def test_mkrepo_exists(self):
@@ -141,7 +244,10 @@ class TestPgvctrlRepoMakeRemove:
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
         print_cmd_error_details(out_rtn, arg_list)
-        assert out_rtn == f'Repository already exist: {TestUtil.pgvctrl_no_files_repo}\n'
+        assert (
+            out_rtn
+            == f"Repository already exist: {TestUtil.pgvctrl_no_files_repo}\n"
+        )
         assert errors.code == 1
 
     def test_rmrepo_exists(self):
@@ -150,7 +256,9 @@ class TestPgvctrlRepoMakeRemove:
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
         print_cmd_error_details(out_rtn, arg_list)
-        assert out_rtn == f'Repository removed: {TestUtil.pgvctrl_no_files_repo}\n'
+        assert (
+            out_rtn == f"Repository removed: {TestUtil.pgvctrl_no_files_repo}\n"
+        )
         assert errors is None
 
     def test_rmrepo_not_exists(self):
@@ -159,17 +267,22 @@ class TestPgvctrlRepoMakeRemove:
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
         print_cmd_error_details(out_rtn, arg_list)
-        assert out_rtn == f'Repository does not exist: {TestUtil.pgvctrl_test_temp_repo}\n'
+        assert (
+            out_rtn
+            == f"Repository does not exist: {TestUtil.pgvctrl_test_temp_repo}\n"
+        )
         assert errors.code == 1
 
 
 class TestPgvctrlRepoList:
-    def setup_method(self, test_method):
+    def setup_method(self):
         TestUtil.get_static_config()
-        TestUtil.mkrepo_ver(TestUtil.pgvctrl_test_repo, TestUtil.test_first_version)
+        TestUtil.mkrepo_ver(
+            TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
+        )
 
-    def teardown_method(self, test_method):
-        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
         TestUtil.delete_folder(TestUtil.test_make_version_path)
         TestUtil.delete_folder(TestUtil.test_first_version_path)
         TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
@@ -180,9 +293,11 @@ class TestPgvctrlRepoList:
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
         print_cmd_error_details(out_rtn, arg_list)
-        assert out_rtn == f'{TestUtil.pgvctrl_test_repo}\n' \
-                          f'\tv {TestUtil.test_first_version} test\n' \
-                          f'\tv {TestUtil.test_version} \n'
+        assert (
+            out_rtn == f"{TestUtil.pgvctrl_test_repo}\n"
+            f"\tv {TestUtil.test_first_version} test\n"
+            f"\tv {TestUtil.test_version} \n"
+        )
         assert errors is None
 
     def test_repo_list_verbose(self):
@@ -191,16 +306,18 @@ class TestPgvctrlRepoList:
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
         print_cmd_error_details(out_rtn, arg_list)
-        assert out_rtn == f'{TestUtil.pgvctrl_test_repo}\n' \
-                          f'\tv {TestUtil.test_first_version} test\n' \
-                          f'\tv {TestUtil.test_version} \n' \
-                          f'\t\t100 AddUsersTable\n' \
-                          f'\t\t110 Notice\n' \
-                          f'\t\t120 ItemTable\n' \
-                          f'\t\t140 ItemsAddMore\n' \
-                          f'\t\t200 AddEmailTable\n' \
-                          f'\t\t300 UserStateTable\n' \
-                          f'\t\t400 ErrorSet\n'
+        assert (
+            out_rtn == f"{TestUtil.pgvctrl_test_repo}\n"
+            f"\tv {TestUtil.test_first_version} test\n"
+            f"\tv {TestUtil.test_version} \n"
+            f"\t\t100 AddUsersTable\n"
+            f"\t\t110 Notice\n"
+            f"\t\t120 ItemTable\n"
+            f"\t\t140 ItemsAddMore\n"
+            f"\t\t200 AddEmailTable\n"
+            f"\t\t300 UserStateTable\n"
+            f"\t\t400 ErrorSet\n"
+        )
         assert errors is None
 
     def test_repo_list_unregistered(self):
@@ -217,295 +334,413 @@ class TestPgvctrlRepoList:
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
         print_cmd_error_details(out_rtn, arg_list)
-        assert out_rtn == f'{TestUtil.pgvctrl_test_temp_repo} UNREGISTERED\n' \
-                          f'{TestUtil.pgvctrl_test_repo}\n' \
-                          f'\tv {TestUtil.test_first_version} test\n' \
-                          f'\tv {TestUtil.test_version} \n'
+        assert (
+            out_rtn == f"{TestUtil.pgvctrl_test_temp_repo} UNREGISTERED\n"
+            f"{TestUtil.pgvctrl_test_repo}\n"
+            f"\tv {TestUtil.test_first_version} test\n"
+            f"\tv {TestUtil.test_version} \n"
+        )
         assert errors is None
 
 
-class TestPgvctrRepoMakeEnv:
-    def setup_method(self, test_method):
+class TestPgvctrlRepoRemoveEnv:
+    def setup_method(self):
         TestUtil.get_static_config()
 
-    def teardown_method(self, test_method):
-        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
 
-    def test_mkenv(self):
+    def test_rmenv_fail(self):
         arg_list = [
-            Const.MAKE_ENV_ARG,
+            Const.REMOVE_ENV_ARG,
             TestUtil.env_qa,
             Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo]
+            TestUtil.pgvctrl_test_repo,
+        ]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
         print_cmd_error_details(out_rtn, arg_list)
-        assert out_rtn == f"Repository environment created: {TestUtil.pgvctrl_test_repo} {TestUtil.env_qa}\n"
+        assert (
+            out_rtn
+            == f"Invalid key in config, expected '{TestUtil.env_qa}'\n"
+        )
+        assert errors.code == 1
+
+    def test_rmenv(self):
+        mk_arg_list = [
+            Const.MAKE_ENV_ARG,
+            TestUtil.env_qa,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+        ]
+        args = parse_args(mk_arg_list)
+        capture_dbvctrl_out(args=args)
+
+        rm_arg_list = [
+            Const.REMOVE_ENV_ARG,
+            TestUtil.env_qa,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+        ]
+        args = parse_args(rm_arg_list)
+        out_rtn, errors = capture_dbvctrl_out(args=args)
+
+        print_cmd_error_details(out_rtn, rm_arg_list)
+        assert (
+            out_rtn
+            == f"Repository environment removed: {TestUtil.pgvctrl_test_repo} {TestUtil.env_qa}\n"
+        )
+
         assert errors is None
 
 
 class TestPgvctrlMakeVersion:
-    def setup_method(self, test_method):
+    def setup_method(self):
         TestUtil.get_static_config()
 
-    def teardown_method(self, test_method):
-        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
         TestUtil.delete_folder(TestUtil.test_make_version_path)
 
     def test_mkv(self):
-        arg_list = [Const.MAKE_V_ARG, TestUtil.test_make_version, Const.REPO_ARG, TestUtil.pgvctrl_test_repo]
+        arg_list = [
+            Const.MAKE_V_ARG,
+            TestUtil.test_make_version,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+        ]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
         print_cmd_error_details(out_rtn, arg_list)
-        assert out_rtn == f'Version {TestUtil.pgvctrl_test_repo}/{TestUtil.test_make_version} created.\n'
+        assert (
+            out_rtn
+            == f"Version {TestUtil.pgvctrl_test_repo}/{TestUtil.test_make_version} created.\n"
+        )
         assert errors is None
 
     def test_mkv_bad(self):
-        arg_list = [Const.MAKE_V_ARG, TestUtil.test_bad_version, Const.REPO_ARG, TestUtil.pgvctrl_test_repo]
+        arg_list = [
+            Const.MAKE_V_ARG,
+            TestUtil.test_bad_version,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+        ]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
         print_cmd_error_details(out_rtn, arg_list)
-        assert out_rtn == f'Repository version number invalid, should be [Major].[Minor].[Maintenance] ' \
-                          f'at a minimum: {TestUtil.test_bad_version}\n'
+        assert (
+            out_rtn
+            == f"Repository version number invalid, should be [Major].[Minor].[Maintenance] "
+            f"at a minimum: {TestUtil.test_bad_version}\n"
+        )
         assert errors.code == 1
 
     def test_mkv_exists(self):
-        arg_list = [Const.MAKE_V_ARG, TestUtil.test_make_version, Const.REPO_ARG, TestUtil.pgvctrl_test_repo]
+        arg_list = [
+            Const.MAKE_V_ARG,
+            TestUtil.test_make_version,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+        ]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
-        arg_list = [Const.MAKE_V_ARG, TestUtil.test_make_version, Const.REPO_ARG, TestUtil.pgvctrl_test_repo]
+        arg_list = [
+            Const.MAKE_V_ARG,
+            TestUtil.test_make_version,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+        ]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
         print_cmd_error_details(out_rtn, arg_list)
-        assert out_rtn == f'Repository version already exists: {TestUtil.pgvctrl_test_repo} 3.0.0\n'
+        assert (
+            out_rtn
+            == f"Repository version already exists: {TestUtil.pgvctrl_test_repo} 3.0.0\n"
+        )
         assert errors.code == 1
 
 
 class TestPgvctrlRepoIncludeSchema:
-    def setup_method(self, test_method):
+    def setup_method(self):
         TestUtil.get_static_config()
 
-    def teardown_method(self, test_method):
-        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
 
     def test_include_schema(self):
         arg_list = [
-            Const.INCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
-            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
+            Const.INCLUDE_SCHEMA_ARG,
+            TestUtil.schema_membership,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
         ]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
-        inc_sch_name = RepositoryConf.get_repo_include_schemas(TestUtil.pgvctrl_test_repo)
+        inc_sch_name = RepositoryConf.get_repo_include_schemas(
+            TestUtil.pgvctrl_test_repo
+        )
 
         print_cmd_error_details(out_rtn, arg_list)
         assert errors is None
-        assert inc_sch_name == ['membership']
-        assert out_rtn == f"Repository added: {TestUtil.pgvctrl_test_repo} " \
-                          f"include-schemas ['{TestUtil.schema_membership}']\n"
+        assert inc_sch_name == ["membership"]
+        assert (
+            out_rtn == f"Repository added: {TestUtil.pgvctrl_test_repo} "
+            f"include-schemas ['{TestUtil.schema_membership}']\n"
+        )
 
 
 class TestPgvctrlRepoRemoveIncludeSchema:
-    def setup_method(self, test_method):
+    def setup_method(self):
         TestUtil.get_static_config()
 
-    def teardown_method(self, test_method):
-        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
 
     def test_include_schema(self):
         arg_list = [
-            Const.INCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
-            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
+            Const.INCLUDE_SCHEMA_ARG,
+            TestUtil.schema_membership,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
         ]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
         arg_list = [
-            Const.RMINCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
-            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
+            Const.RMINCLUDE_SCHEMA_ARG,
+            TestUtil.schema_membership,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
         ]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
-        inc_sch_name = RepositoryConf.get_repo_include_schemas(TestUtil.pgvctrl_test_repo)
+        inc_sch_name = RepositoryConf.get_repo_include_schemas(
+            TestUtil.pgvctrl_test_repo
+        )
 
         print_cmd_error_details(out_rtn, arg_list)
         assert errors is None
         assert inc_sch_name == []
-        assert out_rtn == f"Repository removed: {TestUtil.pgvctrl_test_repo} " \
-                          f"include-schemas ['{TestUtil.schema_membership}']\n"
+        assert (
+            out_rtn == f"Repository removed: {TestUtil.pgvctrl_test_repo} "
+            f"include-schemas ['{TestUtil.schema_membership}']\n"
+        )
 
 
 class TestPgvctrlRepoExcludeSchema:
-    def setup_method(self, test_method):
+    def setup_method(self):
         TestUtil.get_static_config()
 
-    def teardown_method(self, test_method):
-        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
 
     def test_exclude_schema(self):
         arg_list = [
-            Const.EXCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
-            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
+            Const.EXCLUDE_SCHEMA_ARG,
+            TestUtil.schema_membership,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
         ]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
-        exc_sch_name = RepositoryConf.get_repo_exclude_schemas(TestUtil.pgvctrl_test_repo)
+        exc_sch_name = RepositoryConf.get_repo_exclude_schemas(
+            TestUtil.pgvctrl_test_repo
+        )
 
         print_cmd_error_details(out_rtn, arg_list)
         assert errors is None
-        assert exc_sch_name == ['membership']
-        assert out_rtn == f"Repository added: {TestUtil.pgvctrl_test_repo} " \
-                          f"exclude-schemas ['{TestUtil.schema_membership}']\n"
+        assert exc_sch_name == ["membership"]
+        assert (
+            out_rtn == f"Repository added: {TestUtil.pgvctrl_test_repo} "
+            f"exclude-schemas ['{TestUtil.schema_membership}']\n"
+        )
 
 
 class TestPgvctrlRepoRemoveExcludeSchema:
-    def setup_method(self, test_method):
+    def setup_method(self):
         TestUtil.get_static_config()
 
-    def teardown_method(self, test_method):
-        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
 
     def test_remove_exclude_schema(self):
         ex_arg_list = [
-            Const.EXCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
-            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
+            Const.EXCLUDE_SCHEMA_ARG,
+            TestUtil.schema_membership,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
         ]
         args = parse_args(ex_arg_list)
         capture_dbvctrl_out(args=args)
 
         arg_list = [
-            Const.RMEXCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
-            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
+            Const.RMEXCLUDE_SCHEMA_ARG,
+            TestUtil.schema_membership,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
         ]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
-        sch_name = RepositoryConf.get_repo_exclude_schemas(TestUtil.pgvctrl_test_repo)
+        sch_name = RepositoryConf.get_repo_exclude_schemas(
+            TestUtil.pgvctrl_test_repo
+        )
 
         print_cmd_error_details(out_rtn, arg_list)
         assert errors is None
         assert sch_name == []
-        assert out_rtn == f"Repository removed: {TestUtil.pgvctrl_test_repo} " \
-                          f"exclude-schemas ['{TestUtil.schema_membership}']\n"
+        assert (
+            out_rtn == f"Repository removed: {TestUtil.pgvctrl_test_repo} "
+            f"exclude-schemas ['{TestUtil.schema_membership}']\n"
+        )
 
 
 class TestPgvctrlRepoExcludeIncludedSchema:
-    def setup_method(self, test_method):
+    def setup_method(self):
         TestUtil.get_static_config()
 
-    def teardown_method(self, test_method):
-        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
 
     def test_exclude_schema(self):
         arg_list = [
-            Const.EXCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
-            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
+            Const.EXCLUDE_SCHEMA_ARG,
+            TestUtil.schema_membership,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
         ]
         args = parse_args(arg_list)
         # Exclude first
         capture_dbvctrl_out(args=args)
 
         arg_list = [
-            Const.INCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
-            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
+            Const.INCLUDE_SCHEMA_ARG,
+            TestUtil.schema_membership,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
         ]
         args = parse_args(arg_list)
         # Include second
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
-        inc_sch_name = RepositoryConf.get_repo_include_schemas(TestUtil.pgvctrl_test_repo)
-        exc_sch_name = RepositoryConf.get_repo_exclude_schemas(TestUtil.pgvctrl_test_repo)
+        inc_sch_name = RepositoryConf.get_repo_include_schemas(
+            TestUtil.pgvctrl_test_repo
+        )
+        exc_sch_name = RepositoryConf.get_repo_exclude_schemas(
+            TestUtil.pgvctrl_test_repo
+        )
 
         print_cmd_error_details(out_rtn, arg_list)
         assert errors is None
-        assert inc_sch_name == ['membership']
+        assert inc_sch_name == ["membership"]
         assert exc_sch_name == []
-        assert out_rtn == f"Repository added: {TestUtil.pgvctrl_test_repo} " \
-                          f"include-schemas ['{TestUtil.schema_membership}']\n"
+        assert (
+            out_rtn == f"Repository added: {TestUtil.pgvctrl_test_repo} "
+            f"include-schemas ['{TestUtil.schema_membership}']\n"
+        )
 
 
 class TestPgvctrlRepoIncludeExcludedSchema:
-    def setup_method(self, test_method):
+    def setup_method(self):
         TestUtil.get_static_config()
 
-    def teardown_method(self, test_method):
-        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
 
     def test_exclude_schema(self):
         arg_list = [
-            Const.INCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
-            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
+            Const.INCLUDE_SCHEMA_ARG,
+            TestUtil.schema_membership,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
         ]
         args = parse_args(arg_list)
         # Include first
         capture_dbvctrl_out(args=args)
 
         arg_list = [
-            Const.EXCLUDE_SCHEMA_ARG, TestUtil.schema_membership,
-            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
+            Const.EXCLUDE_SCHEMA_ARG,
+            TestUtil.schema_membership,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
         ]
         args = parse_args(arg_list)
         # Exclude second
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
-        inc_sch_name = RepositoryConf.get_repo_include_schemas(TestUtil.pgvctrl_test_repo)
-        exc_sch_name = RepositoryConf.get_repo_exclude_schemas(TestUtil.pgvctrl_test_repo)
+        inc_sch_name = RepositoryConf.get_repo_include_schemas(
+            TestUtil.pgvctrl_test_repo
+        )
+        exc_sch_name = RepositoryConf.get_repo_exclude_schemas(
+            TestUtil.pgvctrl_test_repo
+        )
 
         print_cmd_error_details(out_rtn, arg_list)
         assert errors is None
         assert inc_sch_name == []
-        assert exc_sch_name == ['membership']
-        assert out_rtn == f"Repository added: {TestUtil.pgvctrl_test_repo} " \
-                          f"exclude-schemas ['{TestUtil.schema_membership}']\n"
+        assert exc_sch_name == ["membership"]
+        assert (
+            out_rtn == f"Repository added: {TestUtil.pgvctrl_test_repo} "
+            f"exclude-schemas ['{TestUtil.schema_membership}']\n"
+        )
 
 
 class TestPgvctrlRepoIncludeTable:
-    def setup_method(self, test_method):
+    def setup_method(self):
         TestUtil.get_static_config()
 
-    def teardown_method(self, test_method):
-        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
 
     def test_include_table(self):
         arg_list = [
-            Const.INCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
-            Const.INCLUDE_TABLE_ARG, TestUtil.table_public_item,
-            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
+            Const.INCLUDE_TABLE_ARG,
+            TestUtil.table_membership_user_state,
+            Const.INCLUDE_TABLE_ARG,
+            TestUtil.table_public_item,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
         ]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
         name_list = RepositoryConf.get_repo_list(
-                repo_name=TestUtil.pgvctrl_test_repo,
-                list_name=INCLUDE_TABLES)
+            repo_name=TestUtil.pgvctrl_test_repo, list_name=INCLUDE_TABLES
+        )
 
         print_cmd_error_details(out_rtn, arg_list)
         assert errors is None
-        assert set(name_list) == {TestUtil.table_public_item, TestUtil.table_membership_user_state}
-        assert out_rtn == f"Repository added: {TestUtil.pgvctrl_test_repo} " \
-                          f"include-table ['{TestUtil.table_membership_user_state}', '{TestUtil.table_public_item}']\n"
+        assert set(name_list) == {
+            TestUtil.table_public_item,
+            TestUtil.table_membership_user_state,
+        }
+        assert (
+            out_rtn == f"Repository added: {TestUtil.pgvctrl_test_repo} "
+            f"include-table ['{TestUtil.table_membership_user_state}', '{TestUtil.table_public_item}']\n"
+        )
 
 
 class TestPgvctrlRepoRemoveIncludeTable:
-    def setup_method(self, test_method):
+    def setup_method(self):
         TestUtil.get_static_config()
 
-    def teardown_method(self, test_method):
-        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
 
     def test_remove_include_schema(self):
         arg_list = [
             Const.INCLUDE_TABLE_ARG,
             TestUtil.table_membership_user_state,
             Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo
+            TestUtil.pgvctrl_test_repo,
         ]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
@@ -514,156 +749,180 @@ class TestPgvctrlRepoRemoveIncludeTable:
             Const.RMINCLUDE_TABLE_ARG,
             TestUtil.table_membership_user_state,
             Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo
+            TestUtil.pgvctrl_test_repo,
         ]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
         inc_table_name = RepositoryConf.get_repo_list(
-                repo_name=TestUtil.pgvctrl_test_repo,
-                list_name=INCLUDE_TABLES)
+            repo_name=TestUtil.pgvctrl_test_repo, list_name=INCLUDE_TABLES
+        )
 
         print_cmd_error_details(out_rtn, arg_list)
         assert errors is None
         assert inc_table_name == []
-        assert out_rtn == f'Repository removed: {TestUtil.pgvctrl_test_repo} ' \
-                          f'include-table [\'{TestUtil.table_membership_user_state}\']\n'
+        assert (
+            out_rtn == f"Repository removed: {TestUtil.pgvctrl_test_repo} "
+            f"include-table ['{TestUtil.table_membership_user_state}']\n"
+        )
 
 
 class TestPgvctrlRepoExcludeTable:
-    def setup_method(self, test_method):
+    def setup_method(self):
         TestUtil.get_static_config()
 
-    def teardown_method(self, test_method):
-        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
 
     def test_exclude_table(self):
         arg_list = [
-            Const.EXCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
-            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
+            Const.EXCLUDE_TABLE_ARG,
+            TestUtil.table_membership_user_state,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
         ]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
         name_list = RepositoryConf.get_repo_list(
-                repo_name=TestUtil.pgvctrl_test_repo,
-                list_name=EXCLUDE_TABLES)
+            repo_name=TestUtil.pgvctrl_test_repo, list_name=EXCLUDE_TABLES
+        )
 
         print_cmd_error_details(out_rtn, arg_list)
         assert errors is None
         assert name_list == [TestUtil.table_membership_user_state]
-        assert out_rtn == f'Repository added: {TestUtil.pgvctrl_test_repo} ' \
-                          f'exclude-table [\'{TestUtil.table_membership_user_state}\']\n'
+        assert (
+            out_rtn == f"Repository added: {TestUtil.pgvctrl_test_repo} "
+            f"exclude-table ['{TestUtil.table_membership_user_state}']\n"
+        )
 
 
 class TestPgvctrlRepoRemoveExcludeTable:
-    def setup_method(self, test_method):
+    def setup_method(self):
         TestUtil.get_static_config()
 
-    def teardown_method(self, test_method):
-        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
 
     def test_remove_exclude_schema(self):
         arg_list = [
-            Const.EXCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
-            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
+            Const.EXCLUDE_TABLE_ARG,
+            TestUtil.table_membership_user_state,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
         ]
         args = parse_args(arg_list)
         capture_dbvctrl_out(args=args)
 
         arg_list = [
-            Const.RMEXCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
-            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
+            Const.RMEXCLUDE_TABLE_ARG,
+            TestUtil.table_membership_user_state,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
         ]
         args = parse_args(arg_list)
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
         exc_table_name = RepositoryConf.get_repo_list(
-                repo_name=TestUtil.pgvctrl_test_repo,
-                list_name=EXCLUDE_TABLES)
+            repo_name=TestUtil.pgvctrl_test_repo, list_name=EXCLUDE_TABLES
+        )
 
         print_cmd_error_details(out_rtn, arg_list)
         assert errors is None
         assert exc_table_name == []
-        assert out_rtn == f'Repository removed: {TestUtil.pgvctrl_test_repo} ' \
-                          f'exclude-table [\'{TestUtil.table_membership_user_state}\']\n'
+        assert (
+            out_rtn == f"Repository removed: {TestUtil.pgvctrl_test_repo} "
+            f"exclude-table ['{TestUtil.table_membership_user_state}']\n"
+        )
 
 
 class TestPgvctrlRepoIncludeExcludedTable:
-    def setup_method(self, test_method):
+    def setup_method(self):
         TestUtil.get_static_config()
 
-    def teardown_method(self, test_method):
-        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
 
     def test_exclude_schema(self):
         arg_list = [
-            Const.INCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
-            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
+            Const.INCLUDE_TABLE_ARG,
+            TestUtil.table_membership_user_state,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
         ]
         args = parse_args(arg_list)
         # Include first
         capture_dbvctrl_out(args=args)
 
         arg_list = [
-            Const.EXCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
-            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
+            Const.EXCLUDE_TABLE_ARG,
+            TestUtil.table_membership_user_state,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
         ]
         args = parse_args(arg_list)
         # Exclude second
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
         inc_tbl_name = RepositoryConf.get_repo_list(
-                repo_name=TestUtil.pgvctrl_test_repo,
-                list_name=INCLUDE_TABLES)
+            repo_name=TestUtil.pgvctrl_test_repo, list_name=INCLUDE_TABLES
+        )
 
         exc_tbl_name = RepositoryConf.get_repo_list(
-                repo_name=TestUtil.pgvctrl_test_repo,
-                list_name=EXCLUDE_TABLES)
+            repo_name=TestUtil.pgvctrl_test_repo, list_name=EXCLUDE_TABLES
+        )
 
         print_cmd_error_details(out_rtn, arg_list)
         assert errors is None
         assert inc_tbl_name == []
         assert exc_tbl_name == [TestUtil.table_membership_user_state]
-        assert out_rtn == f'Repository added: {TestUtil.pgvctrl_test_repo} ' \
-                          f'exclude-table [\'{TestUtil.table_membership_user_state}\']\n'
+        assert (
+            out_rtn == f"Repository added: {TestUtil.pgvctrl_test_repo} "
+            f"exclude-table ['{TestUtil.table_membership_user_state}']\n"
+        )
 
 
 class TestPgvctrlRepoExcludedIncludeTable:
-    def setup_method(self, test_method):
+    def setup_method(self):
         TestUtil.get_static_config()
 
-    def teardown_method(self, test_method):
-        TestUtil.delete_file(DB_REPO_CONFIG_JSON)
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
 
     def test_exclude_schema(self):
         arg_list = [
-            Const.EXCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
-            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
+            Const.EXCLUDE_TABLE_ARG,
+            TestUtil.table_membership_user_state,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
         ]
         args = parse_args(arg_list)
         # Exclude first
         capture_dbvctrl_out(args=args)
 
         arg_list = [
-            Const.INCLUDE_TABLE_ARG, TestUtil.table_membership_user_state,
-            Const.REPO_ARG, TestUtil.pgvctrl_test_repo
+            Const.INCLUDE_TABLE_ARG,
+            TestUtil.table_membership_user_state,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
         ]
         args = parse_args(arg_list)
         # Include second
         out_rtn, errors = capture_dbvctrl_out(args=args)
 
         inc_tbl_name = RepositoryConf.get_repo_list(
-                repo_name=TestUtil.pgvctrl_test_repo,
-                list_name=INCLUDE_TABLES)
+            repo_name=TestUtil.pgvctrl_test_repo, list_name=INCLUDE_TABLES
+        )
 
         exc_tbl_name = RepositoryConf.get_repo_list(
-                repo_name=TestUtil.pgvctrl_test_repo,
-                list_name=EXCLUDE_TABLES)
+            repo_name=TestUtil.pgvctrl_test_repo, list_name=EXCLUDE_TABLES
+        )
 
         print_cmd_error_details(out_rtn, arg_list)
         assert errors is None
         assert inc_tbl_name == [TestUtil.table_membership_user_state]
         assert exc_tbl_name == []
-        assert out_rtn == f"Repository added: {TestUtil.pgvctrl_test_repo} " \
-                          f"include-table ['{TestUtil.table_membership_user_state}']\n"
+        assert (
+            out_rtn == f"Repository added: {TestUtil.pgvctrl_test_repo} "
+            f"include-table ['{TestUtil.table_membership_user_state}']\n"
+        )

@@ -15,33 +15,37 @@ class VersionedDbExceptionFileExits(VersionedDbException):
 
 class VersionedDbExceptionRepoVersionNumber(VersionedDbException):
     def __init__(self, version: str):
-        self.message = f"Repository version number invalid, " \
-                       f"should be [Major].[Minor].[Maintenance] at a minimum: {version}"
+        self.message = f"Repository version number invalid, " f"should be [Major].[Minor].[Maintenance] at a minimum: {version}"
         pass
 
 
 class VersionedDbExceptionRepoVersionExits(VersionedDbException):
     def __init__(self, repo_name, version):
-        self.message = f"Repository version already exists: {repo_name}" \
-                       f" {version.major}.{version.minor}.{version.maintenance}"
+        self.message = f"Repository version already exists: {repo_name}" f" {version.major}.{version.minor}.{version.maintenance}"
         pass
 
 
 class VersionedDbExceptionRepoVersionDoesNotExits(VersionedDbException):
     def __init__(self, repo_name, version_name):
-        self.message = f"Repository version does not exist: {repo_name} {version_name}"
+        self.message = (
+            f"Repository version does not exist: {repo_name} {version_name}"
+        )
         pass
 
 
 class VersionedDbExceptionRepoEnvDoesNotExits(VersionedDbException):
     def __init__(self, repo_name, env):
-        self.message = f"Repository environment does not exists: {repo_name} {env}"
+        self.message = (
+            f"Repository environment does not exists: {repo_name} {env}"
+        )
         pass
 
 
 class VersionedDbExceptionRepoEnvExits(VersionedDbException):
     def __init__(self, repo_name, env):
-        self.message = f"Repository environment already exists: {repo_name} {env}"
+        self.message = (
+            f"Repository environment already exists: {repo_name} {env}"
+        )
         pass
 
 
@@ -63,15 +67,11 @@ class VersionedDbExceptionRepoDoesNotExits(VersionedDbException):
         pass
 
 
-class VersionedDbExceptionProductionChangeNoProductionFlag(VersionedDbException):
+class VersionedDbExceptionProductionChangeNoProductionFlag(
+    VersionedDbException
+):
     def __init__(self, action_name=None):
         self.message = f"Production changes need the {Const.PRODUCTION_ARG} flag: {action_name}"
-        pass
-
-
-class VersionedDbExceptionProductionChangeNotAllowed(VersionedDbException):
-    def __init__(self, action_name=None):
-        self.message = f"Production changes not allowed for: {action_name}"
         pass
 
 
@@ -120,12 +120,6 @@ class VersionedDbExceptionMissingDataTable(VersionedDbException):
 class VersionedDbExceptionBadDateSource(VersionedDbException):
     def __init__(self, dbconn):
         self.message = f"Invalid Data Connection: {dbconn}"
-        pass
-
-
-class VersionedDbExceptionInvalidRepo(VersionedDbException):
-    def __init__(self):
-        self.message = "Invalid Repo!"
         pass
 
 

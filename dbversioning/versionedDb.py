@@ -4,11 +4,13 @@ from typing import List
 
 from dbversioning.errorUtil import (
     VersionedDbExceptionFastForwardVersion,
-    VersionedDbExceptionRepoVersionNumber)
+    VersionedDbExceptionRepoVersionNumber,
+)
 from dbversioning.repositoryconf import DATA_DUMP
 from dbversioning.versionedDbHelper import (
     get_valid_elements,
-    get_valid_sql_elements)
+    get_valid_sql_elements,
+)
 
 
 class FastForwardDb(object):
@@ -63,7 +65,9 @@ class Version(object):
         self.major = None
         self.minor = None
         self.maintenance = None
-        self.sql_files = self._set_sql_objs(get_valid_sql_elements(self._version_path))
+        self.sql_files = self._set_sql_objs(
+            get_valid_sql_elements(self._version_path)
+        )
 
         _set_version_info(os.path.basename(self._version_path), self)
 
@@ -85,7 +89,7 @@ class Version(object):
         sha1 = hashlib.sha1()
 
         for sql in self.sql_files:
-            with open(sql.path, 'rb') as f:
+            with open(sql.path, "rb") as f:
                 while True:
                     data = f.read(BUF_SIZE)
                     if not data:
@@ -151,7 +155,7 @@ def _set_version_info(version_dir, ver):
 class SqlPatch(object):
     def __init__(self, sql_path):
         file_array = os.path.basename(sql_path).split(".")
-        
+
         self._path = sql_path
         self._number = int(file_array[0])
         self._name = file_array[1]

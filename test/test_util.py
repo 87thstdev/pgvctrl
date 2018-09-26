@@ -3,7 +3,9 @@ import os
 import io
 import sys
 from contextlib import redirect_stdout
-from shutil import copy2
+from shutil import (
+    copy2,
+    rmtree)
 import simplejson as json
 
 from plumbum import local
@@ -24,18 +26,29 @@ class TestUtil(object):
     pgvctrl_no_files_repo = "pgvctrl_no_files"
     pgvctrl_no_files_repo_path = "databases/pgvctrl_no_files"
     pgvctrl_test_db = "pgvctrl_test_db"
+    pgvctrl_test_db_snapshots_path = (
+        f"databases/_snapshots/{pgvctrl_test_repo}"
+    )
     test_first_version = "0.0.0.first"
-    test_first_version_path = f"databases/{pgvctrl_test_repo}/{test_first_version}"
+    test_first_version_path = (
+        f"databases/{pgvctrl_test_repo}/{test_first_version}"
+    )
     test_version = "2.0.0.NewVersion"
-    test_version_ff_path = f"databases/_fastForward/{pgvctrl_test_repo}/{test_version}.sql"
+    test_version_ff_path = (
+        f"databases/_fastForward/{pgvctrl_test_repo}/{test_version}.sql"
+    )
     test_make_version = "3.0.0.MakeNewVersion"
-    test_make_version_path = f"databases/{pgvctrl_test_repo}/{test_make_version}"
+    test_make_version_path = (
+        f"databases/{pgvctrl_test_repo}/{test_make_version}"
+    )
     test_bad_version = "999.1.bad_version"
     test_version_path = f"databases/pgvctrl_temp_test/{test_version}"
-    error_sql = '130.Error.sql'
-    error_sql_path = f'databases/pgvctrl_test/{test_version}/{error_sql}'
-    error_sql_rollback = '130.Error_rollback.sql'
-    error_sql_rollback_path = f'databases/pgvctrl_test/{test_version}/{error_sql_rollback}'
+    error_sql = "130.Error.sql"
+    error_sql_path = f"databases/pgvctrl_test/{test_version}/{error_sql}"
+    error_sql_rollback = "130.Error_rollback.sql"
+    error_sql_rollback_path = (
+        f"databases/pgvctrl_test/{test_version}/{error_sql_rollback}"
+    )
     env_test = "test"
     env_qa = "qa"
     env_prod = "prod"
@@ -45,7 +58,10 @@ class TestUtil(object):
     table_membership_user_state = f"{schema_membership}.user_state"
     table_public_item = f"{schema_public}.item"
     table_bad = "badtablename"
-    config_file = 'dbRepoConfig.json'
+    error_set_table_name = "error_set"
+    custom_error_message = "WHY WOULD YOU DO THAT!"
+    error_set_data_path = f"databases/pgvctrl_test/data/error_set.sql"
+    config_file = "dbRepoConfig.json"
 
     sql_return = 'Running: 100.AddUsersTable\n\n' \
                  'Running: 110.Notice\n' \
@@ -66,17 +82,24 @@ class TestUtil(object):
     @staticmethod
     def local_psql():
         return local["psql"]
-    
+
     @staticmethod
     def create_database():
+        TestUtil.drop_database()
+
         psql = TestUtil.local_psql()
-        rtn = psql.run(["-c", f"CREATE DATABASE {TestUtil.pgvctrl_test_db}"], retcode=0)
+        rtn = psql.run(
+            ["-c", f"CREATE DATABASE {TestUtil.pgvctrl_test_db}"], retcode=0
+        )
         print(rtn)
 
     @staticmethod
     def drop_database():
         psql = TestUtil.local_psql()
-        rtn = psql.run(["-c", f"DROP DATABASE IF EXISTS {TestUtil.pgvctrl_test_db}"], retcode=0)
+        rtn = psql.run(
+            ["-c", f"DROP DATABASE IF EXISTS {TestUtil.pgvctrl_test_db}"],
+            retcode=0,
+        )
         print(rtn)
 
     @staticmethod
@@ -90,6 +113,11 @@ class TestUtil(object):
             os.rmdir(dir_name)
 
     @staticmethod
+    def delete_folder_full(dir_name):
+        if os.path.isdir(dir_name):
+            rmtree(dir_name)
+
+    @staticmethod
     def create_config():
         pgv = TestUtil.local_pgvctrl()
         rtn = pgv.run([Const.MKCONF_ARG], retcode=0)
@@ -101,28 +129,39 @@ class TestUtil(object):
         rtn = pgv.run([Const.MAKE_REPO_ARG, repo_name], retcode=0)
         print(rtn)
 
-
     @staticmethod
     def mkrepo_ver(repo_name, ver):
         pgv = TestUtil.local_pgvctrl()
-        rtn = pgv.run([Const.REPO_ARG, repo_name, Const.MAKE_V_ARG, ver], retcode=0)
+        rtn = pgv.run(
+            [Const.REPO_ARG, repo_name, Const.MAKE_V_ARG, ver], retcode=0
+        )
         print(rtn)
 
     @staticmethod
     def get_static_config():
-        copy2(f'{TestUtil.config_file}.default', TestUtil.config_file)
+        copy2(f"{TestUtil.config_file}.default", TestUtil.config_file)
+
+    @staticmethod
+    def get_static_bad_config():
+        copy2(f"{TestUtil.config_file}.bad.default", TestUtil.config_file)
 
     @staticmethod
     def get_error_sql():
-        copy2(f'{TestUtil.error_sql_path}.default', TestUtil.error_sql_path)
+        copy2(f"{TestUtil.error_sql_path}.default", TestUtil.error_sql_path)
 
     @staticmethod
     def get_error_rollback_bad_sql():
-        copy2(f'{TestUtil.error_sql_rollback_path}.bad.default', TestUtil.error_sql_rollback_path)
+        copy2(
+            f"{TestUtil.error_sql_rollback_path}.bad.default",
+            TestUtil.error_sql_rollback_path,
+        )
 
     @staticmethod
     def get_error_rollback_good_sql():
-        copy2(f'{TestUtil.error_sql_rollback_path}.good.default', TestUtil.error_sql_rollback_path)
+        copy2(
+            f"{TestUtil.error_sql_rollback_path}.good.default",
+            TestUtil.error_sql_rollback_path,
+        )
 
     @staticmethod
     def get_repo_dict():
@@ -135,8 +174,9 @@ class TestUtil(object):
 
     @staticmethod
     def file_contains(file_path, key):
-        with open(file_path, 'rb', 0) as file, \
-                mmap.mmap(file.fileno(), 0, access=mmap.ACCESS_READ) as s:
+        with open(file_path, "rb", 0) as file, mmap.mmap(
+            file.fileno(), 0, access=mmap.ACCESS_READ
+        ) as s:
             if s.find(key.encode()) != -1:
                 return True
 
