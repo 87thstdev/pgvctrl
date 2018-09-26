@@ -90,6 +90,13 @@ In the test directory:
   have the naming convention of:<br />
   [order number].[change name].sql<br />
   e.g.: 100.AddedUserTable.sql
+  
+    __*Notes:*__<br />
+        * For best results with sql files, wrap all statements in a Transactions.
+    <pre>
+    BEGIN TRANSACTION;
+        [Your sql changes] 
+    COMMIT;</pre>
 
 1. List repositories and changes:
     <pre>pgvctrl -rl</pre>
@@ -193,6 +200,40 @@ __*Notes:*__<br />
 * If this command does not remove the folder from database, you must remove it and its contents yourself.  This is a safety measure.
 * Any repository folders left behind will be displayed as UNREGISTERED when the -rl option is used.
 
+### Manage schemas and tables in Snapshots and Fast Forwards
+
+#### Manage schemas (--schema, --exclude-schema, --rm-schema, --rmexclude-schema):
+1. Allows the user to say what schemas structures to include/exclude when snapshots and Fast Forwards
+are created. 
+1. The 'rm' arguments allow the user to remove schemas from the included and excluded lists.
+
+To include a schema:
+<pre>pgvctrl --schema membership -repo pgvctrl_test</pre>
+Output:
+<pre>Repository added: pgvctrl_test
+include-schemas ['membership']</pre>
+
+__*What happens?*__<br />
+
+* The dbRepoConfig.json file with have the membership schema added to the includeSchemas list
+ property of the "pgvctrl_test" repository 
+
+#### Manage table (--table, --exclude-table, --rm-table, --rmexclude-table):
+1. Allows the user to say what tables structures to include/exclude when snapshots and Fast Forwards
+are created. 
+1. The 'rm' arguments allow the user to remove tables from the included and excluded lists.
+
+To include a table:
+<pre>pgvctrl --table membership.user -repo pgvctrl_test</pre>
+Output:
+<pre>Repository added: pgvctrl_test
+include-table ['membership.user']</pre>
+
+__*Notes:*__
+1. If a table/schema is included and then later excluded, the table/schema is moved from included
+to exclude and vice versa.
+1. Include table/schema works the same as with pg_dump.
+
 ### Fast Forward (-setff, -applyff)
 __What are Fast Forwards?__<br />
 Fast forwards are snapshots of the database structure at the time the snapshot was taken.
@@ -245,7 +286,11 @@ e.g. For pushing by table(s).
 <pre>-pushdata -t error_set -repo mydb -d mylocaldb</pre>
 e.g. For pushing all tables.
 <pre>-pushdata -repo mydb -d mylocaldb</pre>
-
+Output:
+<pre>
+Pushing Data
+Running: error_set.sql
+</pre>
 
 ### dbRepoConfig.json
 The dbRepoConfig.json files is the configuration file for
