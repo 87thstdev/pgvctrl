@@ -6,6 +6,8 @@ from contextlib import redirect_stdout
 from shutil import (
     copy2,
     rmtree)
+from typing import List
+
 import simplejson as json
 
 from plumbum import local
@@ -14,7 +16,7 @@ import dbversioning.dbvctrlConst as Const
 from dbversioning.osUtil import ensure_dir_exists
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from dbversioning.dbvctrl import DbVctrl
+from dbversioning.dbvctrl import DbVctrl, parse_args
 
 
 class TestUtil(object):
@@ -81,10 +83,6 @@ class TestUtil(object):
                  f'Applied: {pgvctrl_test_repo} v {test_version}.0\n'
 
     @staticmethod
-    def local_pgvctrl():
-        return local[Const.PGVCTRL]
-
-    @staticmethod
     def local_psql():
         return local["psql"]
 
@@ -124,23 +122,21 @@ class TestUtil(object):
 
     @staticmethod
     def create_config():
-        pgv = TestUtil.local_pgvctrl()
-        rtn = pgv.run([Const.MKCONF_ARG], retcode=0)
-        print(rtn)
+        args = parse_args([Const.MKCONF_ARG])
+        out_rtn, errors = capture_dbvctrl_out(args=args)
+        print(out_rtn)
 
     @staticmethod
     def mkrepo(repo_name):
-        pgv = TestUtil.local_pgvctrl()
-        rtn = pgv.run([Const.MAKE_REPO_ARG, repo_name], retcode=0)
-        print(rtn)
+        args = parse_args([Const.MAKE_REPO_ARG, repo_name])
+        out_rtn, errors = capture_dbvctrl_out(args=args)
+        print(out_rtn)
 
     @staticmethod
     def mkrepo_ver(repo_name, ver):
-        pgv = TestUtil.local_pgvctrl()
-        rtn = pgv.run(
-            [Const.REPO_ARG, repo_name, Const.MAKE_V_ARG, ver], retcode=0
-        )
-        print(rtn)
+        args = parse_args([Const.REPO_ARG, repo_name, Const.MAKE_V_ARG, ver])
+        out_rtn, errors = capture_dbvctrl_out(args=args)
+        print(out_rtn)
 
     @staticmethod
     def get_static_config():
@@ -213,3 +209,17 @@ def capture_dbvctrl_out(args):
 def print_cmd_error_details(rtn, arg_list):
     print(f":pgvctrl {' '.join(arg_list)}")
     print(f"return: {rtn}")
+
+
+def dbvctrl_assert_simple_msg(arg_list: List[str], msg: str, error_code: int=None):
+    args = parse_args(arg_list)
+    out_rtn, errors = capture_dbvctrl_out(args=args)
+
+    print_cmd_error_details(out_rtn, arg_list)
+
+    if error_code:
+        assert errors.code == error_code
+    else:
+        assert errors is None
+
+    assert out_rtn == msg
