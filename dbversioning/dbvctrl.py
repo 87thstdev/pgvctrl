@@ -425,8 +425,6 @@ class DbVctrl(object):
             error_message(f"Invalid key in config, expected {e}")
         except ProcessExecutionError as e:
             error_message(f"DB Error {e.stderr}")
-        except OSError as e:
-            error_message(f"OSError: {e.strerror} ({e.filename})")
 
 
 def main():
