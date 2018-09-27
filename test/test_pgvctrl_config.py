@@ -237,6 +237,14 @@ class TestPgvctrlRepoMakeRemove:
                 error_code=1
         )
 
+    def test_mkrepo_bad_name(self):
+        arg_list = [Const.MAKE_REPO_ARG, TestUtil.invalid_repo_name]
+        dbvctrl_assert_simple_msg(
+                arg_list=arg_list,
+                msg=f"Repository name invalid {TestUtil.invalid_repo_name}\n",
+                error_code=1
+        )
+
     def test_rmrepo_exists(self):
         arg_list = [Const.REMOVE_REPO_ARG, TestUtil.pgvctrl_no_files_repo]
         dbvctrl_assert_simple_msg(
@@ -305,6 +313,21 @@ class TestPgvctrlRepoList:
                 arg_list=arg_list,
                 msg=f"{TestUtil.pgvctrl_test_temp_repo} UNREGISTERED\n"
                 f"{TestUtil.pgvctrl_test_repo}\n"
+                f"\tv {TestUtil.test_first_version} test\n"
+                f"\tv {TestUtil.test_version} \n"
+        )
+
+    def test_repo_list_missing_repo(self):
+        arg_list = [Const.MAKE_REPO_ARG, TestUtil.pgvctrl_test_temp_repo]
+        args = parse_args(arg_list)
+        capture_dbvctrl_out(args=args)
+
+        TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
+
+        arg_list = [Const.LIST_REPOS_ARG]
+        dbvctrl_assert_simple_msg(
+                arg_list=arg_list,
+                msg=f"{TestUtil.pgvctrl_test_repo}\n"
                 f"\tv {TestUtil.test_first_version} test\n"
                 f"\tv {TestUtil.test_version} \n"
         )

@@ -23,6 +23,7 @@ class TestUtil(object):
     return_code = 0
     stdout = 1
     stderr = 2
+    invalid_repo_name = "/////"
     pgvctrl_test_repo = "pgvctrl_test"
     pgvctrl_test_temp_repo = "pgvctrl_temp_test"
     pgvctrl_test_temp_repo_path = "databases/pgvctrl_temp_test"

@@ -15,13 +15,23 @@ class VersionedDbExceptionFileExits(VersionedDbException):
 
 class VersionedDbExceptionRepoVersionNumber(VersionedDbException):
     def __init__(self, version: str):
-        self.message = f"Repository version number invalid, " f"should be [Major].[Minor].[Maintenance] at a minimum: {version}"
+        self.message = f"Repository version number invalid, should be " \
+                       f"[Major].[Minor].[Maintenance] at a minimum: {version}"
         pass
 
 
 class VersionedDbExceptionRepoVersionExits(VersionedDbException):
     def __init__(self, repo_name, version):
-        self.message = f"Repository version already exists: {repo_name}" f" {version.major}.{version.minor}.{version.maintenance}"
+        self.message = (
+            f"Repository version already exists: {repo_name} "
+            f"{version.major}.{version.minor}.{version.maintenance}"
+        )
+        pass
+
+
+class VersionedDbExceptionRepoNameInvalid(VersionedDbException):
+    def __init__(self, repo_name):
+        self.message = f"Repository name invalid {repo_name}"
         pass
 
 

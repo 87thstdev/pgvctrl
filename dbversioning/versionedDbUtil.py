@@ -22,7 +22,7 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionNoVersionFound,
     VersionedDbExceptionEnvDoesMatchDbEnv,
     VersionedDbExceptionRepoVersionNumber,
-)
+    VersionedDbException, VersionedDbExceptionRepoNameInvalid)
 from dbversioning.versionedDbShellUtil import (
     VersionDbShellUtil,
     error_message,
@@ -106,8 +106,10 @@ class VersionedDbHelper:
         root = conf.root()
         try:
             VersionDb(join(os.getcwd(), root, repository))
-        except (OSError, TypeError):
+        except (OSError, TypeError, VersionedDbExceptionRepoDoesNotExits):
             found = False
+        except VersionedDbExceptionRepoNameInvalid:
+            raise VersionedDbExceptionRepoNameInvalid(repo_name=repository)
 
         return found
 

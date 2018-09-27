@@ -5,7 +5,8 @@ from typing import List
 from dbversioning.errorUtil import (
     VersionedDbExceptionFastForwardVersion,
     VersionedDbExceptionRepoVersionNumber,
-)
+    VersionedDbExceptionRepoDoesNotExits, VersionedDbExceptionRepoNameInvalid)
+from dbversioning.osUtil import dir_exists
 from dbversioning.repositoryconf import DATA_DUMP
 from dbversioning.versionedDbHelper import (
     get_valid_elements,
@@ -113,6 +114,13 @@ class VersionDb(object):
         """
         init_db: Initialize a database to use dbvctrl
         """
+        db_name = os.path.basename(repo_path)
+        if not dir_exists(repo_path):
+            raise VersionedDbExceptionRepoDoesNotExits(repo_path)
+
+        if db_name == "":
+            raise VersionedDbExceptionRepoNameInvalid(db_name)
+
         self._repo_path = repo_path
         self.db_name = os.path.basename(repo_path)
         self.versions = self._populate_versions()
