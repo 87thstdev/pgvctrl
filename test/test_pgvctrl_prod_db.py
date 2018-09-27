@@ -223,8 +223,7 @@ class TestPgvctrlProdPushingDb:
         TestUtil.drop_database()
         TestUtil.delete_folder(TestUtil.test_first_version_path)
         TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.delete_file(TestUtil.test_version_data_path)
-        TestUtil.delete_file(TestUtil.error_set_data_path)
+        TestUtil.delete_folder_full(TestUtil.error_set_data_folder_path)
 
     def test_push_data(self):
         pgv = TestUtil.local_pgvctrl()

@@ -11,6 +11,7 @@ import simplejson as json
 from plumbum import local
 
 import dbversioning.dbvctrlConst as Const
+from dbversioning.osUtil import ensure_dir_exists
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dbversioning.dbvctrl import DbVctrl
@@ -61,7 +62,8 @@ class TestUtil(object):
     table_bad = "badtablename"
     error_set_table_name = "error_set"
     custom_error_message = "WHY WOULD YOU DO THAT!"
-    error_set_data_path = f"databases/pgvctrl_test/data/error_set.sql"
+    error_set_data_folder_path = f"databases/{pgvctrl_test_repo}/data"
+    error_set_data_path = f"{error_set_data_folder_path}/error_set.sql"
     config_file = "dbRepoConfig.json"
     data_file_default = "data.json.default"
     error_set_file_default = "error_set.sql.default"
@@ -146,10 +148,12 @@ class TestUtil(object):
 
     @staticmethod
     def get_static_data_config():
+        ensure_dir_exists(TestUtil.error_set_data_folder_path)
         copy2(TestUtil.data_file_default, TestUtil.test_version_data_path)
 
     @staticmethod
     def get_static_error_set_data():
+        ensure_dir_exists(TestUtil.error_set_data_folder_path)
         copy2(TestUtil.error_set_file_default, TestUtil.error_set_data_path)
 
     @staticmethod

@@ -686,9 +686,7 @@ class TestPgvctrlTestPushPullDb:
         TestUtil.delete_folder(TestUtil.test_first_version_path)
         TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
         TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.delete_file(TestUtil.test_version_data_path)
-        TestUtil.delete_file(TestUtil.error_set_data_path)
-
+        TestUtil.delete_folder_full(TestUtil.error_set_data_folder_path)
         TestUtil.drop_database()
 
     def test_push_data(self):
