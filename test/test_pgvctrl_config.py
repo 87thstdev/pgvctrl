@@ -40,8 +40,7 @@ def test_version_main():
 
 def test_version():
     arg_list = [Const.VERSION_ARG]
-    args = parse_args(arg_list)
-    out_rtn, errors = capture_dbvctrl_out(args=args)
+    out_rtn, errors = capture_dbvctrl_out(arg_list=arg_list)
 
     print_cmd_error_details(out_rtn, arg_list)
     assert errors is None
@@ -135,10 +134,9 @@ class TestPgvctrlRepoMakeConf:
 
     def test_mkconf_exists(self):
         arg_list = [Const.MKCONF_ARG]
-        args = parse_args(arg_list)
 
         # Make config first
-        capture_dbvctrl_out(args=args)
+        capture_dbvctrl_out(arg_list=arg_list)
 
         dbvctrl_assert_simple_msg(
                 arg_list=arg_list,
@@ -175,38 +173,34 @@ class TestPgvctrlSetRepoEnv:
         TestUtil.delete_file(TestUtil.config_file)
 
     def test_set_repo_env(self):
-        arg_make_env_list = [
+        capture_dbvctrl_out(arg_list=[
             Const.MAKE_ENV_ARG,
             TestUtil.env_qa,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
-        ]
-        args = parse_args(arg_make_env_list)
-        capture_dbvctrl_out(args=args)
+        ])
 
-        arg_list = [
-            Const.SET_ENV_ARG,
-            TestUtil.env_qa,
-            Const.V_ARG,
-            TestUtil.test_version,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo,
-        ]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.SET_ENV_ARG,
+                    TestUtil.env_qa,
+                    Const.V_ARG,
+                    TestUtil.test_version,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                ],
                 msg=f"Repository environment set: {TestUtil.pgvctrl_test_repo} "
                     f"{TestUtil.env_qa} {TestUtil.test_version}\n"
         )
 
     def test_set_repo_env_no_v_fail(self):
-        arg_list = [
-            Const.SET_ENV_ARG,
-            TestUtil.env_qa,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo,
-        ]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.SET_ENV_ARG,
+                    TestUtil.env_qa,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                ],
                 msg=f"Missing {Const.V_ARG}\n",
                 error_code=1
         )
@@ -223,39 +217,34 @@ class TestPgvctrlRepoMakeRemove:
         TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
 
     def test_mkrepo_not_exists(self):
-        arg_list = [Const.MAKE_REPO_ARG, TestUtil.pgvctrl_test_temp_repo]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[Const.MAKE_REPO_ARG, TestUtil.pgvctrl_test_temp_repo],
                 msg=f"Repository created: {TestUtil.pgvctrl_test_temp_repo}\n"
         )
 
     def test_mkrepo_exists(self):
-        arg_list = [Const.MAKE_REPO_ARG, TestUtil.pgvctrl_no_files_repo]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[Const.MAKE_REPO_ARG, TestUtil.pgvctrl_no_files_repo],
                 msg=f"Repository already exist: {TestUtil.pgvctrl_no_files_repo}\n",
                 error_code=1
         )
 
     def test_mkrepo_bad_name(self):
-        arg_list = [Const.MAKE_REPO_ARG, TestUtil.invalid_repo_name]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[Const.MAKE_REPO_ARG, TestUtil.invalid_repo_name],
                 msg=f"Repository name invalid {TestUtil.invalid_repo_name}\n",
                 error_code=1
         )
 
     def test_rmrepo_exists(self):
-        arg_list = [Const.REMOVE_REPO_ARG, TestUtil.pgvctrl_no_files_repo]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[Const.REMOVE_REPO_ARG, TestUtil.pgvctrl_no_files_repo],
                 msg=f"Repository removed: {TestUtil.pgvctrl_no_files_repo}\n"
         )
 
     def test_rmrepo_not_exists(self):
-        arg_list = [Const.REMOVE_REPO_ARG, TestUtil.pgvctrl_test_temp_repo]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[Const.REMOVE_REPO_ARG, TestUtil.pgvctrl_test_temp_repo],
                 msg=f"Repository does not exist: {TestUtil.pgvctrl_test_temp_repo}\n",
                 error_code=1
         )
@@ -275,18 +264,16 @@ class TestPgvctrlRepoList:
         TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
 
     def test_repo_list(self):
-        arg_list = [Const.LIST_REPOS_ARG]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[Const.LIST_REPOS_ARG],
                 msg=f"{TestUtil.pgvctrl_test_repo}\n"
                     f"\tv {TestUtil.test_first_version} test\n"
                     f"\tv {TestUtil.test_version} \n"
         )
 
     def test_repo_list_verbose(self):
-        arg_list = [Const.LIST_REPOS_VERBOSE_ARG]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[Const.LIST_REPOS_VERBOSE_ARG],
                 msg=f"{TestUtil.pgvctrl_test_repo}\n"
                     f"\tv {TestUtil.test_first_version} test\n"
                     f"\tv {TestUtil.test_version} \n"
@@ -300,17 +287,10 @@ class TestPgvctrlRepoList:
         )
 
     def test_repo_list_unregistered(self):
-        arg_list = [Const.MAKE_REPO_ARG, TestUtil.pgvctrl_test_temp_repo]
-        args = parse_args(arg_list)
-        capture_dbvctrl_out(args=args)
-
-        arg_list = [Const.REMOVE_REPO_ARG, TestUtil.pgvctrl_test_temp_repo]
-        args = parse_args(arg_list)
-        capture_dbvctrl_out(args=args)
-
-        arg_list = [Const.LIST_REPOS_ARG]
+        capture_dbvctrl_out(arg_list=[Const.MAKE_REPO_ARG, TestUtil.pgvctrl_test_temp_repo])
+        capture_dbvctrl_out(arg_list=[Const.REMOVE_REPO_ARG, TestUtil.pgvctrl_test_temp_repo])
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[Const.LIST_REPOS_ARG],
                 msg=f"{TestUtil.pgvctrl_test_temp_repo} UNREGISTERED\n"
                 f"{TestUtil.pgvctrl_test_repo}\n"
                 f"\tv {TestUtil.test_first_version} test\n"
@@ -318,15 +298,12 @@ class TestPgvctrlRepoList:
         )
 
     def test_repo_list_missing_repo(self):
-        arg_list = [Const.MAKE_REPO_ARG, TestUtil.pgvctrl_test_temp_repo]
-        args = parse_args(arg_list)
-        capture_dbvctrl_out(args=args)
+        capture_dbvctrl_out(arg_list=[Const.MAKE_REPO_ARG, TestUtil.pgvctrl_test_temp_repo])
 
         TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
 
-        arg_list = [Const.LIST_REPOS_ARG]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[Const.LIST_REPOS_ARG],
                 msg=f"{TestUtil.pgvctrl_test_repo}\n"
                 f"\tv {TestUtil.test_first_version} test\n"
                 f"\tv {TestUtil.test_version} \n"
@@ -341,36 +318,31 @@ class TestPgvctrlRepoRemoveEnv:
         TestUtil.delete_file(TestUtil.config_file)
 
     def test_rmenv_fail(self):
-        arg_list = [
-            Const.REMOVE_ENV_ARG,
-            TestUtil.env_qa,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo,
-        ]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.REMOVE_ENV_ARG,
+                    TestUtil.env_qa,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo],
                 msg=f"Invalid key in config, expected '{TestUtil.env_qa}'\n",
                 error_code=1
         )
 
     def test_rmenv(self):
-        mk_arg_list = [
+        capture_dbvctrl_out(arg_list=[
             Const.MAKE_ENV_ARG,
             TestUtil.env_qa,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
-        ]
-        args = parse_args(mk_arg_list)
-        capture_dbvctrl_out(args=args)
+        ])
 
-        rm_arg_list = [
-            Const.REMOVE_ENV_ARG,
-            TestUtil.env_qa,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo,
-        ]
         dbvctrl_assert_simple_msg(
-                arg_list=rm_arg_list,
+                arg_list=[
+                    Const.REMOVE_ENV_ARG,
+                    TestUtil.env_qa,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                ],
                 msg=f"Repository environment removed: {TestUtil.pgvctrl_test_repo} {TestUtil.env_qa}\n"
         )
 
@@ -384,49 +356,43 @@ class TestPgvctrlMakeVersion:
         TestUtil.delete_folder(TestUtil.test_make_version_path)
 
     def test_mkv(self):
-        arg_list = [
-            Const.MAKE_V_ARG,
-            TestUtil.test_make_version,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo,
-        ]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.MAKE_V_ARG,
+                    TestUtil.test_make_version,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo
+                ],
                 msg=f"Version {TestUtil.pgvctrl_test_repo}/{TestUtil.test_make_version} created.\n"
         )
 
     def test_mkv_bad(self):
-        arg_list = [
-            Const.MAKE_V_ARG,
-            TestUtil.test_bad_version,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo,
-        ]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.MAKE_V_ARG,
+                    TestUtil.test_bad_version,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo
+                ],
                 msg=f"Repository version number invalid, should be [Major].[Minor].[Maintenance] "
                     f"at a minimum: {TestUtil.test_bad_version}\n",
                 error_code=1
         )
 
     def test_mkv_exists(self):
-        arg_list = [
+        capture_dbvctrl_out(arg_list=[
             Const.MAKE_V_ARG,
             TestUtil.test_make_version,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
-        ]
-        args = parse_args(arg_list)
-        capture_dbvctrl_out(args=args)
-
-        arg_list = [
-            Const.MAKE_V_ARG,
-            TestUtil.test_make_version,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo,
-        ]
+        ])
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.MAKE_V_ARG,
+                    TestUtil.test_make_version,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo
+                ],
                 msg=f"Repository version already exists: {TestUtil.pgvctrl_test_repo} 3.0.0\n",
                 error_code=1
         )
@@ -440,15 +406,13 @@ class TestPgvctrlRepoIncludeSchema:
         TestUtil.delete_file(TestUtil.config_file)
 
     def test_include_schema(self):
-        arg_list = [
-            Const.INCLUDE_SCHEMA_ARG,
-            TestUtil.schema_membership,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo,
-        ]
-
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.INCLUDE_SCHEMA_ARG,
+                    TestUtil.schema_membership,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                ],
                 msg=f"Repository added: {TestUtil.pgvctrl_test_repo} "
                     f"include-schemas ['{TestUtil.schema_membership}']\n"
         )
@@ -466,23 +430,19 @@ class TestPgvctrlRepoRemoveIncludeSchema:
         TestUtil.delete_file(TestUtil.config_file)
 
     def test_include_schema(self):
-        arg_list = [
+        capture_dbvctrl_out(arg_list=[
             Const.INCLUDE_SCHEMA_ARG,
             TestUtil.schema_membership,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
-        ]
-        args = parse_args(arg_list)
-        capture_dbvctrl_out(args=args)
-
-        arg_list = [
-            Const.RMINCLUDE_SCHEMA_ARG,
-            TestUtil.schema_membership,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo,
-        ]
+        ])
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.RMINCLUDE_SCHEMA_ARG,
+                    TestUtil.schema_membership,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                ],
                 msg=f"Repository removed: {TestUtil.pgvctrl_test_repo} "
                     f"include-schemas ['{TestUtil.schema_membership}']\n"
         )
@@ -500,14 +460,13 @@ class TestPgvctrlRepoExcludeSchema:
         TestUtil.delete_file(TestUtil.config_file)
 
     def test_exclude_schema(self):
-        arg_list = [
-            Const.EXCLUDE_SCHEMA_ARG,
-            TestUtil.schema_membership,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo,
-        ]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.EXCLUDE_SCHEMA_ARG,
+                    TestUtil.schema_membership,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo
+                ],
                 msg=f"Repository added: {TestUtil.pgvctrl_test_repo} "
                     f"exclude-schemas ['{TestUtil.schema_membership}']\n"
         )
@@ -525,23 +484,19 @@ class TestPgvctrlRepoRemoveExcludeSchema:
         TestUtil.delete_file(TestUtil.config_file)
 
     def test_remove_exclude_schema(self):
-        ex_arg_list = [
+        capture_dbvctrl_out(arg_list=[
             Const.EXCLUDE_SCHEMA_ARG,
             TestUtil.schema_membership,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
-        ]
-        args = parse_args(ex_arg_list)
-        capture_dbvctrl_out(args=args)
-
-        arg_list = [
-            Const.RMEXCLUDE_SCHEMA_ARG,
-            TestUtil.schema_membership,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo,
-        ]
+        ])
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.RMEXCLUDE_SCHEMA_ARG,
+                    TestUtil.schema_membership,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo
+                ],
                 msg=f"Repository removed: {TestUtil.pgvctrl_test_repo} "
                     f"exclude-schemas ['{TestUtil.schema_membership}']\n"
         )
@@ -560,24 +515,20 @@ class TestPgvctrlRepoExcludeIncludedSchema:
         TestUtil.delete_file(TestUtil.config_file)
 
     def test_exclude_schema(self):
-        arg_list = [
+        # Exclude first
+        capture_dbvctrl_out(arg_list=[
             Const.EXCLUDE_SCHEMA_ARG,
             TestUtil.schema_membership,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
-        ]
-        args = parse_args(arg_list)
-        # Exclude first
-        capture_dbvctrl_out(args=args)
-
-        arg_list = [
-            Const.INCLUDE_SCHEMA_ARG,
-            TestUtil.schema_membership,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo,
-        ]
+        ])
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.INCLUDE_SCHEMA_ARG,
+                    TestUtil.schema_membership,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo
+                ],
                 msg=f"Repository added: {TestUtil.pgvctrl_test_repo} "
                     f"include-schemas ['{TestUtil.schema_membership}']\n"
         )
@@ -601,24 +552,21 @@ class TestPgvctrlRepoIncludeExcludedSchema:
         TestUtil.delete_file(TestUtil.config_file)
 
     def test_exclude_schema(self):
-        arg_list = [
+        # Include first
+        capture_dbvctrl_out(arg_list=[
             Const.INCLUDE_SCHEMA_ARG,
             TestUtil.schema_membership,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
-        ]
-        args = parse_args(arg_list)
-        # Include first
-        capture_dbvctrl_out(args=args)
+        ])
 
-        arg_list = [
-            Const.EXCLUDE_SCHEMA_ARG,
-            TestUtil.schema_membership,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo,
-        ]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.EXCLUDE_SCHEMA_ARG,
+                    TestUtil.schema_membership,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo
+                ],
                 msg=f"Repository added: {TestUtil.pgvctrl_test_repo} "
                     f"exclude-schemas ['{TestUtil.schema_membership}']\n"
         )
@@ -642,16 +590,15 @@ class TestPgvctrlRepoIncludeTable:
         TestUtil.delete_file(TestUtil.config_file)
 
     def test_include_table(self):
-        arg_list = [
-            Const.INCLUDE_TABLE_ARG,
-            TestUtil.table_membership_user_state,
-            Const.INCLUDE_TABLE_ARG,
-            TestUtil.table_public_item,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo,
-        ]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.INCLUDE_TABLE_ARG,
+                    TestUtil.table_membership_user_state,
+                    Const.INCLUDE_TABLE_ARG,
+                    TestUtil.table_public_item,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo
+                ],
                 msg=f"Repository added: {TestUtil.pgvctrl_test_repo} "
                     f"include-table ['{TestUtil.table_membership_user_state}', '{TestUtil.table_public_item}']\n"
         )
@@ -674,23 +621,20 @@ class TestPgvctrlRepoRemoveIncludeTable:
         TestUtil.delete_file(TestUtil.config_file)
 
     def test_remove_include_schema(self):
-        arg_list = [
+        capture_dbvctrl_out(arg_list=[
             Const.INCLUDE_TABLE_ARG,
             TestUtil.table_membership_user_state,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
-        ]
-        args = parse_args(arg_list)
-        capture_dbvctrl_out(args=args)
+        ])
 
-        arg_list = [
-            Const.RMINCLUDE_TABLE_ARG,
-            TestUtil.table_membership_user_state,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo,
-        ]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.RMINCLUDE_TABLE_ARG,
+                    TestUtil.table_membership_user_state,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo
+                ],
                 msg=f"Repository removed: {TestUtil.pgvctrl_test_repo} "
                     f"include-table ['{TestUtil.table_membership_user_state}']\n"
         )
@@ -709,14 +653,13 @@ class TestPgvctrlRepoExcludeTable:
         TestUtil.delete_file(TestUtil.config_file)
 
     def test_exclude_table(self):
-        arg_list = [
-            Const.EXCLUDE_TABLE_ARG,
-            TestUtil.table_membership_user_state,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo,
-        ]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.EXCLUDE_TABLE_ARG,
+                    TestUtil.table_membership_user_state,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo
+                ],
                 msg=f"Repository added: {TestUtil.pgvctrl_test_repo} "
                     f"exclude-table ['{TestUtil.table_membership_user_state}']\n"
         )
@@ -735,23 +678,20 @@ class TestPgvctrlRepoRemoveExcludeTable:
         TestUtil.delete_file(TestUtil.config_file)
 
     def test_remove_exclude_schema(self):
-        arg_list = [
+        capture_dbvctrl_out(arg_list=[
             Const.EXCLUDE_TABLE_ARG,
             TestUtil.table_membership_user_state,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
-        ]
-        args = parse_args(arg_list)
-        capture_dbvctrl_out(args=args)
+        ])
 
-        arg_list = [
-            Const.RMEXCLUDE_TABLE_ARG,
-            TestUtil.table_membership_user_state,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo,
-        ]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.RMEXCLUDE_TABLE_ARG,
+                    TestUtil.table_membership_user_state,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                ],
                 msg=f"Repository removed: {TestUtil.pgvctrl_test_repo} "
                     f"exclude-table ['{TestUtil.table_membership_user_state}']\n"
         )
@@ -770,24 +710,21 @@ class TestPgvctrlRepoIncludeExcludedTable:
         TestUtil.delete_file(TestUtil.config_file)
 
     def test_exclude_schema(self):
-        arg_list = [
+        # Include first
+        capture_dbvctrl_out(arg_list=[
             Const.INCLUDE_TABLE_ARG,
             TestUtil.table_membership_user_state,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
-        ]
-        args = parse_args(arg_list)
-        # Include first
-        capture_dbvctrl_out(args=args)
+        ])
 
-        arg_list = [
-            Const.EXCLUDE_TABLE_ARG,
-            TestUtil.table_membership_user_state,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo,
-        ]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.EXCLUDE_TABLE_ARG,
+                    TestUtil.table_membership_user_state,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo
+                ],
                 msg=f"Repository added: {TestUtil.pgvctrl_test_repo} "
                     f"exclude-table ['{TestUtil.table_membership_user_state}']\n"
         )
@@ -810,24 +747,21 @@ class TestPgvctrlRepoExcludedIncludeTable:
         TestUtil.delete_file(TestUtil.config_file)
 
     def test_exclude_schema(self):
-        arg_list = [
+        # Exclude first
+        capture_dbvctrl_out(arg_list=[
             Const.EXCLUDE_TABLE_ARG,
             TestUtil.table_membership_user_state,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
-        ]
-        args = parse_args(arg_list)
-        # Exclude first
-        capture_dbvctrl_out(args=args)
+        ])
 
-        arg_list = [
-            Const.INCLUDE_TABLE_ARG,
-            TestUtil.table_membership_user_state,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo,
-        ]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.INCLUDE_TABLE_ARG,
+                    TestUtil.table_membership_user_state,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                ],
                 msg=f"Repository added: {TestUtil.pgvctrl_test_repo} "
                     f"include-table ['{TestUtil.table_membership_user_state}']\n"
         )

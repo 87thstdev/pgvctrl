@@ -29,13 +29,12 @@ class TestPgvctrlInitWithOutDb:
         )
 
     def test_init_invalid_db_conn(self):
-        arg_list = [
-            Const.INIT_ARG,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_temp_repo,
-        ]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.INIT_ARG,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_temp_repo,
+                ],
                 msg=f"Missing connection args\n",
                 error_code=1
         )
@@ -53,60 +52,55 @@ class TestPgvctrlInitWithDb:
         TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
 
     def test_init(self):
-        arg_list = [
-            Const.INIT_ARG,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_temp_repo,
-            Const.DATABASE_ARG,
-            TestUtil.pgvctrl_test_db,
-        ]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.INIT_ARG,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_temp_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ],
                 msg="Database initialized\n"
         )
 
     def test_init_production(self):
-        arg_list = [
-            Const.INIT_ARG,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_temp_repo,
-            Const.PRODUCTION_ARG,
-            Const.DATABASE_ARG,
-            TestUtil.pgvctrl_test_db,
-        ]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.INIT_ARG,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_temp_repo,
+                    Const.PRODUCTION_ARG,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ],
                 msg="Database initialized (PRODUCTION)\n"
         )
 
     def test_init_env(self):
-        arg_list = [
-            Const.INIT_ARG,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_temp_repo,
-            Const.DATABASE_ARG,
-            TestUtil.pgvctrl_test_db,
-            Const.SET_ENV_ARG,
-            TestUtil.env_test,
-        ]
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.INIT_ARG,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_temp_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                    Const.SET_ENV_ARG,
+                    TestUtil.env_test,
+                ],
                 msg=f"Database initialized environment ({TestUtil.env_test})\n"
         )
 
     def test_init_production_with_env(self):
-        arg_list = [
-            Const.INIT_ARG,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_temp_repo,
-            Const.PRODUCTION_ARG,
-            Const.DATABASE_ARG,
-            TestUtil.pgvctrl_test_db,
-            Const.SET_ENV_ARG,
-            TestUtil.env_test,
-        ]
-
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
+                arg_list=[
+                    Const.INIT_ARG,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_temp_repo,
+                    Const.PRODUCTION_ARG,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                    Const.SET_ENV_ARG,
+                    TestUtil.env_test,
+                ],
                 msg=f"Database initialized (PRODUCTION) environment ({TestUtil.env_test})\n"
         )

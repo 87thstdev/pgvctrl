@@ -123,20 +123,17 @@ class TestUtil(object):
 
     @staticmethod
     def create_config():
-        args = parse_args([Const.MKCONF_ARG])
-        out_rtn, errors = capture_dbvctrl_out(args=args)
+        out_rtn, errors = capture_dbvctrl_out(arg_list=[Const.MKCONF_ARG])
         print(out_rtn)
 
     @staticmethod
     def mkrepo(repo_name):
-        args = parse_args([Const.MAKE_REPO_ARG, repo_name])
-        out_rtn, errors = capture_dbvctrl_out(args=args)
+        out_rtn, errors = capture_dbvctrl_out(arg_list=[Const.MAKE_REPO_ARG, repo_name])
         print(out_rtn)
 
     @staticmethod
     def mkrepo_ver(repo_name, ver):
-        args = parse_args([Const.REPO_ARG, repo_name, Const.MAKE_V_ARG, ver])
-        out_rtn, errors = capture_dbvctrl_out(args=args)
+        out_rtn, errors = capture_dbvctrl_out(arg_list=[Const.REPO_ARG, repo_name, Const.MAKE_V_ARG, ver])
         print(out_rtn)
 
     @staticmethod
@@ -195,7 +192,8 @@ class TestUtil(object):
         return False
 
 
-def capture_dbvctrl_out(args):
+def capture_dbvctrl_out(arg_list: List[str]):
+    args = parse_args(arg_list)
     out = io.StringIO()
     errors = None
     with redirect_stdout(out):
@@ -213,8 +211,7 @@ def print_cmd_error_details(rtn, arg_list):
 
 
 def dbvctrl_assert_simple_msg(arg_list: List[str], msg: str, error_code: int=None):
-    args = parse_args(arg_list)
-    out_rtn, errors = capture_dbvctrl_out(args=args)
+    out_rtn, errors = capture_dbvctrl_out(arg_list=arg_list)
 
     print_cmd_error_details(out_rtn, arg_list)
 
