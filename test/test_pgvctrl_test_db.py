@@ -78,6 +78,30 @@ class TestPgvctrlTestDb:
                 msg=TestUtil.sql_return
         )
 
+    def test_apply_good_version_twice(self):
+        capture_dbvctrl_out(arg_list=[
+            Const.APPLY_ARG,
+            Const.V_ARG,
+            "2.0.0",
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+
+        out_rtn, errors = capture_dbvctrl_out(arg_list=[
+            Const.APPLY_ARG,
+            Const.V_ARG,
+            "2.0.0",
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+
+        assert errors is None
+        assert f"Applied: {TestUtil.pgvctrl_test_repo} v {TestUtil.test_version}.1" in out_rtn
+
     def test_apply_good_version_passing_v(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[

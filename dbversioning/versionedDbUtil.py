@@ -308,9 +308,6 @@ class VersionedDbHelper:
         ver_hash = apply_repo.get_version_hash_set()
 
         increase_rev = True
-        if dbver.version_hash == json.dumps(ver_hash):
-            increase_rev = False
-
         reset_rev = False
         if standing > 0:
             increase_rev = False
@@ -362,7 +359,7 @@ class VersionedDbHelper:
         if (
             v_h.major == v_l.major
             and v_h.minor == v_l.minor
-            and v_h.maintenance >= v_l.maintenance
+            and v_h.maintenance > v_l.maintenance
         ):
             return 1
 
