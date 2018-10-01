@@ -1,30 +1,31 @@
 from dbversioning.errorUtil import VersionedDbExceptionMissingArgs
+import dbversioning.dbvctrlConst as Const
 
 
 def _append_svc_args(args, rtn_conn):
     if args.svc:
-        rtn_conn.append("service={0}".format(args.svc))
+        rtn_conn.append(f"service={args.svc}")
 
 
 def _append_server_args(args, rtn_conn):
     if args.d:
-        rtn_conn.append("-d")
+        rtn_conn.append(Const.DATABASE_ARG)
         rtn_conn.append(args.d)
 
     if args.host:
-        rtn_conn.append("-h")
+        rtn_conn.append(Const.PSQL_HOST_PARAM)
         rtn_conn.append(args.host)
 
     if args.p:
-        rtn_conn.append("-p")
+        rtn_conn.append(Const.PORT_ARG)
         rtn_conn.append(args.p)
 
     if args.u:
-        rtn_conn.append("-U")
+        rtn_conn.append(Const.PSQL_USER_PARAM)
         rtn_conn.append(args.u)
 
     if args.pwd:
-        rtn_conn.append("-W")
+        rtn_conn.append(Const.PSQL_PWD_PARAM)
         rtn_conn.append(args.p)
 
 
