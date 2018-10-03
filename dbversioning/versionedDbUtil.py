@@ -34,15 +34,15 @@ from dbversioning.versionedDbShellUtil import (
 from dbversioning.versionedDb import VersionDb, FastForwardDb, GenericSql
 from dbversioning.repositoryconf import (
     RepositoryConf,
-    VERSION_STORAGE,
-    SNAPSHOTS,
-    FAST_FORWARD,
+    VERSION_STORAGE_PROP,
+    SNAPSHOTS_DIR,
+    FAST_FORWARD_DIR,
     ROLLBACK_FILE_ENDING,
-    ENVS,
-    INCLUDE_SCHEMAS,
-    EXCLUDE_SCHEMAS,
-    INCLUDE_TABLES,
-    EXCLUDE_TABLES,
+    ENVS_PROP,
+    INCLUDE_SCHEMAS_PROP,
+    EXCLUDE_SCHEMAS_PROP,
+    INCLUDE_TABLES_PROP,
+    EXCLUDE_TABLES_PROP,
 )
 
 to_unicode = str
@@ -70,7 +70,7 @@ class VersionedDbHelper:
         conf = RepositoryConf()
         root = conf.root()
 
-        ignored = {FAST_FORWARD, SNAPSHOTS}
+        ignored = {FAST_FORWARD_DIR, SNAPSHOTS_DIR}
         repo_locations = get_valid_elements(root, ignored)
 
         for repo_location in repo_locations:
@@ -88,9 +88,9 @@ class VersionedDbHelper:
                 repo_unregistered_message(db_repo.db_name)
             for v in v_sorted:
                 env = ""
-                if repo_conf and repo_conf[ENVS]:
-                    for e in repo_conf[ENVS]:
-                        if repo_conf[ENVS][e] == v.version_number:
+                if repo_conf and repo_conf[ENVS_PROP]:
+                    for e in repo_conf[ENVS_PROP]:
+                        if repo_conf[ENVS_PROP][e] == v.version_number:
                             env = e
 
                 repo_version_information_message(f"\tv {v.full_name}", f"{env}")
@@ -427,6 +427,15 @@ class VersionedDbHelper:
         return RepositoryConf.get_repo_env(repo_name=repo_name, env=env)
 
     @staticmethod
+    def set_repository_version_storage_owner(repo_name: str, owner: str):
+        VersionedDbHelper.valid_repository_throwing(repo_name)
+
+        if RepositoryConf.set_repo_version_storage_owner(repo_name=repo_name, owner=owner):
+            information_message(
+                f"Repository version storage owner set: {repo_name} {owner}"
+            )
+
+    @staticmethod
     def set_repository_environment_version(repo_name, env, version):
         VersionedDbHelper.valid_repository_throwing(repo_name)
         version_nums = VersionedDbHelper.get_version_numbers(version)
@@ -453,8 +462,8 @@ class VersionedDbHelper:
         if RepositoryConf.balance_repo_lists(
             repo_name=repo_name,
             add_list=include_schemas,
-            add_to=INCLUDE_SCHEMAS,
-            remove_from=EXCLUDE_SCHEMAS,
+            add_to=INCLUDE_SCHEMAS_PROP,
+            remove_from=EXCLUDE_SCHEMAS_PROP,
         ):
             information_message(
                 f"Repository added: {repo_name} include-schemas {include_schemas}"
@@ -467,7 +476,7 @@ class VersionedDbHelper:
         if RepositoryConf.remove_from_repo_list(
             repo_name=repo_name,
             remove_list=rminclude_schemas,
-            remove_from=INCLUDE_SCHEMAS,
+            remove_from=INCLUDE_SCHEMAS_PROP,
         ):
             information_message(
                 f"Repository removed: {repo_name} include-schemas {rminclude_schemas}"
@@ -480,8 +489,8 @@ class VersionedDbHelper:
         if RepositoryConf.balance_repo_lists(
             repo_name=repo_name,
             add_list=exclude_schemas,
-            add_to=EXCLUDE_SCHEMAS,
-            remove_from=INCLUDE_SCHEMAS,
+            add_to=EXCLUDE_SCHEMAS_PROP,
+            remove_from=INCLUDE_SCHEMAS_PROP,
         ):
             information_message(
                 f"Repository added: {repo_name} exclude-schemas {exclude_schemas}"
@@ -494,7 +503,7 @@ class VersionedDbHelper:
         if RepositoryConf.remove_from_repo_list(
             repo_name=repo_name,
             remove_list=rmexclude_schemas,
-            remove_from=EXCLUDE_SCHEMAS,
+            remove_from=EXCLUDE_SCHEMAS_PROP,
         ):
             information_message(
                 f"Repository removed: {repo_name} exclude-schemas {rmexclude_schemas}"
@@ -507,8 +516,8 @@ class VersionedDbHelper:
         if RepositoryConf.balance_repo_lists(
             repo_name=repo_name,
             add_list=include_tables,
-            add_to=INCLUDE_TABLES,
-            remove_from=EXCLUDE_TABLES,
+            add_to=INCLUDE_TABLES_PROP,
+            remove_from=EXCLUDE_TABLES_PROP,
         ):
             information_message(
                 f"Repository added: {repo_name} include-table {include_tables}"
@@ -521,7 +530,7 @@ class VersionedDbHelper:
         if RepositoryConf.remove_from_repo_list(
             repo_name=repo_name,
             remove_list=rminclude_table,
-            remove_from=INCLUDE_TABLES,
+            remove_from=INCLUDE_TABLES_PROP,
         ):
             information_message(
                 f"Repository removed: {repo_name} include-table {rminclude_table}"
@@ -534,8 +543,8 @@ class VersionedDbHelper:
         if RepositoryConf.balance_repo_lists(
             repo_name=repo_name,
             add_list=exclude_tables,
-            add_to=EXCLUDE_TABLES,
-            remove_from=INCLUDE_TABLES,
+            add_to=EXCLUDE_TABLES_PROP,
+            remove_from=INCLUDE_TABLES_PROP,
         ):
             information_message(
                 f"Repository added: {repo_name} exclude-table {exclude_tables}"
@@ -548,7 +557,7 @@ class VersionedDbHelper:
         if RepositoryConf.remove_from_repo_list(
             repo_name=repo_name,
             remove_list=rmexclude_table,
-            remove_from=EXCLUDE_TABLES,
+            remove_from=EXCLUDE_TABLES_PROP,
         ):
             information_message(
                 f"Repository removed: {repo_name} exclude-table {rmexclude_table}"
@@ -579,7 +588,7 @@ class VersionedDbHelper:
         v_stg = None
 
         if repo:
-            v_stg = repo[VERSION_STORAGE]
+            v_stg = repo[VERSION_STORAGE_PROP]
         else:
             raise VersionedDbExceptionRepoDoesNotExits(repo_name)
 

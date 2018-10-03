@@ -10,8 +10,8 @@ import dbversioning.dbvctrlConst as Const
 from dbversioning.dbvctrl import parse_args
 from dbversioning.repositoryconf import (
     RepositoryConf,
-    INCLUDE_TABLES,
-    EXCLUDE_TABLES,
+    INCLUDE_TABLES_PROP,
+    EXCLUDE_TABLES_PROP,
 )
 from test.test_util import (
     TestUtil,
@@ -141,6 +141,38 @@ class TestPgvctrlRepoMakeConf:
         dbvctrl_assert_simple_msg(
                 arg_list=arg_list,
                 msg=f"File already exists: {TestUtil.config_file}\n",
+                error_code=1
+        )
+
+
+class TestPgvctrlSetRepoVersionTableOwner:
+    def setup_method(self):
+        TestUtil.get_static_config()
+
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
+
+    def test_set_repo_table_owner(self):
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.SET_VERSION_STORAGE_TABLE_OWNER_ARG,
+                    TestUtil.version_table_owner,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                ],
+                msg=f"Repository version storage owner set: "
+                    f"{TestUtil.pgvctrl_test_repo} {TestUtil.version_table_owner}\n"
+        )
+
+    def test_set_repo_table_owner_bad_repo(self):
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.SET_VERSION_STORAGE_TABLE_OWNER_ARG,
+                    TestUtil.version_table_owner,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_bad_repo,
+                ],
+                msg=f"Repository does not exist: {TestUtil.pgvctrl_bad_repo}\n",
                 error_code=1
         )
 
@@ -604,7 +636,7 @@ class TestPgvctrlRepoIncludeTable:
         )
 
         name_list = RepositoryConf.get_repo_list(
-            repo_name=TestUtil.pgvctrl_test_repo, list_name=INCLUDE_TABLES
+            repo_name=TestUtil.pgvctrl_test_repo, list_name=INCLUDE_TABLES_PROP
         )
 
         assert set(name_list) == {
@@ -640,7 +672,7 @@ class TestPgvctrlRepoRemoveIncludeTable:
         )
 
         inc_table_name = RepositoryConf.get_repo_list(
-            repo_name=TestUtil.pgvctrl_test_repo, list_name=INCLUDE_TABLES
+            repo_name=TestUtil.pgvctrl_test_repo, list_name=INCLUDE_TABLES_PROP
         )
         assert inc_table_name == []
 
@@ -665,7 +697,7 @@ class TestPgvctrlRepoExcludeTable:
         )
 
         name_list = RepositoryConf.get_repo_list(
-            repo_name=TestUtil.pgvctrl_test_repo, list_name=EXCLUDE_TABLES
+            repo_name=TestUtil.pgvctrl_test_repo, list_name=EXCLUDE_TABLES_PROP
         )
         assert name_list == [TestUtil.table_membership_user_state]
 
@@ -697,7 +729,7 @@ class TestPgvctrlRepoRemoveExcludeTable:
         )
 
         exc_table_name = RepositoryConf.get_repo_list(
-            repo_name=TestUtil.pgvctrl_test_repo, list_name=EXCLUDE_TABLES
+            repo_name=TestUtil.pgvctrl_test_repo, list_name=EXCLUDE_TABLES_PROP
         )
         assert exc_table_name == []
 
@@ -730,10 +762,10 @@ class TestPgvctrlRepoIncludeExcludedTable:
         )
 
         inc_tbl_name = RepositoryConf.get_repo_list(
-            repo_name=TestUtil.pgvctrl_test_repo, list_name=INCLUDE_TABLES
+            repo_name=TestUtil.pgvctrl_test_repo, list_name=INCLUDE_TABLES_PROP
         )
         exc_tbl_name = RepositoryConf.get_repo_list(
-            repo_name=TestUtil.pgvctrl_test_repo, list_name=EXCLUDE_TABLES
+            repo_name=TestUtil.pgvctrl_test_repo, list_name=EXCLUDE_TABLES_PROP
         )
         assert inc_tbl_name == []
         assert exc_tbl_name == [TestUtil.table_membership_user_state]
@@ -767,11 +799,11 @@ class TestPgvctrlRepoExcludedIncludeTable:
         )
 
         inc_tbl_name = RepositoryConf.get_repo_list(
-            repo_name=TestUtil.pgvctrl_test_repo, list_name=INCLUDE_TABLES
+            repo_name=TestUtil.pgvctrl_test_repo, list_name=INCLUDE_TABLES_PROP
         )
 
         exc_tbl_name = RepositoryConf.get_repo_list(
-            repo_name=TestUtil.pgvctrl_test_repo, list_name=EXCLUDE_TABLES
+            repo_name=TestUtil.pgvctrl_test_repo, list_name=EXCLUDE_TABLES_PROP
         )
         assert inc_tbl_name == [TestUtil.table_membership_user_state]
         assert exc_tbl_name == []

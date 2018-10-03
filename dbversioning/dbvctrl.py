@@ -58,6 +58,10 @@ def parse_args(args):
         help="Push data from repository to database",
         action="store_true",
     )
+    group.add_argument(
+        Const.SET_VERSION_STORAGE_TABLE_OWNER_ARG,
+        help="Set postgres owner for the version storage table",
+    )
 
     parser.add_argument(
         Const.FORCE_ARG,
@@ -269,6 +273,11 @@ def remove_repository_env_type(repo_name: str, env: str):
     vdb.remove_repository_environment(repo_name=repo_name, env=env)
 
 
+def set_repository_version_storage_owner(repo_name: str, owner: str):
+    vdb = VersionedDbHelper()
+    vdb.set_repository_version_storage_owner(repo_name=repo_name, owner=owner)
+
+
 def set_repository_env_version(arg_set):
     vdb = VersionedDbHelper()
 
@@ -367,6 +376,9 @@ class DbVctrl(object):
             elif arg_set.rmenv:
                 # -rmenv test -repo test_db
                 remove_repository_env_type(repo_name=arg_set.repo, env=arg_set.rmenv)
+            elif arg_set.set_version_storage_owner:
+                # --set-version-storage-owner dbowner -repo test_db
+                set_repository_version_storage_owner(repo_name=arg_set.repo, owner=arg_set.set_version_storage_owner)
             elif arg_set.setenv:
                 # -setenv test -repo test_db -v 1.0.0
                 set_repository_env_version(arg_set)

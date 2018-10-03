@@ -14,6 +14,7 @@ from plumbum import local
 
 import dbversioning.dbvctrlConst as Const
 from dbversioning.osUtil import ensure_dir_exists
+from dbversioning.versionedDbShellUtil import STDOUT
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dbversioning.dbvctrl import DbVctrl, parse_args
@@ -25,6 +26,7 @@ class TestUtil(object):
     stderr = 2
     invalid_repo_name = "/////"
     pgvctrl_test_repo = "pgvctrl_test"
+    pgvctrl_bad_repo = "BAD_REPO"
     pgvctrl_test_temp_repo = "pgvctrl_temp_test"
     pgvctrl_test_temp_repo_path = "databases/pgvctrl_temp_test"
     pgvctrl_no_files_repo = "pgvctrl_no_files"
@@ -57,6 +59,7 @@ class TestUtil(object):
     env_test = "test"
     env_qa = "qa"
     env_prod = "prod"
+    version_table_owner = "test_owner"
     schema_membership = "membership"
     schema_public = "public"
     schema_bad = "badschemaname"
@@ -96,6 +99,41 @@ class TestUtil(object):
             ["-c", f"CREATE DATABASE {TestUtil.pgvctrl_test_db}"], retcode=0
         )
         print(rtn)
+
+    @staticmethod
+    def create_table_owner_role():
+        psql = TestUtil.local_psql()
+        rtn = psql.run(
+                ["-c", f"CREATE ROLE {TestUtil.version_table_owner};"],
+                retcode=(0, 1)
+        )
+        print(rtn)
+
+    @staticmethod
+    def remove_table_owner_role():
+        psql = TestUtil.local_psql()
+        rtn = psql.run(
+                ["-c", f"DROP ROLE {TestUtil.version_table_owner};"],
+                retcode=(0, 1)
+        )
+        print(rtn)
+
+    @staticmethod
+    def get_table_owner(db_name: str, table_name: str):
+        psql = TestUtil.local_psql()
+        rtn = psql.run(
+                ["-d",
+                 db_name,
+                 "-A",
+                 "-c",
+                 f"SELECT tableowner FROM pg_tables where tablename = '{table_name}';"],
+                retcode=0
+        )
+        rtn_array = rtn[STDOUT].split("|")
+        owner = rtn_array[0].split("\n")[1]
+
+        print(owner)
+        return owner
 
     @staticmethod
     def drop_database():

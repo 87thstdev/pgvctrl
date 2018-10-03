@@ -7,7 +7,8 @@
         "revision": "revision",
         "table": "repository_version",
         "version": "version",
-        "versionHash": "version_hash"
+        "versionHash": "version_hash",
+        "tableOwner": null
     },
     "repositories": [
         {
@@ -22,7 +23,8 @@
                 "revision": "revision",
                 "table": "repository_version",
                 "version": "version",
-                "versionHash": "version_hash"
+                "versionHash": "version_hash",
+                "tableOwner": null
             }
         }
      ],

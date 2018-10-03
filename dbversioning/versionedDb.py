@@ -7,7 +7,7 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionRepoVersionNumber,
     VersionedDbExceptionRepoDoesNotExits, VersionedDbExceptionRepoNameInvalid)
 from dbversioning.osUtil import dir_exists
-from dbversioning.repositoryconf import DATA_DUMP
+from dbversioning.repositoryconf import DATA_DUMP_DIR
 from dbversioning.versionedDbHelper import (
     get_valid_elements,
     get_valid_sql_elements,
@@ -128,7 +128,7 @@ class VersionDb(object):
     def _populate_versions(self) -> List[Version]:
         ver_list = []
 
-        ignored = {DATA_DUMP}
+        ignored = {DATA_DUMP_DIR}
 
         ver_locations = get_valid_elements(self._repo_path, ignored)
 

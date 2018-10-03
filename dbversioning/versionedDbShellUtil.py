@@ -27,9 +27,9 @@ from dbversioning.errorUtil import (
 from dbversioning.repositoryconf import (
     RepositoryConf,
     ROLLBACK_FILE_ENDING,
-    INCLUDE_TABLES,
-    EXCLUDE_TABLES,
-)
+    INCLUDE_TABLES_PROP,
+    EXCLUDE_TABLES_PROP,
+    Version_Table)
 
 DATA_DUMP_CONFIG_NAME = "data.json"
 RETCODE = 0
@@ -66,7 +66,7 @@ class VersionDbShellUtil:
 
     @staticmethod
     def init_db(
-        repo_name, v_stg=None, db_conn=None, is_production=False, env=None
+        repo_name: str, v_stg: Version_Table=None, db_conn=None, is_production: bool=False, env: str=None
     ):
         psql = _local_psql()
         conf = RepositoryConf()
@@ -84,7 +84,16 @@ class VersionDbShellUtil:
             error_message(e.message)
             return False
 
-        create_v_tbl = f"CREATE TABLE IF NOT EXISTS {v_stg.tbl} (" f"{v_stg.v} VARCHAR," f"{v_stg.repo} VARCHAR NOT NULL," f"{v_stg.is_prod} BOOLEAN NOT NULL," f"{v_stg.env} VARCHAR," f"{v_stg.rev} INTEGER NOT NULL DEFAULT(0)," f"{v_stg.hash} JSONB);"
+        create_v_tbl = f"CREATE TABLE IF NOT EXISTS {v_stg.tbl} (" \
+                       f"{v_stg.v} VARCHAR," \
+                       f"{v_stg.repo} VARCHAR NOT NULL," \
+                       f"{v_stg.is_prod} BOOLEAN NOT NULL," \
+                       f"{v_stg.env} VARCHAR," \
+                       f"{v_stg.rev} INTEGER NOT NULL DEFAULT(0)," \
+                       f"{v_stg.hash} JSONB);"
+
+        if v_stg.owner:
+            create_v_tbl = f"SET ROLE {v_stg.owner}; {create_v_tbl} RESET ROLE;"
 
         if env:
             env_var = f"'{env}'"
@@ -290,10 +299,10 @@ class VersionDbShellUtil:
         exc_sch = conf.get_repo_exclude_schemas(repo_name)
 
         inc_tbl = conf.get_repo_list(
-            repo_name=repo_name, list_name=INCLUDE_TABLES
+            repo_name=repo_name, list_name=INCLUDE_TABLES_PROP
         )
         exc_tbl = conf.get_repo_list(
-            repo_name=repo_name, list_name=EXCLUDE_TABLES
+            repo_name=repo_name, list_name=EXCLUDE_TABLES_PROP
         )
         tbl_args = []
         schema_args = []
