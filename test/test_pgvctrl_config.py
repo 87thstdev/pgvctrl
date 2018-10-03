@@ -12,7 +12,7 @@ from dbversioning.repositoryconf import (
     RepositoryConf,
     INCLUDE_TABLES_PROP,
     EXCLUDE_TABLES_PROP,
-)
+    INCLUDE_SCHEMAS_PROP, EXCLUDE_SCHEMAS_PROP)
 from test.test_util import (
     TestUtil,
     print_cmd_error_details,
@@ -316,6 +316,89 @@ class TestPgvctrlRepoList:
                     f"\t\t200 AddEmailTable\n"
                     f"\t\t300 UserStateTable\n"
                     f"\t\t400 ErrorSet\n"
+        )
+
+    def test_repo_list_verbose_includes_excludes(self):
+        base_msg = (
+            f"\tv {TestUtil.test_first_version} test\n"
+            f"\tv {TestUtil.test_version} \n"
+            f"\t\t100 AddUsersTable\n"
+            f"\t\t110 Notice\n"
+            f"\t\t120 ItemTable\n"
+            f"\t\t140 ItemsAddMore\n"
+            f"\t\t200 AddEmailTable\n"
+            f"\t\t300 UserStateTable\n"
+            f"\t\t400 ErrorSet\n"
+        )
+
+        capture_dbvctrl_out(
+                arg_list=[
+                    Const.INCLUDE_SCHEMA_ARG,
+                    TestUtil.schema_membership,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                ]
+        )
+
+        dbvctrl_assert_simple_msg(
+                arg_list=[Const.LIST_REPOS_VERBOSE_ARG],
+                msg=f"{TestUtil.pgvctrl_test_repo}\n"
+                    f"\t({INCLUDE_SCHEMAS_PROP}: ['{TestUtil.schema_membership}'])\n"
+                    f"{base_msg}"
+        )
+
+        capture_dbvctrl_out(
+                arg_list=[
+                    Const.INCLUDE_TABLE_ARG,
+                    TestUtil.table_membership_user_state,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                ]
+        )
+
+        dbvctrl_assert_simple_msg(
+                arg_list=[Const.LIST_REPOS_VERBOSE_ARG],
+                msg=f"{TestUtil.pgvctrl_test_repo}\n"
+                    f"\t({INCLUDE_SCHEMAS_PROP}: ['{TestUtil.schema_membership}'], "
+                    f"{INCLUDE_TABLES_PROP}: ['{TestUtil.table_membership_user_state}'])\n"
+                    f"{base_msg}"
+        )
+
+        capture_dbvctrl_out(
+                arg_list=[
+                    Const.EXCLUDE_SCHEMA_ARG,
+                    TestUtil.schema_public,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                ]
+        )
+
+        dbvctrl_assert_simple_msg(
+                arg_list=[Const.LIST_REPOS_VERBOSE_ARG],
+                msg=f"{TestUtil.pgvctrl_test_repo}\n"
+                    f"\t({INCLUDE_SCHEMAS_PROP}: ['{TestUtil.schema_membership}'], "
+                    f"{EXCLUDE_SCHEMAS_PROP}: ['{TestUtil.schema_public}'], "
+                    f"{INCLUDE_TABLES_PROP}: ['{TestUtil.table_membership_user_state}'])\n"
+                    f"{base_msg}"
+        )
+
+        capture_dbvctrl_out(
+                arg_list=[
+                    Const.EXCLUDE_TABLE_ARG,
+                    TestUtil.table_public_item,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                ]
+        )
+
+        dbvctrl_assert_simple_msg(
+                arg_list=[Const.LIST_REPOS_VERBOSE_ARG],
+                msg=f"{TestUtil.pgvctrl_test_repo}\n"
+                    f"\t({INCLUDE_SCHEMAS_PROP}: ['{TestUtil.schema_membership}'], "
+                    f"{EXCLUDE_SCHEMAS_PROP}: ['{TestUtil.schema_public}'], "
+                    f"{INCLUDE_TABLES_PROP}: ['{TestUtil.table_membership_user_state}'], "
+                    f"{EXCLUDE_TABLES_PROP}: ['{TestUtil.table_public_item}'])\n"
+                    f"{base_msg}"
         )
 
     def test_repo_list_unregistered(self):

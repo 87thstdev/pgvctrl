@@ -540,6 +540,10 @@ def information_message(message):
     print(colors.blue & colors.bold | message)
 
 
+def notice_message(msg):
+    print(colors.green & colors.bold | msg)
+
+
 def repo_version_information_message(version, env):
     print(colors.blue & colors.bold | version, colors.green & colors.bold | env)
 

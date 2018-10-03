@@ -30,7 +30,7 @@ from dbversioning.versionedDbShellUtil import (
     DATA_DUMP_CONFIG_NAME,
     repo_version_information_message,
     repo_unregistered_message,
-)
+    notice_message)
 from dbversioning.versionedDb import VersionDb, FastForwardDb, GenericSql
 from dbversioning.repositoryconf import (
     RepositoryConf,
@@ -84,8 +84,25 @@ class VersionedDbHelper:
             repo_conf = conf.get_repo(db_repo.db_name)
             if repo_conf:
                 information_message(db_repo.db_name)
+                inc_exc = []
+                if INCLUDE_SCHEMAS_PROP in repo_conf:
+                    inc_exc.append(f"{INCLUDE_SCHEMAS_PROP}: {repo_conf[INCLUDE_SCHEMAS_PROP]}")
+
+                if EXCLUDE_SCHEMAS_PROP in repo_conf:
+                    inc_exc.append(f"{EXCLUDE_SCHEMAS_PROP}: {repo_conf[EXCLUDE_SCHEMAS_PROP]}")
+
+                if INCLUDE_TABLES_PROP in repo_conf:
+                    inc_exc.append(f"{INCLUDE_TABLES_PROP}: {repo_conf[INCLUDE_TABLES_PROP]}")
+
+                if EXCLUDE_TABLES_PROP in repo_conf:
+                    inc_exc.append(f"{EXCLUDE_TABLES_PROP}: {repo_conf[EXCLUDE_TABLES_PROP]}")
+
+                if inc_exc:
+                    msg = ", ".join(inc_exc)
+                    notice_message(f"\t({msg})")
             else:
                 repo_unregistered_message(db_repo.db_name)
+
             for v in v_sorted:
                 env = ""
                 if repo_conf and repo_conf[ENVS_PROP]:
