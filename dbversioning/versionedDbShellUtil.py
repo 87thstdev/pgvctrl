@@ -75,14 +75,10 @@ class VersionDbShellUtil:
         try:
             dbv = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
             if dbv:
-                warning_message("Already initialized")
-                return False
+                raise VersionedDbExceptionDatabaseAlreadyInit()
 
         except VersionedDbExceptionMissingVersionTable:
             missing_tbl = True
-        except VersionedDbExceptionDatabaseAlreadyInit as e:
-            error_message(e.message)
-            return False
 
         create_v_tbl = f"CREATE TABLE IF NOT EXISTS {v_stg.tbl} (" \
                        f"{v_stg.v} VARCHAR," \
@@ -171,8 +167,7 @@ class VersionDbShellUtil:
         table_list = VersionDbShellUtil._get_data_dump_dict(repo_name)
 
         if len(table_list) == 0:
-            information_message("No tables to pull!")
-            return
+            raise VersionedDbException("No tables to pull!")
 
         for tbl in table_list:
             sql_loc = conf.get_data_dump_sql_dir(
