@@ -19,8 +19,31 @@ from dbversioning.versionedDbShellUtil import STDOUT
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dbversioning.dbvctrl import DbVctrl, parse_args
 
+# NOTICE:
+#   Only change these constants for your postgres environment if you need to for testing.
+LOCAL_HOST = "localhost"
+PORT = "5432"
+PG_TEST_SERVICE = "pgvctrl_test"
+PG_USER = "87admin"
+PG_PSW = ""
+
+#
+# [pgvctrl_test:test]
+#     host=localhost
+#     port=5432
+#     dbname=pgvctrl_test_db
+
+# DON'T CHANGE LINES BELOW
+
 
 class TestUtil(object):
+    local_host_server = LOCAL_HOST
+    port = PORT
+    svc = PG_TEST_SERVICE
+    user = PG_USER
+    psw = PG_PSW
+    user_bad = "BADUSER_asdfafasdfda"
+    psw_bad = "BADPSW_aslkjfdoija"
     return_code = 0
     stdout = 1
     stderr = 2
@@ -67,6 +90,7 @@ class TestUtil(object):
     table_public_item = f"{schema_public}.item"
     table_bad = "badtablename"
     error_set_table_name = "error_set"
+    bad_table_name = "asdeeiaoivjaiosdj"
     custom_error_message = "WHY WOULD YOU DO THAT!"
     error_set_data_folder_path = f"databases/{pgvctrl_test_repo}/data"
     error_set_data_path = f"{error_set_data_folder_path}/error_set.sql"
@@ -145,6 +169,18 @@ class TestUtil(object):
         print(rtn)
 
     @staticmethod
+    def remove_rev_recs(db_name: str):
+        psql = TestUtil.local_psql()
+        psql.run(
+                ["-d",
+                 db_name,
+                 "-A",
+                 "-c",
+                 f"DELETE FROM repository_version;"],
+                retcode=0
+        )
+
+    @staticmethod
     def delete_file(file_name):
         if os.path.isfile(file_name):
             os.remove(file_name)
@@ -191,6 +227,14 @@ class TestUtil(object):
     @staticmethod
     def get_static_bad_config():
         copy2(f"{TestUtil.config_file}.bad.default", TestUtil.config_file)
+
+    @staticmethod
+    def get_static_bad_repositories_config():
+        copy2(f"{TestUtil.config_file}.bad.repositories.default", TestUtil.config_file)
+
+    @staticmethod
+    def get_static_invalid_config():
+        copy2(f"{TestUtil.config_file}.badjson.default", TestUtil.config_file)
 
     @staticmethod
     def get_error_sql():

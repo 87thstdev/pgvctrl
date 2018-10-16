@@ -78,6 +78,94 @@ class TestPgvctrlInitWithDb:
                 msg="Database initialized (PRODUCTION)\n"
         )
 
+    def test_init_test_twice(self):
+        capture_dbvctrl_out(arg_list=[
+            Const.INIT_ARG,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_temp_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.INIT_ARG,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_temp_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ],
+                msg="Database already initialized!\n",
+                error_code=1
+        )
+
+    def test_init_production_bad_db(self):
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.INIT_ARG,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_temp_repo,
+                    Const.PRODUCTION_ARG,
+                ],
+                msg="Missing connection args\n",
+                error_code=1
+        )
+
+    def test_init_production_long_bad_user(self):
+        out_rtn, errors = capture_dbvctrl_out(
+                arg_list=[
+                    Const.INIT_ARG,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_temp_repo,
+                    Const.PRODUCTION_ARG,
+                    Const.HOST_ARG,
+                    TestUtil.local_host_server,
+                    Const.PORT_ARG,
+                    TestUtil.port,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                    Const.PWD_ARG,
+                    TestUtil.psw,
+                    Const.USER_ARG,
+                    TestUtil.user_bad
+                ])
+
+        assert errors.code == 1
+        assert "Invalid Data Connection" in out_rtn
+
+    def test_init_production_long(self):
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.INIT_ARG,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_temp_repo,
+                    Const.PRODUCTION_ARG,
+                    Const.HOST_ARG,
+                    TestUtil.local_host_server,
+                    Const.PORT_ARG,
+                    TestUtil.port,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                    Const.PWD_ARG,
+                    TestUtil.psw,
+                    Const.USER_ARG,
+                    TestUtil.user
+                ],
+                msg="Database initialized (PRODUCTION)\n"
+        )
+
+    def test_init_test_svc(self):
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.INIT_ARG,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_temp_repo,
+                    Const.SERVICE_ARG,
+                    TestUtil.svc,
+                ],
+                msg="Database initialized\n"
+        )
+
     def test_init_env(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[

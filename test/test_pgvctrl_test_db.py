@@ -49,6 +49,21 @@ class TestPgvctrlTestDb:
                 msg=f"{TestUtil.test_first_version}.0: {TestUtil.pgvctrl_test_repo} environment (None)\n"
         )
 
+    def test_chkver_no_recs(self):
+        TestUtil.remove_rev_recs(TestUtil.pgvctrl_test_db)
+
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.CHECK_VER_ARG,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ],
+                msg=f"No version found!\n",
+                error_code=1
+        )
+
     def test_apply_bad_version(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[
@@ -102,6 +117,31 @@ class TestPgvctrlTestDb:
         assert errors is None
         assert f"Applied: {TestUtil.pgvctrl_test_repo} v {TestUtil.test_version}.1" in out_rtn
 
+    def test_apply_good_version_lesser(self):
+        capture_dbvctrl_out(arg_list=[
+            Const.APPLY_ARG,
+            Const.V_ARG,
+            "2.0.0",
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.APPLY_ARG,
+                    Const.V_ARG,
+                    TestUtil.test_first_version,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ],
+                msg=f"Version is higher then applying {TestUtil.test_version} > {TestUtil.test_first_version}!\n",
+                error_code=1
+        )
+
     def test_apply_good_version_passing_v(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[
@@ -115,7 +155,7 @@ class TestPgvctrlTestDb:
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"General VersionedDbException: Version and environment args are mutually exclusive.\n",
+                msg=f"Version and environment args are mutually exclusive.\n",
                 error_code=1
         )
 
@@ -548,10 +588,8 @@ class TestPgvctrlTestDb:
         )
 
 
-class TestPgvctrlTestPushPullDb:
+class TestPgvctrlTestPushDb:
     def setup_method(self):
-        TestUtil.get_static_data_config()
-        TestUtil.get_static_error_set_data()
         TestUtil.drop_database()
         TestUtil.create_database()
         TestUtil.get_static_config()
@@ -562,18 +600,17 @@ class TestPgvctrlTestPushPullDb:
             Const.DATABASE_ARG,
             TestUtil.pgvctrl_test_db,
         ])
-        TestUtil.mkrepo_ver(
-                TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
-        )
         capture_dbvctrl_out(arg_list=[
             Const.APPLY_ARG,
             Const.V_ARG,
-            TestUtil.test_first_version,
+            TestUtil.test_version,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
             Const.DATABASE_ARG,
             TestUtil.pgvctrl_test_db,
         ])
+        TestUtil.get_static_data_config()
+        TestUtil.get_static_error_set_data()
 
     def teardown_method(self):
         TestUtil.delete_folder(TestUtil.test_first_version_path)
@@ -594,14 +631,79 @@ class TestPgvctrlTestPushPullDb:
                 msg=f"{Const.PUSHING_DATA}\nRunning: error_set.sql\n\n"
         )
 
-    def test_pull_data(self):
+
+class TestPgvctrlTestPullDb:
+    def setup_method(self):
+        TestUtil.drop_database()
+        TestUtil.create_database()
+        TestUtil.get_static_config()
         capture_dbvctrl_out(arg_list=[
-            Const.PUSH_DATA_ARG,
+            Const.INIT_ARG,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
             Const.DATABASE_ARG,
             TestUtil.pgvctrl_test_db,
         ])
+        capture_dbvctrl_out(arg_list=[
+            Const.APPLY_ARG,
+            Const.V_ARG,
+            TestUtil.test_version,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+        TestUtil.delete_folder_full(TestUtil.error_set_data_folder_path)
+
+    def teardown_method(self):
+        TestUtil.delete_folder(TestUtil.test_first_version_path)
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
+        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.delete_folder_full(TestUtil.error_set_data_folder_path)
+        TestUtil.drop_database()
+
+    def test_pull_data_no_list(self):
+        arg_list = [
+            Const.PULL_DATA_ARG,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ]
+
+        dbvctrl_assert_simple_msg(
+                arg_list=arg_list,
+                msg="No tables to pull!\n",
+                error_code=1
+        )
+
+    def test_pull_data_bad_table(self):
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.PULL_DATA_ARG,
+                    Const.TBL_ARG,
+                    TestUtil.bad_table_name,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ],
+                msg=f"Pulling: {TestUtil.bad_table_name}\nSql Error: pg_dump: no matching tables were found\n\n",
+                error_code=1
+        )
+
+    def test_pull_data_from_repos_table_list(self):
+        arg_list = [
+            Const.PULL_DATA_ARG,
+            Const.TBL_ARG,
+            TestUtil.error_set_table_name,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ]
+        # Puts tables in the list of data
+        capture_dbvctrl_out(arg_list=arg_list)
 
         arg_list = [
             Const.PULL_DATA_ARG,
@@ -620,10 +722,6 @@ class TestPgvctrlTestPushPullDb:
         assert has_error_set
         assert has_custom_error
         assert errors is None
-
-
-# TODO: Make tests for
-# -pulldata -t error_set -t membership.user_state -repo test_db -d postgresPlay
 
 
 class TestPgvctrlTestCleanDb:
@@ -772,6 +870,63 @@ class TestPgvctrlTestDbEnv:
                     TestUtil.pgvctrl_test_db,
                 ],
                 msg=f"Applied: {TestUtil.pgvctrl_test_repo} v {TestUtil.test_first_version}.0\n"
+        )
+
+    def test_apply_env_not_exits(self):
+        capture_dbvctrl_out(arg_list=[
+            Const.INIT_ARG,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+            Const.SET_ENV_ARG,
+            TestUtil.env_test,
+        ])
+
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.APPLY_ARG,
+                    Const.ENV_ARG,
+                    TestUtil.env_qa,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ],
+                msg=f"Repository environment does not exists: {TestUtil.pgvctrl_test_repo} {TestUtil.env_qa}\n",
+                error_code=1
+        )
+
+    def test_apply_env_wrong_env(self):
+        capture_dbvctrl_out(arg_list=[
+            Const.INIT_ARG,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+            Const.SET_ENV_ARG,
+            TestUtil.env_test,
+        ])
+
+        capture_dbvctrl_out(arg_list=[
+            Const.MAKE_ENV_ARG,
+            TestUtil.env_qa,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+        ])
+
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.APPLY_ARG,
+                    Const.ENV_ARG,
+                    TestUtil.env_qa,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ],
+                msg=f"Environment does not match databases environment: {TestUtil.env_qa} != {TestUtil.env_test}\n",
+                error_code=1
         )
 
 
