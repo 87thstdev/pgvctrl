@@ -19,10 +19,9 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionFastForwardNotAllowed,
     VersionedDbExceptionRepoDoesNotExits,
     VersionedDbExceptionRepoExits,
-    VersionedDbExceptionNoVersionFound,
     VersionedDbExceptionEnvDoesMatchDbEnv,
     VersionedDbExceptionRepoVersionNumber,
-    VersionedDbException, VersionedDbExceptionRepoNameInvalid)
+    VersionedDbExceptionRepoNameInvalid)
 from dbversioning.versionedDbShellUtil import (
     VersionDbShellUtil,
     error_message,
@@ -104,13 +103,15 @@ class VersionedDbHelper:
                 repo_unregistered_message(db_repo.db_name)
 
             for v in v_sorted:
-                env = ""
+                env = []
                 if repo_conf and repo_conf[ENVS_PROP]:
                     for e in repo_conf[ENVS_PROP]:
                         if repo_conf[ENVS_PROP][e] == v.version_number:
-                            env = e
-
-                repo_version_information_message(f"\tv {v.full_name}", f"{env}")
+                            env.append(e)
+                if env:
+                    repo_version_information_message(f"\tv {v.full_name}", f"{env}")
+                else:
+                    repo_version_information_message(f"\tv {v.full_name}", "")
 
                 if verbose:
                     for s in v.sql_files:
@@ -142,9 +143,6 @@ class VersionedDbHelper:
         root = conf.root()
 
         vdb = VersionDb(join(os.getcwd(), root, repository))
-
-        if version is None:
-            raise VersionedDbExceptionNoVersionFound()
 
         rtn = [
             v
@@ -311,7 +309,7 @@ class VersionedDbHelper:
         standing = VersionedDbHelper._version_standing(ver_nums, repo_nums)
         if standing < 0:
             raise VersionedDbExceptionVersionIsHigherThanApplying(
-                ver_nums, version
+                dbver.version, version
             )
 
         VersionedDbHelper.apply_sql_files_to_database(
@@ -466,7 +464,7 @@ class VersionedDbHelper:
             )
 
         if RepositoryConf.set_repo_env(
-            repo_name=repo_name, env=env, version=version
+            repo_name=repo_name, env=env, version=version_found[0].version_number
         ):
             information_message(
                 f"Repository environment set: {repo_name} {env} {version}"

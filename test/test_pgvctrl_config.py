@@ -83,19 +83,44 @@ def test_help_help():
     assert "Postgres db version control." in out_rtn
 
 
+def test_mkrepo_not_exists():
+    dbvctrl_assert_simple_msg(
+            arg_list=[Const.MAKE_REPO_ARG, TestUtil.pgvctrl_test_temp_repo],
+            msg=f"File missing: dbRepoConfig.json\n",
+            error_code=1
+    )
+
+
+def test_rmrepo_not_exists():
+    dbvctrl_assert_simple_msg(
+            arg_list=[Const.REMOVE_REPO_ARG, TestUtil.pgvctrl_test_temp_repo],
+            msg=f"File missing: dbRepoConfig.json\n",
+            error_code=1
+    )
+
+
 class TestPgvctrlBadConf:
     def setup_method(self):
         TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.get_static_bad_config()
 
     def teardown_method(self):
         TestUtil.delete_file(TestUtil.config_file)
 
-    def test_conf_bad_mkconf(self):
-        arg_list = [Const.LIST_REPOS_ARG]
+    def test_conf_bad_root(self):
+        TestUtil.get_static_bad_config()
+
         dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
-                msg=f"Bad config file!\n",
+                arg_list=[Const.LIST_REPOS_ARG],
+                msg=f"Invalid key in config, expected 'root'\n",
+                error_code=1
+        )
+
+    def test_conf_bad_repositories(self):
+        TestUtil.get_static_bad_repositories_config()
+
+        dbvctrl_assert_simple_msg(
+                arg_list=[Const.LIST_REPOS_ARG],
+                msg=f"Invalid key in config, expected 'repositories'\n",
                 error_code=1
         )
 
@@ -196,6 +221,19 @@ class TestPgvctrlRepoMakeEnv:
                 msg=f"Repository environment created: {TestUtil.pgvctrl_test_repo} {TestUtil.env_qa}\n"
         )
 
+    def test_mkenv_bad_repo(self):
+        arg_list = [
+            Const.MAKE_ENV_ARG,
+            TestUtil.env_qa,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_bad_repo,
+        ]
+        dbvctrl_assert_simple_msg(
+                arg_list=arg_list,
+                msg=f"Repository does not exist: {TestUtil.pgvctrl_bad_repo}\n",
+                error_code=1
+        )
+
 
 class TestPgvctrlSetRepoEnv:
     def setup_method(self):
@@ -225,6 +263,48 @@ class TestPgvctrlSetRepoEnv:
                     f"{TestUtil.env_qa} {TestUtil.test_version}\n"
         )
 
+    def test_set_repo_two_on_ver_env(self):
+        base_msg = (
+            f"{TestUtil.pgvctrl_test_repo}\n"
+            f"\tv {TestUtil.test_version} ['{TestUtil.env_qa}', '{TestUtil.env_test}']\n"
+        )
+
+        capture_dbvctrl_out(arg_list=[
+            Const.MAKE_ENV_ARG,
+            TestUtil.env_qa,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+        ])
+
+        capture_dbvctrl_out(
+                arg_list=[
+                    Const.SET_ENV_ARG,
+                    TestUtil.env_test,
+                    Const.V_ARG,
+                    TestUtil.test_version,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                ]
+        )
+
+        capture_dbvctrl_out(
+                arg_list=[
+                    Const.SET_ENV_ARG,
+                    TestUtil.env_qa,
+                    Const.V_ARG,
+                    TestUtil.test_version,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                ]
+        )
+
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.LIST_REPOS_ARG
+                ],
+                msg=base_msg
+        )
+
     def test_set_repo_env_no_v_fail(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[
@@ -240,8 +320,8 @@ class TestPgvctrlSetRepoEnv:
 
 class TestPgvctrlRepoMakeRemove:
     def setup_method(self):
-        TestUtil.get_static_config()
-        TestUtil.mkrepo(TestUtil.pgvctrl_no_files_repo)
+        TestUtil.delete_file(TestUtil.config_file)
+        capture_dbvctrl_out(arg_list=[Const.MKCONF_ARG])
 
     def teardown_method(self):
         TestUtil.delete_file(TestUtil.config_file)
@@ -255,6 +335,8 @@ class TestPgvctrlRepoMakeRemove:
         )
 
     def test_mkrepo_exists(self):
+        TestUtil.mkrepo(TestUtil.pgvctrl_no_files_repo)
+
         dbvctrl_assert_simple_msg(
                 arg_list=[Const.MAKE_REPO_ARG, TestUtil.pgvctrl_no_files_repo],
                 msg=f"Repository already exist: {TestUtil.pgvctrl_no_files_repo}\n",
@@ -269,6 +351,8 @@ class TestPgvctrlRepoMakeRemove:
         )
 
     def test_rmrepo_exists(self):
+        TestUtil.mkrepo(TestUtil.pgvctrl_no_files_repo)
+
         dbvctrl_assert_simple_msg(
                 arg_list=[Const.REMOVE_REPO_ARG, TestUtil.pgvctrl_no_files_repo],
                 msg=f"Repository removed: {TestUtil.pgvctrl_no_files_repo}\n"
@@ -299,7 +383,7 @@ class TestPgvctrlRepoList:
         dbvctrl_assert_simple_msg(
                 arg_list=[Const.LIST_REPOS_ARG],
                 msg=f"{TestUtil.pgvctrl_test_repo}\n"
-                    f"\tv {TestUtil.test_first_version} test\n"
+                    f"\tv {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
                     f"\tv {TestUtil.test_version} \n"
         )
 
@@ -307,7 +391,7 @@ class TestPgvctrlRepoList:
         dbvctrl_assert_simple_msg(
                 arg_list=[Const.LIST_REPOS_VERBOSE_ARG],
                 msg=f"{TestUtil.pgvctrl_test_repo}\n"
-                    f"\tv {TestUtil.test_first_version} test\n"
+                    f"\tv {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
                     f"\tv {TestUtil.test_version} \n"
                     f"\t\t100 AddUsersTable\n"
                     f"\t\t110 Notice\n"
@@ -320,7 +404,7 @@ class TestPgvctrlRepoList:
 
     def test_repo_list_verbose_includes_excludes(self):
         base_msg = (
-            f"\tv {TestUtil.test_first_version} test\n"
+            f"\tv {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
             f"\tv {TestUtil.test_version} \n"
             f"\t\t100 AddUsersTable\n"
             f"\t\t110 Notice\n"
@@ -408,7 +492,7 @@ class TestPgvctrlRepoList:
                 arg_list=[Const.LIST_REPOS_ARG],
                 msg=f"{TestUtil.pgvctrl_test_temp_repo} UNREGISTERED\n"
                 f"{TestUtil.pgvctrl_test_repo}\n"
-                f"\tv {TestUtil.test_first_version} test\n"
+                f"\tv {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
                 f"\tv {TestUtil.test_version} \n"
         )
 
@@ -420,7 +504,7 @@ class TestPgvctrlRepoList:
         dbvctrl_assert_simple_msg(
                 arg_list=[Const.LIST_REPOS_ARG],
                 msg=f"{TestUtil.pgvctrl_test_repo}\n"
-                f"\tv {TestUtil.test_first_version} test\n"
+                f"\tv {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
                 f"\tv {TestUtil.test_version} \n"
         )
 
