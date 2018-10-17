@@ -1,0 +1,42 @@
+{
+    "autoSnapshots": false,
+    "defaultVersionStorage": {
+        "env": "env",
+        "isProduction": "is_production",
+        "repository": "repository_name",
+        "revision": "revision",
+        "table": "repository_version",
+        "version": "version",
+        "versionHash": "version_hash",
+        "tableOwner": null
+    },
+    "repositories": [
+        {
+            "name": "pgvctrl_test",
+            "versionStorage": {
+                "env": "env",
+                "isProduction": "is_production",
+                "repository": "repository_name",
+                "revision": "revision",
+                "table": "repository_version",
+                "version": "version",
+                "versionHash": "version_hash",
+                "tableOwner": null
+            }
+        },
+        {
+            "name": "pgvctrl_test",
+            "versionStorage": {
+                "env": "env",
+                "isProduction": "is_production",
+                "repository": "repository_name",
+                "revision": "revision",
+                "table": "repository_version",
+                "version": "version",
+                "versionHash": "version_hash",
+                "tableOwner": null
+            }
+        }
+     ],
+    "root": "databases"
+}

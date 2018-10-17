@@ -21,8 +21,7 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionTooManyVersionRecordsFound,
     VersionedDbExceptionDatabaseAlreadyInit,
     VersionedDbExceptionSqlExecutionError,
-    VersionedDbExceptionBadDataConfigFile,
-    VersionedDbExceptionMissingDataTable,
+    VersionedDbExceptionBadDataConfigFile
 )
 from dbversioning.repositoryconf import (
     RepositoryConf,
@@ -185,12 +184,9 @@ class VersionDbShellUtil:
             pg_dump_parm_list.append("-f")
             pg_dump_parm_list.append(sql_loc)
 
-            try:
-                size_num, size_txt = get_table_size(tbl, db_conn)
-                information_message(f"Pulling: {tbl['table']}, {size_txt}")
-                pg_dump(pg_dump_parm_list, retcode=0)
-            except ProcessExecutionError as e:
-                raise VersionedDbExceptionSqlExecutionError(e.stderr)
+            size_num, size_txt = get_table_size(tbl, db_conn)
+            information_message(f"Pulling: {tbl['table']}, {size_txt}")
+            pg_dump(pg_dump_parm_list, retcode=0)
 
     @staticmethod
     def apply_sql_file(db_conn, sql_file, break_on_error=False):
@@ -490,9 +486,6 @@ def get_table_size(tbl, db_conn):
     tbl_sql = f"SELECT pg_size_pretty(pg_total_relation_size('{tbl['table']}')) " f"As tbl_size, pg_total_relation_size('{tbl['table']}') num_size;"
 
     rtn = psql[db_conn, Const.TBL_ARG, "-A", "-c", tbl_sql].run()
-    if rtn[RETCODE] > 0:
-
-        raise VersionedDbExceptionMissingDataTable(tbl["table"])
 
     rtn_array = rtn[STDOUT].split("|")
     size_txt = rtn_array[0]

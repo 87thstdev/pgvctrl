@@ -124,6 +124,15 @@ class TestPgvctrlBadConf:
                 error_code=1
         )
 
+    def test_conf_bad_multi_repositories(self):
+        TestUtil.get_static_bad_config_multi_repos()
+
+        dbvctrl_assert_simple_msg(
+                arg_list=[Const.LIST_REPOS_ARG],
+                msg=f"Bad config: Multiple repositories found for {TestUtil.pgvctrl_test_repo}!\n",
+                error_code=1
+        )
+
 
 class TestPgvctrlNoConf:
     def setup_method(self):

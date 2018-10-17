@@ -7,11 +7,10 @@ from simplejson import JSONDecodeError
 from collections import namedtuple
 
 from dbversioning.errorUtil import (
-    VersionedDbExceptionBadConfigFile,
     VersionedDbExceptionFileMissing,
     VersionedDbExceptionRepoDoesNotExits,
     VersionedDbExceptionRepoEnvDoesNotExits,
-    VersionedDbExceptionBadConfigVersionFound,
+    VersionedDbExceptionBadConfigMultiRepos,
     VersionedDbExceptionIncludeExcludeSchema,
     VersionedDbException)
 from dbversioning.osUtil import ensure_dir_exists
@@ -176,7 +175,7 @@ class RepositoryConf(object):
         if len(rp) == 1:
             rtn_val = rp[0]
         elif len(rp) > 1:
-            raise VersionedDbExceptionBadConfigVersionFound()
+            raise VersionedDbExceptionBadConfigMultiRepos(repo_name)
 
         return rtn_val
 

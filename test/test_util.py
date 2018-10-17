@@ -176,7 +176,19 @@ class TestUtil(object):
                  db_name,
                  "-A",
                  "-c",
-                 f"DELETE FROM repository_version;"],
+                 "DELETE FROM repository_version;"],
+                retcode=0
+        )
+
+    @staticmethod
+    def add_rev_recs(db_name: str):
+        psql = TestUtil.local_psql()
+        psql.run(
+                ["-d",
+                 db_name,
+                 "-A",
+                 "-c",
+                 "INSERT INTO repository_version (repository_name, is_production, env) VALUES ('test', false, 'test');"],
                 retcode=0
         )
 
@@ -215,6 +227,10 @@ class TestUtil(object):
         copy2(f"{TestUtil.config_file}.default", TestUtil.config_file)
 
     @staticmethod
+    def get_static_snapshot_config():
+        copy2(f"{TestUtil.config_file}.snapshot.default", TestUtil.config_file)
+
+    @staticmethod
     def get_static_data_config():
         ensure_dir_exists(TestUtil.error_set_data_folder_path)
         copy2(TestUtil.data_file_default, TestUtil.test_version_data_path)
@@ -231,6 +247,10 @@ class TestUtil(object):
     @staticmethod
     def get_static_bad_repositories_config():
         copy2(f"{TestUtil.config_file}.bad.repositories.default", TestUtil.config_file)
+
+    @staticmethod
+    def get_static_bad_config_multi_repos():
+        copy2(f"{TestUtil.config_file}.bad.multi.repos.default", TestUtil.config_file)
 
     @staticmethod
     def get_static_invalid_config():

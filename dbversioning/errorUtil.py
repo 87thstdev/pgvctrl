@@ -113,12 +113,6 @@ class VersionedDbExceptionMissingVersionTable(VersionedDbException):
         pass
 
 
-class VersionedDbExceptionMissingDataTable(VersionedDbException):
-    def __init__(self, table_name):
-        self.message = f"Missing Data Table: {table_name}"
-        pass
-
-
 class VersionedDbExceptionBadDateSource(VersionedDbException):
     def __init__(self, dbconn):
         self.message = f"Invalid Data Connection: {dbconn}"
@@ -143,15 +137,9 @@ class VersionedDbExceptionSqlExecutionError(VersionedDbException):
         pass
 
 
-class VersionedDbExceptionBadConfigVersionFound(VersionedDbException):
-    def __init__(self):
-        self.message = "Bad config found!"
-        pass
-
-
-class VersionedDbExceptionBadConfigFile(VersionedDbException):
-    def __init__(self):
-        self.message = "Bad config file!"
+class VersionedDbExceptionBadConfigMultiRepos(VersionedDbException):
+    def __init__(self, repo):
+        self.message = f"Bad config: Multiple repositories found for {repo}!"
         pass
 
 
