@@ -3,12 +3,12 @@ from os import path
 
 here = path.abspath(path.dirname(__file__))
 
-with open(path.join(here, "README.md"), encoding="utf-8") as f:
+with open(path.join(here, "readme.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
     name="pgvctrl",
-    version="0.7.0",
+    version="0.7.1",
     description="postgreSQL database version control tool",
     keywords="postgres version control sql migrate migration patch patches",
     author="Heath Sutton",
