@@ -7,7 +7,6 @@ from collections import namedtuple
 
 from dbversioning.errorUtil import (
     VersionedDbExceptionFileMissing,
-    VersionedDbExceptionRepoDoesNotExits,
     VersionedDbExceptionRepoEnvDoesNotExits,
     VersionedDbExceptionBadConfigMultiRepos,
     VersionedDbExceptionIncludeExcludeSchema,
@@ -301,9 +300,6 @@ class RepositoryConf(object):
             repos = conf[REPOSITORIES_PROP]
             rp = [r for r in repos if r[NAME_PROP] == repo_name]
 
-            if not rp:
-                raise VersionedDbExceptionRepoDoesNotExits(repo_name)
-
             if rp[0][VERSION_STORAGE_PROP]:
                 rp[0][VERSION_STORAGE_PROP][TABLE_OWNER_PROP] = owner
             else:
@@ -357,9 +353,6 @@ class RepositoryConf(object):
         with open(RepositoryConf.config_file_name()):
             repos = conf[REPOSITORIES_PROP]
             rp = [r for r in repos if r[NAME_PROP] == repo_name]
-
-            if not rp:
-                raise VersionedDbExceptionRepoDoesNotExits(repo_name)
 
             if rp[0][ENVS_PROP] is None:
                 raise VersionedDbExceptionRepoEnvDoesNotExits(
@@ -470,9 +463,6 @@ class RepositoryConf(object):
         with open(RepositoryConf.config_file_name()):
             repos = conf[REPOSITORIES_PROP]
             rp = [r for r in repos if r[NAME_PROP] == repo_name]
-
-            if not rp:
-                raise VersionedDbExceptionRepoDoesNotExits(repo_name)
 
             if remove_from in rp[0]:
                 current_set = set(rp[0][remove_from])
