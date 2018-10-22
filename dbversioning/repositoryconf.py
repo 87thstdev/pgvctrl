@@ -2,7 +2,6 @@ import os
 from typing import List, Dict, Union
 
 import simplejson as json
-from simplejson import JSONDecodeError
 
 from collections import namedtuple
 
@@ -24,6 +23,7 @@ HIDDEN = "."
 AUTO_SNAPSHOTS_PROP = "autoSnapshots"
 FAST_FORWARD_DIR = "_fastForward"
 SNAPSHOTS_DIR = "_snapshots"
+DATABASE_BACKUP_DIR = "_databaseBackup"
 DATA_DUMP_DIR = "data"
 ROLLBACK_FILE_ENDING = "_rollback.sql"
 DEFAULT_VERSION_STORAGE_PROP = "defaultVersionStorage"
@@ -39,6 +39,9 @@ VERSION_HASH_PROP = "versionHash"
 TABLE_OWNER_PROP = "tableOwner"
 IS_PRODUCTION_PROP = "isProduction"
 ENV_PROP = "env"
+DUMP_DATABASE_OPTIONS_DEFAULT = "-Fc -Z 9"
+DUMP_DATABASE_OPTIONS_PROP = "dumpDatabaseOptions"
+DUMP_DATABASE_OPTIONS_PROP_DEFAULT = "dumpDatabaseOptionsDefault"
 NAME_PROP = "name"
 ENVS_PROP = "envs"
 INCLUDE_TABLES_PROP = "includeTables"
@@ -55,10 +58,12 @@ class RepositoryConf(object):
     @staticmethod
     def repo_conf(repo_name: str):
         repo_name_val = repo_name
+        default = RepositoryConf.dump_database_options_default()
 
         return {
             ENVS_PROP: {},
             NAME_PROP: repo_name_val,
+            DUMP_DATABASE_OPTIONS_PROP: default,
             VERSION_STORAGE_PROP: RepositoryConf.default_version_storage(),
         }
 
@@ -71,6 +76,7 @@ class RepositoryConf(object):
         config_json = {
             ROOT: "databases",
             AUTO_SNAPSHOTS_PROP: True,
+            DUMP_DATABASE_OPTIONS_PROP_DEFAULT: DUMP_DATABASE_OPTIONS_DEFAULT,
             DEFAULT_VERSION_STORAGE_PROP: {
                 TABLE_PROP: REPOSITORY_VERSION,
                 VERSION_PROP: VERSION_PROP,
@@ -110,6 +116,11 @@ class RepositoryConf(object):
         return conf[AUTO_SNAPSHOTS_PROP]
 
     @staticmethod
+    def dump_database_options_default():
+        conf = RepositoryConf._get_repo_dict()
+        return conf[DUMP_DATABASE_OPTIONS_PROP_DEFAULT]
+
+    @staticmethod
     def fast_forward_dir():
         return os.path.join(RepositoryConf.root(), FAST_FORWARD_DIR)
 
@@ -126,6 +137,10 @@ class RepositoryConf(object):
     @staticmethod
     def snapshot_dir():
         return os.path.join(RepositoryConf.root(), SNAPSHOTS_DIR)
+
+    @staticmethod
+    def database_backup_dir():
+        return os.path.join(RepositoryConf.root(), DATABASE_BACKUP_DIR)
 
     @staticmethod
     def default_version_storage():
@@ -372,6 +387,16 @@ class RepositoryConf(object):
     def save_config(out_str: str):
         with open(RepositoryConf.config_file_name(), "w") as outfile:
             outfile.write(out_str)
+
+    @staticmethod
+    def get_repo_dump_database_options(repo_name: str) -> Union[None, List[str]]:
+        repo_dict = RepositoryConf.get_repo(repo_name)
+        default = RepositoryConf.dump_database_options_default()
+
+        if DUMP_DATABASE_OPTIONS_PROP in repo_dict:
+            return repo_dict[DUMP_DATABASE_OPTIONS_PROP]
+
+        return default
 
     @staticmethod
     def get_repo_include_schemas(repo_name: str) -> Union[None, List[str]]:

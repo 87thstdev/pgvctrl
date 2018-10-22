@@ -1,5 +1,6 @@
 {
     "autoSnapshots": false,
+    "dumpDatabaseOptionsDefault": "-Fc -Z 9",
     "defaultVersionStorage": {
         "env": "env",
         "isProduction": "is_production",
@@ -12,6 +13,7 @@
     },
     "repositories": [
         {
+           "dumpDatabaseOptions": "-Fc -Z 9",
            "envs": {
                 "test": "0.0.0"
             },

@@ -286,29 +286,8 @@ class VersionDbShellUtil:
         ensure_dir_exists(repo_ff)
 
         ff = os.path.join(repo_ff, f"{dbver.version}.sql")
-        inc_sch = conf.get_repo_include_schemas(repo_name)
-        exc_sch = conf.get_repo_exclude_schemas(repo_name)
 
-        inc_tbl = conf.get_repo_list(
-            repo_name=repo_name, list_name=INCLUDE_TABLES_PROP
-        )
-        exc_tbl = conf.get_repo_list(
-            repo_name=repo_name, list_name=EXCLUDE_TABLES_PROP
-        )
-        tbl_args = []
-        schema_args = []
-
-        if inc_sch:
-            schema_args = _build_arg_list(inc_sch, Const.PG_INCLUDE_SCHEMA_ARG)
-
-        if exc_sch:
-            schema_args = _build_arg_list(exc_sch, Const.PG_EXCLUDE_SCHEMA_ARG)
-
-        if inc_tbl:
-            tbl_args = _build_arg_list(inc_tbl, Const.PG_INCLUDE_TABLE_ARG)
-
-        if exc_tbl:
-            tbl_args = _build_arg_list(exc_tbl, Const.PG_EXCLUDE_TABLE_ARG)
+        schema_args, tbl_args = _get_schema_table_args(conf, repo_name)
 
         pg_dump(db_conn, "-s", "-f", ff, schema_args, tbl_args, retcode=0)
 
@@ -332,6 +311,27 @@ class VersionDbShellUtil:
         ss = os.path.join(repo_sh, f"{dbver.version}.{d}.sql")
 
         pg_dump(db_conn, "-s", "-f", ss, retcode=0)
+
+    @staticmethod
+    def dump_database_backup(db_conn, v_stg, dump_options: List[str]):
+        pg_dump = _local_pg_dump()
+        conf = RepositoryConf()
+
+        dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
+
+        ensure_dir_exists(conf.database_backup_dir())
+
+        repo_db_bak = os.path.join(conf.database_backup_dir(), dbver.repo_name)
+
+        ensure_dir_exists(repo_db_bak)
+
+        d = datetime.datetime.now().strftime(SNAPSHOT_DATE_FORMAT)
+
+        db_bak = os.path.join(repo_db_bak, f"{dbver.repo_name}.{d}.sql")
+
+        schema_args, tbl_args = _get_schema_table_args(conf, dbver.repo_name)
+
+        pg_dump(db_conn, dump_options, schema_args, tbl_args, "-f", db_bak, retcode=0)
 
     @staticmethod
     def display_db_instance_version(v_tbl, db_conn):
@@ -478,6 +478,35 @@ def _good_version_table(v_tbl, db_conn):
         raise VersionedDbExceptionTooManyVersionRecordsFound()
 
     return good_table
+
+
+def _get_schema_table_args(conf, repo_name: str) -> (List[str], List[str]):
+    inc_sch = conf.get_repo_include_schemas(repo_name)
+    exc_sch = conf.get_repo_exclude_schemas(repo_name)
+
+    inc_tbl = conf.get_repo_list(
+            repo_name=repo_name, list_name=INCLUDE_TABLES_PROP
+    )
+    exc_tbl = conf.get_repo_list(
+            repo_name=repo_name, list_name=EXCLUDE_TABLES_PROP
+    )
+
+    tbl_args = []
+    schema_args = []
+
+    if inc_sch:
+        schema_args = _build_arg_list(inc_sch, Const.PG_INCLUDE_SCHEMA_ARG)
+
+    if exc_sch:
+        schema_args = _build_arg_list(exc_sch, Const.PG_EXCLUDE_SCHEMA_ARG)
+
+    if inc_tbl:
+        tbl_args = _build_arg_list(inc_tbl, Const.PG_INCLUDE_TABLE_ARG)
+
+    if exc_tbl:
+        tbl_args = _build_arg_list(exc_tbl, Const.PG_EXCLUDE_TABLE_ARG)
+
+    return schema_args, tbl_args
 
 
 def get_table_size(tbl, db_conn):

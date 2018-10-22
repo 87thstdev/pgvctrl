@@ -36,13 +36,14 @@ from dbversioning.repositoryconf import (
     VERSION_STORAGE_PROP,
     SNAPSHOTS_DIR,
     FAST_FORWARD_DIR,
+    DATABASE_BACKUP_DIR,
     ROLLBACK_FILE_ENDING,
     ENVS_PROP,
     INCLUDE_SCHEMAS_PROP,
     EXCLUDE_SCHEMAS_PROP,
     INCLUDE_TABLES_PROP,
     EXCLUDE_TABLES_PROP,
-)
+    DUMP_DATABASE_OPTIONS_DEFAULT)
 
 to_unicode = str
 
@@ -69,7 +70,7 @@ class VersionedDbHelper:
         conf = RepositoryConf()
         root = conf.root()
 
-        ignored = {FAST_FORWARD_DIR, SNAPSHOTS_DIR}
+        ignored = {FAST_FORWARD_DIR, SNAPSHOTS_DIR, DATABASE_BACKUP_DIR}
         repo_locations = get_valid_elements(root, ignored)
 
         for repo_location in repo_locations:
@@ -262,6 +263,26 @@ class VersionedDbHelper:
             )
         else:
             raise VersionedDbExceptionFolderMissing(data_dump)
+
+    @staticmethod
+    def repo_database_dump(repo_name, db_conn, is_production):
+        v_stg = VersionedDbHelper._get_v_stg(repo_name)
+        dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
+
+        if is_production != dbver.is_production:
+            raise VersionedDbExceptionProductionChangeNoProductionFlag(
+                Const.DUMP_DATABASE_ARG
+            )
+        # dump_database_backup
+        conf = RepositoryConf()
+        dump_options = conf.get_repo_dump_database_options(repo_name=repo_name)
+
+        if not dump_options:
+            dump_options = DUMP_DATABASE_OPTIONS_DEFAULT
+
+        dump_options_list = dump_options.split(" ")
+
+        VersionDbShellUtil.dump_database_backup(db_conn, v_stg, dump_options_list)
 
     @staticmethod
     def pull_table_for_repo_data(repo_name, db_conn, table_list=None):

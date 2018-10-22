@@ -12,7 +12,8 @@ from dbversioning.repositoryconf import (
     RepositoryConf,
     INCLUDE_TABLES_PROP,
     EXCLUDE_TABLES_PROP,
-    INCLUDE_SCHEMAS_PROP, EXCLUDE_SCHEMAS_PROP)
+    INCLUDE_SCHEMAS_PROP,
+    EXCLUDE_SCHEMAS_PROP)
 from test.test_util import (
     TestUtil,
     print_cmd_error_details,

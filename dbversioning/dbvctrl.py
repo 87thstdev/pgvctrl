@@ -69,6 +69,12 @@ def parse_args(args):
         action="store_true",
     )
 
+    group.add_argument(
+            Const.DUMP_DATABASE_ARG,
+            help="Dump database from server to local file (requires confirmation)",
+            action="store_true",
+    )
+
     parser.add_argument(
         Const.TBL_ARG, metavar="", help="Pull table for data", action="append"
     )
@@ -230,6 +236,17 @@ def push_repo_data_to_db(arg_set):
         db_conn=db_conn,
         repo_name=arg_set.repo,
         force=arg_set.force,
+        is_production=arg_set.production,
+    )
+
+
+def repo_database_dump(arg_set):
+    vdb = VersionedDbHelper()
+    db_conn = connection_list(arg_set)
+
+    vdb.repo_database_dump(
+        db_conn=db_conn,
+        repo_name=arg_set.repo,
         is_production=arg_set.production,
     )
 
@@ -424,6 +441,12 @@ class DbVctrl(object):
             elif arg_set.version:
                 # -version
                 show_version()
+            elif arg_set.dump_database:
+                if user_yes_no_query("Do you want to dump the database?"):
+                    print(f"dump-database")
+                    repo_database_dump(arg_set)
+                else:
+                    error_message("Dump database cancelled.")
             else:
                 prj_name = pkg_resources.require(Const.PGVCTRL)[0].project_name
                 error_message(
@@ -443,6 +466,11 @@ def main():
     arg_set = parse_args(sys.argv[1:])
     c = DbVctrl()
     c.run(arg_set)
+
+
+def user_yes_no_query(question):
+    sys.stdout.write('%s [YES/NO]\n' % question)
+    return input() == 'YES'
 
 
 if __name__ == "__main__":

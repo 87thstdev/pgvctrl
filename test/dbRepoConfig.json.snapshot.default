@@ -12,6 +12,7 @@
     },
     "repositories": [
         {
+           "dumpDatabaseOptions": "-Fc -Z 9",
            "name": "pgvctrl_test",
             "versionStorage": {
                 "env": "env",

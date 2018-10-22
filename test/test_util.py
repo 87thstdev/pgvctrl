@@ -58,6 +58,9 @@ class TestUtil(object):
     pgvctrl_test_db_snapshots_path = (
         f"databases/_snapshots/{pgvctrl_test_repo}"
     )
+    pgvctrl_test_db_backups_path = (
+        f"databases/_databaseBackup/{pgvctrl_test_repo}"
+    )
     test_first_version = "0.0.0.first"
     test_first_version_path = (
         f"databases/{pgvctrl_test_repo}/{test_first_version}"
@@ -273,6 +276,10 @@ class TestUtil(object):
             f"{TestUtil.error_sql_rollback_path}.good.default",
             TestUtil.error_sql_rollback_path,
         )
+
+    @staticmethod
+    def get_backup_file_name(repo: str):
+        return os.listdir(f"databases/_databaseBackup/{repo}")
 
     @staticmethod
     def get_repo_dict():
