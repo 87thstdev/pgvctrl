@@ -58,6 +58,9 @@ class TestUtil(object):
     pgvctrl_test_db_snapshots_path = (
         f"databases/_snapshots/{pgvctrl_test_repo}"
     )
+    pgvctrl_std_qa_reply = "Do you want to dump the database? [YES/NO]\n"
+    pgvctrl_std_dump_reply = f"{pgvctrl_std_qa_reply}dump-database\n"
+    pgvctrl_std_dump_cancelled_reply = f"{pgvctrl_std_qa_reply}Dump database cancelled.\n"
     pgvctrl_test_db_backups_path = (
         f"databases/_databaseBackup/{pgvctrl_test_repo}"
     )
