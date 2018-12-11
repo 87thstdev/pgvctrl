@@ -240,7 +240,7 @@ class VersionedDbHelper:
 
         if is_production != dbver.is_production:
             raise VersionedDbExceptionProductionChangeNoProductionFlag(
-                Const.PULL_DATA_ARG
+                Const.PUSH_DATA_ARG
             )
 
         conf = RepositoryConf()
