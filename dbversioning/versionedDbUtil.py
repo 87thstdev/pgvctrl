@@ -283,6 +283,8 @@ class VersionedDbHelper:
         dump_options_list = dump_options.split(" ")
 
         VersionDbShellUtil.dump_database_backup(db_conn, v_stg, dump_options_list)
+        information_message(f"Repository {repo_name} database backup")
+
 
     @staticmethod
     def pull_table_for_repo_data(repo_name, db_conn, table_list=None):

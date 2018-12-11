@@ -442,8 +442,8 @@ class DbVctrl(object):
                 # -version
                 show_version()
             elif arg_set.dump_database:
+                # -dump-database -repo test_db -d postgresPlay [-production]
                 if user_yes_no_query("Do you want to dump the database?"):
-                    print(f"dump-database")
                     repo_database_dump(arg_set)
                 else:
                     error_message("Dump database cancelled.")

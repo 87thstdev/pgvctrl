@@ -44,7 +44,7 @@ class TestPgvctrlTestDbDataDump:
                 Const.DATABASE_ARG,
                 TestUtil.pgvctrl_test_db,
             ])
-            assert out == TestUtil.pgvctrl_std_dump_reply
+            assert out == f"{TestUtil.pgvctrl_std_dump_reply}Repository {TestUtil.pgvctrl_test_repo} database backup\n"
             assert errors is None
 
         files = TestUtil.get_backup_file_name(TestUtil.pgvctrl_test_repo)
@@ -97,7 +97,7 @@ class TestPgvctrlTestDbDataDump:
                 Const.DATABASE_ARG,
                 TestUtil.pgvctrl_test_db,
             ])
-            assert out == TestUtil.pgvctrl_std_dump_reply
+            assert out == f"{TestUtil.pgvctrl_std_dump_reply}Repository {TestUtil.pgvctrl_test_repo} database backup\n"
             assert errors is None
 
         files = TestUtil.get_backup_file_name(TestUtil.pgvctrl_test_repo)
@@ -169,7 +169,7 @@ class TestPgvctrlTestDbDataDump:
                 Const.DATABASE_ARG,
                 TestUtil.pgvctrl_test_db,
             ])
-            assert out == TestUtil.pgvctrl_std_dump_reply
+            assert out == f"{TestUtil.pgvctrl_std_dump_reply}Repository {TestUtil.pgvctrl_test_repo} database backup\n"
             assert errors is None
 
         files = TestUtil.get_backup_file_name(TestUtil.pgvctrl_test_repo)
