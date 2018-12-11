@@ -394,7 +394,7 @@ class VersionDbShellUtil:
         x = [tbl for tbl in conf if tbl["table"] == tbl_name]
 
         if len(x) == 0:
-            conf.append({"table": tbl_name, "column-inserts": value})
+            conf.append({"table": tbl_name, "column-inserts": value, "apply-order": 0})
         else:
             x[0]["column-inserts"] = value
 

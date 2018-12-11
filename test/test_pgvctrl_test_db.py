@@ -806,11 +806,13 @@ class TestPgvctrlTestPullDb:
         out_rtn, errors = capture_dbvctrl_out(arg_list=arg_list)
         has_error_set = TestUtil.file_contains(TestUtil.error_set_data_path, TestUtil.error_set_table_name)
         has_custom_error = TestUtil.file_contains(TestUtil.error_set_data_path, TestUtil.custom_error_message)
+        has_error_set_default = TestUtil.file_contains(TestUtil.test_version_data_path, TestUtil.error_set_table_error_set_table)
 
         print_cmd_error_details(out_rtn, arg_list)
         assert "Pulling: error_set" in out_rtn
         assert has_error_set
         assert has_custom_error
+        assert has_error_set_default
         assert errors is None
 
 

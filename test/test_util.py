@@ -96,6 +96,7 @@ class TestUtil(object):
     table_public_item = f"{schema_public}.item"
     table_bad = "badtablename"
     error_set_table_name = "error_set"
+    error_set_table_error_set_table = '{\n        "apply-order": 0,\n        "column-inserts": true,\n        "table": "error_set"\n    }'
     bad_table_name = "asdeeiaoivjaiosdj"
     custom_error_message = "WHY WOULD YOU DO THAT!"
     error_set_data_folder_path = f"databases/{pgvctrl_test_repo}/data"
