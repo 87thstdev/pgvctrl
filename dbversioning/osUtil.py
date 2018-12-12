@@ -22,5 +22,4 @@ def make_data_file(file_name):
                 separators=(",", ": "),
                 ensure_ascii=True,
             )
-            # outfile.write(to_unicode(str_))
             outfile.write(str_)
