@@ -1,0 +1,12 @@
+[
+    {
+        "column-inserts": true,
+        "table": "app_error_set",
+        "apply-order": 1
+    },
+    {
+        "column-inserts": true,
+        "table": "error_set",
+        "apply-order": 0
+    }
+]

@@ -52,3 +52,7 @@ PG_INCLUDE_TABLE_ARG = "--table"
 PG_EXCLUDE_TABLE_ARG = "--exclude-table"
 
 PUSHING_DATA = "Pushing Data"
+
+DATA_TABLE = "table"
+DATA_COLUMN_INSERTS = "column-inserts"
+DATA_APPLY_ORDER = "apply-order"

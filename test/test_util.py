@@ -100,9 +100,12 @@ class TestUtil(object):
     bad_table_name = "asdeeiaoivjaiosdj"
     custom_error_message = "WHY WOULD YOU DO THAT!"
     error_set_data_folder_path = f"databases/{pgvctrl_test_repo}/data"
+    app_error_set_data_path = f"{error_set_data_folder_path}/app_error_set.sql"
     error_set_data_path = f"{error_set_data_folder_path}/error_set.sql"
     config_file = "dbRepoConfig.json"
     data_file_default = "data.json.default"
+    data_file_applying_default = "data.json.applying.default"
+    app_error_set_file_default = "app_error_set.sql.default"
     error_set_file_default = "error_set.sql.default"
 
     sql_return = 'Running: 100.AddUsersTable\n\n' \
@@ -241,6 +244,16 @@ class TestUtil(object):
     def get_static_data_config():
         ensure_dir_exists(TestUtil.error_set_data_folder_path)
         copy2(TestUtil.data_file_default, TestUtil.test_version_data_path)
+
+    @staticmethod
+    def get_static_data_applying_config():
+        ensure_dir_exists(TestUtil.error_set_data_folder_path)
+        copy2(TestUtil.data_file_applying_default, TestUtil.test_version_data_path)
+
+    @staticmethod
+    def get_static_app_error_set_data():
+        ensure_dir_exists(TestUtil.error_set_data_folder_path)
+        copy2(TestUtil.app_error_set_file_default, TestUtil.app_error_set_data_path)
 
     @staticmethod
     def get_static_error_set_data():

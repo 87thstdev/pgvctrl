@@ -29,8 +29,11 @@ from dbversioning.versionedDbShellUtil import (
     DATA_DUMP_CONFIG_NAME,
     repo_version_information_message,
     repo_unregistered_message,
-    notice_message)
-from dbversioning.versionedDb import VersionDb, FastForwardDb, GenericSql
+    notice_message, warning_message)
+from dbversioning.versionedDb import (
+    VersionDb,
+    FastForwardDb,
+    GenericSql)
 from dbversioning.repositoryconf import (
     RepositoryConf,
     VERSION_STORAGE_PROP,
@@ -246,23 +249,22 @@ class VersionedDbHelper:
         conf = RepositoryConf()
         data_files = []
         data_dump = conf.get_data_dump_dir(repo_name)
+        conf = VersionDbShellUtil.get_data_dump_dict(repo_name)
+        apply_order = set([p[Const.DATA_APPLY_ORDER] for p in conf])
 
-        if dir_exists(data_dump):
-            ignored = {DATA_DUMP_CONFIG_NAME}
-            data_file_list = get_valid_elements(
-                conf.get_data_dump_dir(repo_name), ignored
-            )
+        if len(conf) == 0:
+            warning_message("No tables found to push")
 
-            for sql in data_file_list:
-                sql_path = os.path.join(data_dump, sql)
-                gs = GenericSql(sql_path)
-                data_files.append(gs)
+        for o in apply_order:
+            for data_table in conf:
+                if data_table[Const.DATA_APPLY_ORDER] == o:
+                    sql_path = os.path.join(data_dump, f"{data_table[Const.DATA_TABLE]}.sql")
+                    gs = GenericSql(sql_path)
+                    data_files.append(gs)
 
-            VersionedDbHelper.apply_data_sql_files_to_database(
-                db_conn, data_files, force
-            )
-        else:
-            raise VersionedDbExceptionFolderMissing(data_dump)
+        VersionedDbHelper.apply_data_sql_files_to_database(
+            db_conn, data_files, force
+        )
 
     @staticmethod
     def repo_database_dump(repo_name, db_conn, is_production):

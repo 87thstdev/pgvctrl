@@ -163,7 +163,7 @@ class VersionDbShellUtil:
         conf = RepositoryConf()
 
         ensure_dir_exists(conf.get_data_dump_dir(repo_name))
-        table_list = VersionDbShellUtil._get_data_dump_dict(repo_name)
+        table_list = VersionDbShellUtil.get_data_dump_dict(repo_name)
 
         if len(table_list) == 0:
             raise VersionedDbException("No tables to pull!")
@@ -376,10 +376,10 @@ class VersionDbShellUtil:
 
     @staticmethod
     def get_col_inserts_setting(repo_name, tbl_name):
-        conf = VersionDbShellUtil._get_data_dump_dict(repo_name)
-        x = [tbl for tbl in conf if tbl["table"] == tbl_name]
+        conf = VersionDbShellUtil.get_data_dump_dict(repo_name)
+        x = [tbl for tbl in conf if tbl[Const.DATA_TABLE] == tbl_name]
         if len(x) == 1:
-            return x[0]["column-inserts"]
+            return x[0][Const.DATA_COLUMN_INSERTS]
         elif len(x) > 1:
             raise VersionedDbExceptionBadDataConfigFile()
 
@@ -388,15 +388,19 @@ class VersionDbShellUtil:
 
     @staticmethod
     def add_col_inserts_setting(repo_name, tbl_name, value):
-        conf = VersionDbShellUtil._get_data_dump_dict(repo_name)
+        conf = VersionDbShellUtil.get_data_dump_dict(repo_name)
         conf_file = VersionDbShellUtil._get_data_dump_config_file(repo_name)
 
-        x = [tbl for tbl in conf if tbl["table"] == tbl_name]
+        x = [tbl for tbl in conf if tbl[Const.DATA_TABLE] == tbl_name]
 
         if len(x) == 0:
-            conf.append({"table": tbl_name, "column-inserts": value, "apply-order": 0})
+            conf.append({
+                Const.DATA_TABLE: tbl_name,
+                Const.DATA_COLUMN_INSERTS: value,
+                Const.DATA_APPLY_ORDER: 0
+            })
         else:
-            x[0]["column-inserts"] = value
+            x[0][Const.DATA_COLUMN_INSERTS] = value
 
         with open(conf_file, "w") as f:
             str_ = json.dumps(
@@ -409,11 +413,13 @@ class VersionDbShellUtil:
             f.write(to_unicode(str_))
 
     @staticmethod
-    def _get_data_dump_dict(repo_name):
+    def get_data_dump_dict(repo_name):
         d = None
         conf_file = VersionDbShellUtil._get_data_dump_config_file(repo_name)
 
         if not os.path.isfile(conf_file):
+            conf = RepositoryConf()
+            ensure_dir_exists(conf.get_data_dump_dir(repo_name))
             make_data_file(conf_file)
 
         try:
