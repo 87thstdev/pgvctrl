@@ -693,6 +693,20 @@ class TestPgvctrlTestPushApplyingDb:
                     f'{Const.PUSHING_DATA}\nRunning: app_error_set.sql\n\n'
         )
 
+    def test_push_one_data_table(self):
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.PUSH_DATA_ARG,
+                    Const.TBL_ARG,
+                    "app_error_set",
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ],
+                msg=f'{Const.PUSHING_DATA}\nRunning: app_error_set.sql\n\n'
+        )
+
 
 class TestPgvctrlTestSnapshotDb:
     def setup_method(self):

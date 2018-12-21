@@ -236,6 +236,7 @@ def push_repo_data_to_db(arg_set):
         db_conn=db_conn,
         repo_name=arg_set.repo,
         force=arg_set.force,
+        table_list=arg_set.t,
         is_production=arg_set.production,
     )
 
@@ -436,7 +437,7 @@ class DbVctrl(object):
                 # -pulldata -t error_set -t membership.user_state -repo test_db -d postgresPlay
                 pull_table_for_repo_data(arg_set)
             elif arg_set.pushdata:
-                # -pushdata -repo test_db -d postgresPlay
+                # -pushdata [-t error_set ... ] -repo test_db -d postgresPlay
                 push_repo_data_to_db(arg_set)
             elif arg_set.version:
                 # -version

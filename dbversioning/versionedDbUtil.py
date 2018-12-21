@@ -237,7 +237,7 @@ class VersionedDbHelper:
             error_message(f"Fast forward not found {full_version}")
 
     @staticmethod
-    def push_data_to_database(repo_name, db_conn, force, is_production):
+    def push_data_to_database(repo_name, db_conn, force, is_production, table_list=None):
         v_stg = VersionedDbHelper._get_v_stg(repo_name)
         dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
 
@@ -249,14 +249,16 @@ class VersionedDbHelper:
         conf = RepositoryConf()
         data_files = []
         data_dump = conf.get_data_dump_dir(repo_name)
-        conf = VersionDbShellUtil.get_data_dump_dict(repo_name)
-        apply_order = set([p[Const.DATA_APPLY_ORDER] for p in conf])
+        data_push_set = VersionDbShellUtil.get_data_dump_dict(repo_name)
+        if table_list:
+            data_push_set = [t for t in data_push_set if t[Const.DATA_TABLE] in table_list]
+        apply_order = set([p[Const.DATA_APPLY_ORDER] for p in data_push_set])
 
-        if len(conf) == 0:
+        if len(data_push_set) == 0:
             warning_message("No tables found to push")
 
         for o in apply_order:
-            for data_table in conf:
+            for data_table in data_push_set:
                 if data_table[Const.DATA_APPLY_ORDER] == o:
                     sql_path = os.path.join(data_dump, f"{data_table[Const.DATA_TABLE]}.sql")
                     gs = GenericSql(sql_path)
