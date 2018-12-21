@@ -382,12 +382,16 @@ class TestPgvctrlRepoList:
         TestUtil.mkrepo_ver(
             TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
         )
+        TestUtil.get_error_sql()
+        TestUtil.get_error_rollback_good_sql()
 
     def teardown_method(self):
         TestUtil.delete_file(TestUtil.config_file)
         TestUtil.delete_folder(TestUtil.test_make_version_path)
         TestUtil.delete_folder(TestUtil.test_first_version_path)
         TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
+        TestUtil.delete_file(TestUtil.error_sql_path)
+        TestUtil.delete_file(TestUtil.error_sql_rollback_path)
 
     def test_repo_list(self):
         dbvctrl_assert_simple_msg(
@@ -406,6 +410,8 @@ class TestPgvctrlRepoList:
                     f"\t\t100 AddUsersTable\n"
                     f"\t\t110 Notice\n"
                     f"\t\t120 ItemTable\n"
+                    f"\t\t130 Error\n"
+                    f"\t\t130 Error_rollback\n"
                     f"\t\t140 ItemsAddMore\n"
                     f"\t\t200 AddEmailTable\n"
                     f"\t\t300 UserStateTable\n"

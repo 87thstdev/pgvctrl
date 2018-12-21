@@ -106,7 +106,7 @@ class Version(object):
         for sql in sql_list:
             sql_path = os.path.join(self._version_path, sql)
             sql_objs.append(SqlPatch(sql_path))
-        return sorted(sql_objs, key=lambda x: x.number)
+        return sorted(sql_objs, key=lambda x: (x.number, x.name))
 
 
 class VersionDb(object):
