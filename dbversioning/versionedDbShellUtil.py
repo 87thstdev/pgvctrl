@@ -571,6 +571,10 @@ def repo_version_information_message(version, env):
     print(colors.blue & colors.bold | version, colors.green & colors.bold | env)
 
 
+def sql_rollback_information_message(sql_message: str):
+    print(colors.blue & colors.bold | sql_message, colors.green & colors.bold | "ROLLBACK")
+
+
 def repo_unregistered_message(repo_name):
     print(
         colors.blue & colors.bold | repo_name,

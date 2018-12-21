@@ -6,12 +6,10 @@ import simplejson as json
 from os.path import join
 
 import dbversioning.dbvctrlConst as Const
-from dbversioning.osUtil import dir_exists
 from dbversioning.versionedDbHelper import get_valid_elements
 from dbversioning.errorUtil import (
     VersionedDbExceptionFileExits,
     VersionedDbExceptionVersionIsHigherThanApplying,
-    VersionedDbExceptionFolderMissing,
     VersionedDbExceptionRepoVersionExits,
     VersionedDbExceptionRepoVersionDoesNotExits,
     VersionedDbExceptionProductionChangeNoProductionFlag,
@@ -26,10 +24,11 @@ from dbversioning.versionedDbShellUtil import (
     VersionDbShellUtil,
     error_message,
     information_message,
-    DATA_DUMP_CONFIG_NAME,
     repo_version_information_message,
     repo_unregistered_message,
-    notice_message, warning_message)
+    notice_message,
+    warning_message,
+    sql_rollback_information_message)
 from dbversioning.versionedDb import (
     VersionDb,
     FastForwardDb,
@@ -119,7 +118,11 @@ class VersionedDbHelper:
 
                 if verbose:
                     for s in v.sql_files:
-                        information_message(f"\t\t{s.number} {s.name}")
+                        sql_msg = f"\t\t{s.number} {s.name}"
+                        if s.is_rollback:
+                            sql_rollback_information_message(sql_message=sql_msg)
+                        else:
+                            information_message(message=sql_msg)
 
     @staticmethod
     def valid_repository(repository: str):
@@ -382,7 +385,7 @@ class VersionedDbHelper:
     @staticmethod
     def apply_sql_files_to_database(db_conn, sql_files):
         for sql_file in sql_files:
-            if not sql_file.path.endswith(ROLLBACK_FILE_ENDING):
+            if not sql_file.is_rollback:
                 VersionDbShellUtil.apply_sql_file(db_conn, sql_file)
 
     @staticmethod

@@ -5,13 +5,15 @@ from typing import List
 from dbversioning.errorUtil import (
     VersionedDbExceptionFastForwardVersion,
     VersionedDbExceptionRepoVersionNumber,
-    VersionedDbExceptionRepoDoesNotExits, VersionedDbExceptionRepoNameInvalid)
+    VersionedDbExceptionRepoDoesNotExits,
+    VersionedDbExceptionRepoNameInvalid)
 from dbversioning.osUtil import dir_exists
-from dbversioning.repositoryconf import DATA_DUMP_DIR
+from dbversioning.repositoryconf import (
+    DATA_DUMP_DIR,
+    ROLLBACK_FILE_ENDING)
 from dbversioning.versionedDbHelper import (
     get_valid_elements,
-    get_valid_sql_elements,
-)
+    get_valid_sql_elements)
 
 
 class FastForwardDb(object):
@@ -183,6 +185,10 @@ class SqlPatch(object):
     @property
     def path(self):
         return self._path
+
+    @property
+    def is_rollback(self):
+        return self._path.endswith(ROLLBACK_FILE_ENDING)
 
 
 class GenericSql(object):
