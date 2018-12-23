@@ -5,7 +5,7 @@ CURRENT_DIR = Path(__file__).parent
 
 
 def long_description() -> str:
-    readme_md = CURRENT_DIR / "read.md"
+    readme_md = CURRENT_DIR / "readme.md"
     with open(readme_md, encoding="utf8") as ld_file:
         return ld_file.read()
 
