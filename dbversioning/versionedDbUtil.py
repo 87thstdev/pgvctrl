@@ -39,7 +39,6 @@ from dbversioning.repositoryconf import (
     SNAPSHOTS_DIR,
     FAST_FORWARD_DIR,
     DATABASE_BACKUP_DIR,
-    ROLLBACK_FILE_ENDING,
     ENVS_PROP,
     INCLUDE_SCHEMAS_PROP,
     EXCLUDE_SCHEMAS_PROP,

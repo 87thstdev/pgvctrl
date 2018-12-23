@@ -276,6 +276,7 @@ class TestPgvctrlSetRepoEnv:
     def test_set_repo_two_on_ver_env(self):
         base_msg = (
             f"{TestUtil.pgvctrl_test_repo}\n"
+            f"\tv {TestUtil.test_second_version_no_name} \n"
             f"\tv {TestUtil.test_version} ['{TestUtil.env_qa}', '{TestUtil.env_test}']\n"
         )
 
@@ -382,6 +383,9 @@ class TestPgvctrlRepoList:
         TestUtil.mkrepo_ver(
             TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
         )
+        TestUtil.mkrepo_ver(
+                TestUtil.pgvctrl_test_repo, TestUtil.test_second_version_no_name
+        )
         TestUtil.get_error_sql()
         TestUtil.get_error_rollback_good_sql()
 
@@ -398,6 +402,7 @@ class TestPgvctrlRepoList:
                 arg_list=[Const.LIST_REPOS_ARG],
                 msg=f"{TestUtil.pgvctrl_test_repo}\n"
                     f"\tv {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
+                    f"\tv {TestUtil.test_second_version_no_name} \n"
                     f"\tv {TestUtil.test_version} \n"
         )
 
@@ -406,7 +411,9 @@ class TestPgvctrlRepoList:
                 arg_list=[Const.LIST_REPOS_VERBOSE_ARG],
                 msg=f"{TestUtil.pgvctrl_test_repo}\n"
                     f"\tv {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
+                    f"\tv {TestUtil.test_second_version_no_name} \n"
                     f"\tv {TestUtil.test_version} \n"
+                    f"\t\t90 \n"
                     f"\t\t100 AddUsersTable\n"
                     f"\t\t110 Notice\n"
                     f"\t\t120 ItemTable\n"
@@ -421,7 +428,9 @@ class TestPgvctrlRepoList:
     def test_repo_list_verbose_includes_excludes(self):
         base_msg = (
             f"\tv {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
+            f"\tv {TestUtil.test_second_version_no_name} \n"
             f"\tv {TestUtil.test_version} \n"
+            f"\t\t90 \n"
             f"\t\t100 AddUsersTable\n"
             f"\t\t110 Notice\n"
             f"\t\t120 ItemTable\n"
@@ -511,6 +520,7 @@ class TestPgvctrlRepoList:
                 msg=f"{TestUtil.pgvctrl_test_temp_repo} UNREGISTERED\n"
                 f"{TestUtil.pgvctrl_test_repo}\n"
                 f"\tv {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
+                f"\tv {TestUtil.test_second_version_no_name} \n"
                 f"\tv {TestUtil.test_version} \n"
         )
 
@@ -523,7 +533,29 @@ class TestPgvctrlRepoList:
                 arg_list=[Const.LIST_REPOS_ARG],
                 msg=f"{TestUtil.pgvctrl_test_repo}\n"
                 f"\tv {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
+                f"\tv {TestUtil.test_second_version_no_name} \n"
                 f"\tv {TestUtil.test_version} \n"
+        )
+
+
+class TestPgvctrlBadRepoList:
+    def setup_method(self):
+        TestUtil.get_static_config()
+        TestUtil.mkrepo(TestUtil.pgvctrl_test_temp_repo)
+
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
+
+    def test_make_bad_repo_version(self):
+        dbvctrl_assert_simple_msg(
+                arg_list=[Const.REPO_ARG,
+                          TestUtil.pgvctrl_test_temp_repo,
+                          Const.MAKE_V_ARG,
+                          TestUtil.test_bad_version_number],
+                msg=f"Repository version number invalid, should be [Major].[Minor].[Maintenance] "
+                    f"at a minimum: {TestUtil.test_bad_version_number}\n",
+                error_code=1
         )
 
 

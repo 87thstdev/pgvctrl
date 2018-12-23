@@ -48,9 +48,9 @@ class FastForwardVersion(object):
     @property
     def full_name(self):
         if self.name == "":
-            return f"{self.major}.{self.minor}.{self.maintenance}"
+            return self.version_number
 
-        return f"{self.major}.{self.minor}.{self.maintenance}.{self.name}"
+        return f"{self.version_number}.{self.name}"
 
     @property
     def version_number(self):
@@ -77,9 +77,9 @@ class Version(object):
     @property
     def full_name(self):
         if self.name == "":
-            return f"{self.major}.{self.minor}.{self.maintenance}"
+            return self.version_number
 
-        return f"{self.major}.{self.minor}.{self.maintenance}.{self.name}"
+        return f"{self.version_number}.{self.name}"
 
     @property
     def version_number(self):
@@ -168,7 +168,7 @@ class SqlPatch(object):
 
         self._path = sql_path
         self._number = int(file_array[0])
-        self._name = file_array[1]
+        self._name = ".".join(file_array[1:(len(file_array)-1)])
 
     @property
     def fullname(self):

@@ -64,10 +64,12 @@ class TestUtil(object):
     pgvctrl_test_db_backups_path = (
         f"databases/_databaseBackup/{pgvctrl_test_repo}"
     )
+    test_bad_version_number = "one.0.0.first"
     test_first_version = "0.0.0.first"
     test_first_version_path = (
         f"databases/{pgvctrl_test_repo}/{test_first_version}"
     )
+    test_second_version_no_name = "1.0.0"
     test_version = "2.0.0.NewVersion"
     test_version_ff_path = (
         f"databases/_fastForward/{pgvctrl_test_repo}/{test_version}.sql"
@@ -108,7 +110,9 @@ class TestUtil(object):
     app_error_set_file_default = "app_error_set.sql.default"
     error_set_file_default = "error_set.sql.default"
 
-    sql_return = 'Running: 100.AddUsersTable\n\n' \
+    sql_return = 'Running: 90.\n' \
+                 '\t6: NOTICE:  No name sql!\n\n' \
+                 'Running: 100.AddUsersTable\n\n' \
                  'Running: 110.Notice\n' \
                  '\t8: NOTICE:  WHO DAT? 87admin\n' \
                  '\t8: NOTICE:  Just me, 87admin\n' \
