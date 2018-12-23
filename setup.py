@@ -12,7 +12,7 @@ def get_long_description() -> str:
 
 setup(
     name="pgvctrl",
-    version="0.8.1",
+    version="0.8.2",
     description="postgreSQL database version control tool",
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
