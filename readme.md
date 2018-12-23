@@ -75,7 +75,7 @@ In the test directory:
     __What just happened?__<br />
     After initialization is complete:
     * There will be a new table in your database named repository_version.
-      This is where pbvctrl stores your repository name, version number with a
+      This is where pgvctrl stores your repository name, version number with a
        version hash for each sql update file, environment name, revision (number of times
        the same version has been applied with different sql hash) and production flag.
        
@@ -283,7 +283,7 @@ one or more tables with the [-t [table name]] option.
 Once you have your data in your repository, pushing data is easy.
 <pre>-pushdata -repo [repository name] [db connection information]</pre>
 e.g. For pushing by table(s).
-<pre>-pushdata -t error_set -repo mydb -d mylocaldb</pre>
+<pre>-pushdata -t error_set -t process_state -repo mydb -d mylocaldb</pre>
 e.g. For pushing all tables.
 <pre>-pushdata -repo mydb -d mylocaldb</pre>
 Output:
@@ -291,6 +291,11 @@ Output:
 Pushing Data
 Running: error_set.sql
 </pre>
+
+#### -dump-database: Dump the repositories database
+You can dump the database based on the repository backing it.  This means includes/excludes
+for schemas and tables are honored during the database backup. 
+<pre>-dump-database -repo [repository name] [db connection information]</pre>
 
 ### dbRepoConfig.json
 The dbRepoConfig.json files is the configuration file for
@@ -303,6 +308,7 @@ tells pgvctrl where to look for the repositories.
 <pre>
 {
     "autoSnapshots": true,
+    "dumpDatabaseOptionsDefault": "-Fc -Z 9",
     "defaultVersionStorage": {
         "env": "env",
         "isProduction": "is_production",
@@ -314,6 +320,7 @@ tells pgvctrl where to look for the repositories.
     },
     "repositories": [
         {
+            "dumpDatabaseOptions": "-Fc -Z 9",
             "envs": { 
                 "your_test": "1.0.1",
                 "your_qa": "1.0.0",

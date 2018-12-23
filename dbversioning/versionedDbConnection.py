@@ -37,14 +37,10 @@ def connection_list(args):
     """
     rtn_conn = []
 
-    try:
-        if args.svc:
-            _append_svc_args(args, rtn_conn)
-        else:
-            _append_server_args(args, rtn_conn)
-
-    except TypeError:
-        raise VersionedDbExceptionMissingArgs
+    if args.svc:
+        _append_svc_args(args, rtn_conn)
+    else:
+        _append_server_args(args, rtn_conn)
 
     if len(rtn_conn) == 0:
         raise VersionedDbExceptionMissingArgs

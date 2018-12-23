@@ -5,13 +5,15 @@ from typing import List
 from dbversioning.errorUtil import (
     VersionedDbExceptionFastForwardVersion,
     VersionedDbExceptionRepoVersionNumber,
-    VersionedDbExceptionRepoDoesNotExits, VersionedDbExceptionRepoNameInvalid)
+    VersionedDbExceptionRepoDoesNotExits,
+    VersionedDbExceptionRepoNameInvalid)
 from dbversioning.osUtil import dir_exists
-from dbversioning.repositoryconf import DATA_DUMP
+from dbversioning.repositoryconf import (
+    DATA_DUMP_DIR,
+    ROLLBACK_FILE_ENDING)
 from dbversioning.versionedDbHelper import (
     get_valid_elements,
-    get_valid_sql_elements,
-)
+    get_valid_sql_elements)
 
 
 class FastForwardDb(object):
@@ -46,9 +48,9 @@ class FastForwardVersion(object):
     @property
     def full_name(self):
         if self.name == "":
-            return f"{self.major}.{self.minor}.{self.maintenance}"
+            return self.version_number
 
-        return f"{self.major}.{self.minor}.{self.maintenance}.{self.name}"
+        return f"{self.version_number}.{self.name}"
 
     @property
     def version_number(self):
@@ -75,9 +77,9 @@ class Version(object):
     @property
     def full_name(self):
         if self.name == "":
-            return f"{self.major}.{self.minor}.{self.maintenance}"
+            return self.version_number
 
-        return f"{self.major}.{self.minor}.{self.maintenance}.{self.name}"
+        return f"{self.version_number}.{self.name}"
 
     @property
     def version_number(self):
@@ -106,7 +108,7 @@ class Version(object):
         for sql in sql_list:
             sql_path = os.path.join(self._version_path, sql)
             sql_objs.append(SqlPatch(sql_path))
-        return sorted(sql_objs, key=lambda x: x.number)
+        return sorted(sql_objs, key=lambda x: (x.number, x.name))
 
 
 class VersionDb(object):
@@ -128,7 +130,7 @@ class VersionDb(object):
     def _populate_versions(self) -> List[Version]:
         ver_list = []
 
-        ignored = {DATA_DUMP}
+        ignored = {DATA_DUMP_DIR}
 
         ver_locations = get_valid_elements(self._repo_path, ignored)
 
@@ -166,7 +168,7 @@ class SqlPatch(object):
 
         self._path = sql_path
         self._number = int(file_array[0])
-        self._name = file_array[1]
+        self._name = ".".join(file_array[1:(len(file_array)-1)])
 
     @property
     def fullname(self):
@@ -183,6 +185,10 @@ class SqlPatch(object):
     @property
     def path(self):
         return self._path
+
+    @property
+    def is_rollback(self):
+        return self._path.endswith(ROLLBACK_FILE_ENDING)
 
 
 class GenericSql(object):

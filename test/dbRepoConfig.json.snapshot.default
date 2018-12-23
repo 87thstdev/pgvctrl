@@ -1,6 +1,5 @@
 {
-    "autoSnapshots": false,
-    "dumpDatabaseOptionsDefault": "-Fc -Z 9",
+    "autoSnapshots": true,
     "defaultVersionStorage": {
         "env": "env",
         "isProduction": "is_production",
@@ -14,10 +13,7 @@
     "repositories": [
         {
            "dumpDatabaseOptions": "-Fc -Z 9",
-           "envs": {
-                "test": "0.0.0"
-            },
-            "name": "pgvctrl_test",
+           "name": "pgvctrl_test",
             "versionStorage": {
                 "env": "env",
                 "isProduction": "is_production",

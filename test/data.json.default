@@ -1,6 +1,7 @@
 [
     {
         "column-inserts": true,
-        "table": "error_set"
+        "table": "error_set",
+        "apply-order": 0
     }
 ]

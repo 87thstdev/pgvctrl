@@ -3,7 +3,7 @@ import dbversioning.dbvctrlConst as Const
 
 class VersionedDbException(Exception):
     def __init__(self, message=None):
-        self.message = f"General VersionedDbException: {message}"
+        self.message = message
         pass
 
 
@@ -47,14 +47,6 @@ class VersionedDbExceptionRepoEnvDoesNotExits(VersionedDbException):
     def __init__(self, repo_name, env):
         self.message = (
             f"Repository environment does not exists: {repo_name} {env}"
-        )
-        pass
-
-
-class VersionedDbExceptionRepoEnvExits(VersionedDbException):
-    def __init__(self, repo_name, env):
-        self.message = (
-            f"Repository environment already exists: {repo_name} {env}"
         )
         pass
 
@@ -121,12 +113,6 @@ class VersionedDbExceptionMissingVersionTable(VersionedDbException):
         pass
 
 
-class VersionedDbExceptionMissingDataTable(VersionedDbException):
-    def __init__(self, table_name):
-        self.message = f"Missing Data Table: {table_name}"
-        pass
-
-
 class VersionedDbExceptionBadDateSource(VersionedDbException):
     def __init__(self, dbconn):
         self.message = f"Invalid Data Connection: {dbconn}"
@@ -151,15 +137,9 @@ class VersionedDbExceptionSqlExecutionError(VersionedDbException):
         pass
 
 
-class VersionedDbExceptionBadConfigVersionFound(VersionedDbException):
-    def __init__(self):
-        self.message = "Bad config found!"
-        pass
-
-
-class VersionedDbExceptionBadConfigFile(VersionedDbException):
-    def __init__(self):
-        self.message = "Bad config file!"
+class VersionedDbExceptionBadConfigMultiRepos(VersionedDbException):
+    def __init__(self, repo):
+        self.message = f"Bad config: Multiple repositories found for {repo}!"
         pass
 
 

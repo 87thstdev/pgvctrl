@@ -2,49 +2,51 @@ import os
 from typing import List, Dict, Union
 
 import simplejson as json
-from simplejson import JSONDecodeError
 
 from collections import namedtuple
 
 from dbversioning.errorUtil import (
-    VersionedDbExceptionBadConfigFile,
     VersionedDbExceptionFileMissing,
-    VersionedDbExceptionRepoEnvExits,
-    VersionedDbExceptionRepoDoesNotExits,
-    VersionedDbExceptionRepoExits,
     VersionedDbExceptionRepoEnvDoesNotExits,
-    VersionedDbExceptionBadConfigVersionFound,
+    VersionedDbExceptionBadConfigMultiRepos,
     VersionedDbExceptionIncludeExcludeSchema,
-)
+    VersionedDbException)
 from dbversioning.osUtil import ensure_dir_exists
 
 Version_Table = namedtuple(
-    "version_table", ["tbl", "v", "rev", "hash", "repo", "is_prod", "env"]
+    "version_table", ["tbl", "v", "rev", "hash", "repo", "is_prod", "env", "owner"]
 )
 
 ROOT = "root"
 HIDDEN = "."
-AUTO_SNAPSHOTS = "autoSnapshots"
-FAST_FORWARD = "_fastForward"
+AUTO_SNAPSHOTS_PROP = "autoSnapshots"
+FAST_FORWARD_DIR = "_fastForward"
+SNAPSHOTS_DIR = "_snapshots"
+DATABASE_BACKUP_DIR = "_databaseBackup"
+DATA_DUMP_DIR = "data"
 ROLLBACK_FILE_ENDING = "_rollback.sql"
-SNAPSHOTS = "_snapshots"
-DATA_DUMP = "data"
-DEFAULT_VERSION_STORAGE = "defaultVersionStorage"
-TABLE = "table"
-VERSION = "version"
-REVISION = "revision"
-REPOSITORY = "repository"
-REPOSITORIES = "repositories"
-VERSION_STORAGE = "versionStorage"
-VERSION_HASH = "versionHash"
-IS_PRODUCTION = "isProduction"
-ENV = "env"
-NAME = "name"
-ENVS = "envs"
-INCLUDE_TABLES = "includeTables"
-INCLUDE_SCHEMAS = "includeSchemas"
-EXCLUDE_TABLES = "excludeTables"
-EXCLUDE_SCHEMAS = "excludeSchemas"
+DEFAULT_VERSION_STORAGE_PROP = "defaultVersionStorage"
+REPOSITORY_VERSION = "repository_version"
+TABLE_PROP = "table"
+VERSION_PROP = "version"
+REVISION_PROP = "revision"
+REPOSITORY_PROP = "repository"
+REPOSITORY_NAME = "repository_name"
+REPOSITORIES_PROP = "repositories"
+VERSION_STORAGE_PROP = "versionStorage"
+VERSION_HASH_PROP = "versionHash"
+TABLE_OWNER_PROP = "tableOwner"
+IS_PRODUCTION_PROP = "isProduction"
+ENV_PROP = "env"
+DUMP_DATABASE_OPTIONS_DEFAULT = "-Fc -Z 9"
+DUMP_DATABASE_OPTIONS_PROP = "dumpDatabaseOptions"
+DUMP_DATABASE_OPTIONS_PROP_DEFAULT = "dumpDatabaseOptionsDefault"
+NAME_PROP = "name"
+ENVS_PROP = "envs"
+INCLUDE_TABLES_PROP = "includeTables"
+INCLUDE_SCHEMAS_PROP = "includeSchemas"
+EXCLUDE_TABLES_PROP = "excludeTables"
+EXCLUDE_SCHEMAS_PROP = "excludeSchemas"
 
 
 class RepositoryConf(object):
@@ -55,11 +57,13 @@ class RepositoryConf(object):
     @staticmethod
     def repo_conf(repo_name: str):
         repo_name_val = repo_name
+        default = RepositoryConf.dump_database_options_default()
 
         return {
-            ENVS: {},
-            NAME: repo_name_val,
-            VERSION_STORAGE: RepositoryConf.default_version_storage(),
+            ENVS_PROP: {},
+            NAME_PROP: repo_name_val,
+            DUMP_DATABASE_OPTIONS_PROP: default,
+            VERSION_STORAGE_PROP: RepositoryConf.default_version_storage(),
         }
 
     @staticmethod
@@ -70,17 +74,19 @@ class RepositoryConf(object):
     def config_json():
         config_json = {
             ROOT: "databases",
-            AUTO_SNAPSHOTS: True,
-            DEFAULT_VERSION_STORAGE: {
-                TABLE: "repository_version",
-                VERSION: "version",
-                REVISION: "revision",
-                REPOSITORY: "repository_name",
-                VERSION_HASH: "version_hash",
-                IS_PRODUCTION: "is_production",
-                ENV: "env",
+            AUTO_SNAPSHOTS_PROP: True,
+            DUMP_DATABASE_OPTIONS_PROP_DEFAULT: DUMP_DATABASE_OPTIONS_DEFAULT,
+            DEFAULT_VERSION_STORAGE_PROP: {
+                TABLE_PROP: REPOSITORY_VERSION,
+                VERSION_PROP: VERSION_PROP,
+                REVISION_PROP: REVISION_PROP,
+                REPOSITORY_PROP: REPOSITORY_NAME,
+                VERSION_HASH_PROP: "version_hash",
+                TABLE_OWNER_PROP: None,
+                IS_PRODUCTION_PROP: "is_production",
+                ENV_PROP: "env",
             },
-            REPOSITORIES: [],
+            REPOSITORIES_PROP: [],
         }
         return config_json
 
@@ -89,11 +95,8 @@ class RepositoryConf(object):
         d = None
 
         if os.path.isfile(RepositoryConf.config_file_name()):
-            try:
-                with open(RepositoryConf.config_file_name()) as json_data:
-                    d = json.load(json_data)
-            except JSONDecodeError:
-                raise VersionedDbExceptionBadConfigFile()
+            with open(RepositoryConf.config_file_name()) as json_data:
+                d = json.load(json_data)
         else:
             raise VersionedDbExceptionFileMissing(
                 RepositoryConf.config_file_name()
@@ -109,58 +112,69 @@ class RepositoryConf(object):
     @staticmethod
     def auto_snapshots():
         conf = RepositoryConf._get_repo_dict()
-        return conf[AUTO_SNAPSHOTS]
+        return conf[AUTO_SNAPSHOTS_PROP]
+
+    @staticmethod
+    def dump_database_options_default():
+        conf = RepositoryConf._get_repo_dict()
+        return conf[DUMP_DATABASE_OPTIONS_PROP_DEFAULT]
 
     @staticmethod
     def fast_forward_dir():
-        return os.path.join(RepositoryConf.root(), FAST_FORWARD)
+        return os.path.join(RepositoryConf.root(), FAST_FORWARD_DIR)
 
     @staticmethod
     def get_data_dump_dir(repo_name: str):
-        return os.path.join(RepositoryConf.root(), repo_name, DATA_DUMP)
+        return os.path.join(RepositoryConf.root(), repo_name, DATA_DUMP_DIR)
 
     @staticmethod
     def get_data_dump_sql_dir(repo_name: str, sql_file):
         return os.path.join(
-            RepositoryConf.root(), repo_name, DATA_DUMP, sql_file
+            RepositoryConf.root(), repo_name, DATA_DUMP_DIR, sql_file
         )
 
     @staticmethod
     def snapshot_dir():
-        return os.path.join(RepositoryConf.root(), SNAPSHOTS)
+        return os.path.join(RepositoryConf.root(), SNAPSHOTS_DIR)
+
+    @staticmethod
+    def database_backup_dir():
+        return os.path.join(RepositoryConf.root(), DATABASE_BACKUP_DIR)
 
     @staticmethod
     def default_version_storage():
         conf = RepositoryConf._get_repo_dict()
-        d = conf[DEFAULT_VERSION_STORAGE]
+        d = conf[DEFAULT_VERSION_STORAGE_PROP]
         return {
-            TABLE: d[TABLE],
-            VERSION: d[VERSION],
-            REVISION: d[REVISION],
-            VERSION_HASH: d[VERSION_HASH],
-            REPOSITORY: d[REPOSITORY],
-            IS_PRODUCTION: d[IS_PRODUCTION],
-            ENV: d[ENV],
+            TABLE_PROP: d[TABLE_PROP],
+            VERSION_PROP: d[VERSION_PROP],
+            REVISION_PROP: d[REVISION_PROP],
+            VERSION_HASH_PROP: d[VERSION_HASH_PROP],
+            TABLE_OWNER_PROP: d[TABLE_OWNER_PROP],
+            REPOSITORY_PROP: d[REPOSITORY_PROP],
+            IS_PRODUCTION_PROP: d[IS_PRODUCTION_PROP],
+            ENV_PROP: d[ENV_PROP],
         }
 
     @staticmethod
     def repo_list():
         conf = RepositoryConf._get_repo_dict()
-        repos = conf[REPOSITORIES]
+        repos = conf[REPOSITORIES_PROP]
         rtn_repos = []
 
         for repo in repos:
-            vs = repo[VERSION_STORAGE]
+            vs = repo[VERSION_STORAGE_PROP]
             ver_tbl = Version_Table(
-                tbl=vs[TABLE],
-                v=vs[VERSION],
-                rev=vs[REVISION],
-                hash=vs[VERSION_HASH],
-                repo=vs[REPOSITORY],
-                is_prod=vs[IS_PRODUCTION],
-                env=vs[ENV],
+                tbl=vs[TABLE_PROP],
+                v=vs[VERSION_PROP],
+                rev=vs[REVISION_PROP],
+                hash=vs[VERSION_HASH_PROP],
+                repo=vs[REPOSITORY_PROP],
+                is_prod=vs[IS_PRODUCTION_PROP],
+                env=vs[ENV_PROP],
+                owner=vs[TABLE_OWNER_PROP],
             )
-            repo[VERSION_STORAGE] = ver_tbl
+            repo[VERSION_STORAGE_PROP] = ver_tbl
             rtn_repos.append(repo)
 
         return rtn_repos
@@ -170,12 +184,12 @@ class RepositoryConf(object):
         rtn_val = None
         repo_list = RepositoryConf.repo_list()
 
-        rp = [r for r in repo_list if r[NAME] == repo_name]
+        rp = [r for r in repo_list if r[NAME_PROP] == repo_name]
 
         if len(rp) == 1:
             rtn_val = rp[0]
         elif len(rp) > 1:
-            raise VersionedDbExceptionBadConfigVersionFound()
+            raise VersionedDbExceptionBadConfigMultiRepos(repo_name)
 
         return rtn_val
 
@@ -183,39 +197,23 @@ class RepositoryConf(object):
     def create_repo(repo_name: str):
         conf = RepositoryConf._get_repo_dict()
 
-        if os.path.isfile(RepositoryConf.config_file_name()):
-            try:
-                with open(RepositoryConf.config_file_name()):
-                    repos = conf[REPOSITORIES]
-
-                    rp = [r for r in repos if r[NAME] == repo_name]
-
-                    if rp:
-                        raise VersionedDbExceptionRepoExits(repo_name)
-
-                    conf[REPOSITORIES].append(
-                        RepositoryConf.repo_conf(repo_name)
-                    )
-
-                    out_str = json.dumps(
-                        conf,
-                        indent=4,
-                        sort_keys=True,
-                        separators=(",", ": "),
-                        ensure_ascii=True,
-                    )
-
-            except JSONDecodeError:
-                raise VersionedDbExceptionBadConfigFile()
-
-            with open(RepositoryConf.config_file_name(), "w") as outfile:
-                outfile.write(out_str)
-
-            ensure_dir_exists(os.path.join(RepositoryConf.root(), repo_name))
-        else:
-            raise VersionedDbExceptionFileMissing(
-                RepositoryConf.config_file_name()
+        with open(RepositoryConf.config_file_name()):
+            conf[REPOSITORIES_PROP].append(
+                RepositoryConf.repo_conf(repo_name)
             )
+
+            out_str = json.dumps(
+                conf,
+                indent=4,
+                sort_keys=True,
+                separators=(",", ": "),
+                ensure_ascii=True,
+            )
+
+        with open(RepositoryConf.config_file_name(), "w") as outfile:
+            outfile.write(out_str)
+
+        ensure_dir_exists(os.path.join(RepositoryConf.root(), repo_name))
 
         return True
 
@@ -223,39 +221,27 @@ class RepositoryConf(object):
     def remove_repo(repo_name: str):
         conf = RepositoryConf._get_repo_dict()
 
-        if os.path.isfile(RepositoryConf.config_file_name()):
-            try:
-                with open(RepositoryConf.config_file_name()):
-                    if conf[REPOSITORIES] is None:
-                        conf[REPOSITORIES] = list()
-                    repos = conf[REPOSITORIES]
+        with open(RepositoryConf.config_file_name()):
+            if conf[REPOSITORIES_PROP] is None:
+                conf[REPOSITORIES_PROP] = list()
+            repos = conf[REPOSITORIES_PROP]
 
-                    rp = [r for r in repos if r[NAME] == repo_name]
+            rp = [r for r in repos if r[NAME_PROP] == repo_name]
 
-                    if not rp:
-                        raise VersionedDbExceptionRepoDoesNotExits(repo_name)
+            conf[REPOSITORIES_PROP].remove(rp[0])
 
-                    conf[REPOSITORIES].remove(rp[0])
-
-                    out_str = json.dumps(
-                        conf,
-                        indent=4,
-                        sort_keys=True,
-                        separators=(",", ": "),
-                        ensure_ascii=True,
-                    )
-
-            except JSONDecodeError:
-                raise VersionedDbExceptionBadConfigFile()
-
-            with open(RepositoryConf.config_file_name(), "w") as outfile:
-                outfile.write(out_str)
-
-            ensure_dir_exists(os.path.join(RepositoryConf.root(), repo_name))
-        else:
-            raise VersionedDbExceptionFileMissing(
-                RepositoryConf.config_file_name()
+            out_str = json.dumps(
+                conf,
+                indent=4,
+                sort_keys=True,
+                separators=(",", ": "),
+                ensure_ascii=True,
             )
+
+        with open(RepositoryConf.config_file_name(), "w") as outfile:
+            outfile.write(out_str)
+
+        ensure_dir_exists(os.path.join(RepositoryConf.root(), repo_name))
 
         return True
 
@@ -263,40 +249,23 @@ class RepositoryConf(object):
     def create_repo_env(repo_name: str, env: str):
         conf = RepositoryConf._get_repo_dict()
 
-        if os.path.isfile(RepositoryConf.config_file_name()):
-            try:
-                with open(RepositoryConf.config_file_name()):
-                    repos = conf[REPOSITORIES]
-                    rp = [r for r in repos if r[NAME] == repo_name]
+        with open(RepositoryConf.config_file_name()):
+            repos = conf[REPOSITORIES_PROP]
+            rp = [r for r in repos if r[NAME_PROP] == repo_name]
 
-                    if not rp:
-                        raise VersionedDbExceptionRepoDoesNotExits(repo_name)
+            if env not in rp[0][ENVS_PROP]:
+                rp[0][ENVS_PROP].update({env: None})
 
-                    if rp[0][ENVS] is None:
-                        rp[0][ENVS] = {}
-
-                    if env not in rp[0][ENVS]:
-                        rp[0][ENVS].update({env: None})
-                    else:
-                        raise VersionedDbExceptionRepoEnvExits(repo_name, env)
-
-                    out_str = json.dumps(
-                        conf,
-                        indent=4,
-                        sort_keys=True,
-                        separators=(",", ": "),
-                        ensure_ascii=True,
-                    )
-
-            except JSONDecodeError:
-                raise VersionedDbExceptionBadConfigFile()
+            out_str = json.dumps(
+                conf,
+                indent=4,
+                sort_keys=True,
+                separators=(",", ": "),
+                ensure_ascii=True,
+            )
 
             with open(RepositoryConf.config_file_name(), "w") as outfile:
                 outfile.write(out_str)
-        else:
-            raise VersionedDbExceptionFileMissing(
-                RepositoryConf.config_file_name()
-            )
 
         return True
 
@@ -304,39 +273,48 @@ class RepositoryConf(object):
     def remove_repo_env(repo_name: str, env: str):
         conf = RepositoryConf._get_repo_dict()
 
-        if os.path.isfile(RepositoryConf.config_file_name()):
-            try:
-                with open(RepositoryConf.config_file_name()):
-                    repos = conf[REPOSITORIES]
-                    rp = [r for r in repos if r[NAME] == repo_name]
+        with open(RepositoryConf.config_file_name()):
+            repos = conf[REPOSITORIES_PROP]
+            rp = [r for r in repos if r[NAME_PROP] == repo_name]
 
-                    if not rp:
-                        raise VersionedDbExceptionRepoDoesNotExits(repo_name)
+            del rp[0][ENVS_PROP][env]
 
-                    if rp[0][ENVS] is None:
-                        raise VersionedDbExceptionRepoEnvDoesNotExits(
-                            repo_name, env
-                        )
-
-                    del rp[0][ENVS][env]
-
-                    out_str = json.dumps(
-                        conf,
-                        indent=4,
-                        sort_keys=True,
-                        separators=(",", ": "),
-                        ensure_ascii=True,
-                    )
-
-            except JSONDecodeError:
-                raise VersionedDbExceptionBadConfigFile()
+            out_str = json.dumps(
+                conf,
+                indent=4,
+                sort_keys=True,
+                separators=(",", ": "),
+                ensure_ascii=True,
+            )
 
             with open(RepositoryConf.config_file_name(), "w") as outfile:
                 outfile.write(out_str)
-        else:
-            raise VersionedDbExceptionFileMissing(
-                RepositoryConf.config_file_name()
+
+        return True
+
+    @staticmethod
+    def set_repo_version_storage_owner(repo_name: str, owner: str):
+        conf = RepositoryConf._get_repo_dict()
+
+        with open(RepositoryConf.config_file_name()):
+            repos = conf[REPOSITORIES_PROP]
+            rp = [r for r in repos if r[NAME_PROP] == repo_name]
+
+            if rp[0][VERSION_STORAGE_PROP]:
+                rp[0][VERSION_STORAGE_PROP][TABLE_OWNER_PROP] = owner
+            else:
+                raise VersionedDbException(f"{repo_name}: {VERSION_STORAGE_PROP} does not exist.")
+
+            out_str = json.dumps(
+                    conf,
+                    indent=4,
+                    sort_keys=True,
+                    separators=(",", ": "),
+                    ensure_ascii=True,
             )
+
+            with open(RepositoryConf.config_file_name(), "w") as outfile:
+                outfile.write(out_str)
 
         return True
 
@@ -344,39 +322,27 @@ class RepositoryConf(object):
     def set_repo_env(repo_name: str, env: str, version: str):
         conf = RepositoryConf._get_repo_dict()
 
-        if os.path.isfile(RepositoryConf.config_file_name()):
-            try:
-                with open(RepositoryConf.config_file_name()):
-                    repos = conf[REPOSITORIES]
-                    rp = [r for r in repos if r[NAME] == repo_name]
+        with open(RepositoryConf.config_file_name()):
+            repos = conf[REPOSITORIES_PROP]
+            rp = [r for r in repos if r[NAME_PROP] == repo_name]
 
-                    if not rp:
-                        raise VersionedDbExceptionRepoDoesNotExits(repo_name)
+            if rp[0][ENVS_PROP] and env in rp[0][ENVS_PROP]:
+                rp[0][ENVS_PROP][env] = version
+            else:
+                raise VersionedDbExceptionRepoEnvDoesNotExits(
+                    repo_name, env
+                )
 
-                    if rp[0][ENVS] and env in rp[0][ENVS]:
-                        rp[0][ENVS][env] = version
-                    else:
-                        raise VersionedDbExceptionRepoEnvDoesNotExits(
-                            repo_name, env
-                        )
-
-                    out_str = json.dumps(
-                        conf,
-                        indent=4,
-                        sort_keys=True,
-                        separators=(",", ": "),
-                        ensure_ascii=True,
-                    )
-
-            except JSONDecodeError:
-                raise VersionedDbExceptionBadConfigFile()
+            out_str = json.dumps(
+                conf,
+                indent=4,
+                sort_keys=True,
+                separators=(",", ": "),
+                ensure_ascii=True,
+            )
 
             with open(RepositoryConf.config_file_name(), "w") as outfile:
                 outfile.write(out_str)
-        else:
-            raise VersionedDbExceptionFileMissing(
-                RepositoryConf.config_file_name()
-            )
 
         return True
 
@@ -384,34 +350,21 @@ class RepositoryConf(object):
     def get_repo_env(repo_name: str, env: str):
         conf = RepositoryConf._get_repo_dict()
 
-        if os.path.isfile(RepositoryConf.config_file_name()):
-            try:
-                with open(RepositoryConf.config_file_name()):
-                    repos = conf[REPOSITORIES]
-                    rp = [r for r in repos if r[NAME] == repo_name]
+        with open(RepositoryConf.config_file_name()):
+            repos = conf[REPOSITORIES_PROP]
+            rp = [r for r in repos if r[NAME_PROP] == repo_name]
 
-                    if not rp:
-                        raise VersionedDbExceptionRepoDoesNotExits(repo_name)
+            if rp[0][ENVS_PROP] is None:
+                raise VersionedDbExceptionRepoEnvDoesNotExits(
+                    repo_name, env
+                )
 
-                    if rp[0][ENVS] is None:
-                        raise VersionedDbExceptionRepoEnvDoesNotExits(
-                            repo_name, env
-                        )
-
-                    if rp[0][ENVS] and env in rp[0][ENVS]:
-                        return rp[0][ENVS][env]
-                    else:
-                        raise VersionedDbExceptionRepoEnvDoesNotExits(
-                            repo_name, env
-                        )
-
-            except JSONDecodeError:
-                raise VersionedDbExceptionBadConfigFile()
-
-        else:
-            raise VersionedDbExceptionFileMissing(
-                RepositoryConf.config_file_name()
-            )
+            if rp[0][ENVS_PROP] and env in rp[0][ENVS_PROP]:
+                return rp[0][ENVS_PROP][env]
+            else:
+                raise VersionedDbExceptionRepoEnvDoesNotExits(
+                    repo_name, env
+                )
 
     @staticmethod
     def convert_dict_to_config_json_str(conf: Dict) -> str:
@@ -429,11 +382,21 @@ class RepositoryConf(object):
             outfile.write(out_str)
 
     @staticmethod
+    def get_repo_dump_database_options(repo_name: str) -> Union[None, List[str]]:
+        repo_dict = RepositoryConf.get_repo(repo_name)
+        default = RepositoryConf.dump_database_options_default()
+
+        if DUMP_DATABASE_OPTIONS_PROP in repo_dict:
+            return repo_dict[DUMP_DATABASE_OPTIONS_PROP]
+
+        return default
+
+    @staticmethod
     def get_repo_include_schemas(repo_name: str) -> Union[None, List[str]]:
         repo_dict = RepositoryConf.get_repo(repo_name)
 
-        if INCLUDE_SCHEMAS in repo_dict:
-            return repo_dict[INCLUDE_SCHEMAS]
+        if INCLUDE_SCHEMAS_PROP in repo_dict:
+            return repo_dict[INCLUDE_SCHEMAS_PROP]
 
         return None
 
@@ -441,8 +404,8 @@ class RepositoryConf(object):
     def get_repo_exclude_schemas(repo_name: str) -> Union[None, List[str]]:
         repo_dict = RepositoryConf.get_repo(repo_name)
 
-        if EXCLUDE_SCHEMAS in repo_dict:
-            return repo_dict[EXCLUDE_SCHEMAS]
+        if EXCLUDE_SCHEMAS_PROP in repo_dict:
+            return repo_dict[EXCLUDE_SCHEMAS_PROP]
 
         return None
 
@@ -470,33 +433,21 @@ class RepositoryConf(object):
         conf = RepositoryConf._get_repo_dict()
         add_set = set(add_list)
 
-        if not os.path.isfile(RepositoryConf.config_file_name()):
-            raise VersionedDbExceptionFileMissing(
-                RepositoryConf.config_file_name()
-            )
+        with open(RepositoryConf.config_file_name()):
+            repos = conf[REPOSITORIES_PROP]
+            rp = [r for r in repos if r[NAME_PROP] == repo_name]
 
-        try:
-            with open(RepositoryConf.config_file_name()):
-                repos = conf[REPOSITORIES]
-                rp = [r for r in repos if r[NAME] == repo_name]
+            if add_to in rp[0]:
+                current_set = set(rp[0][add_to])
+                add_set.union(current_set)
 
-                if not rp:
-                    raise VersionedDbExceptionRepoDoesNotExits(repo_name)
+            rp[0][add_to] = list(add_set)
 
-                if add_to in rp[0]:
-                    current_set = set(rp[0][add_to])
-                    add_set.union(current_set)
+            if remove_from in rp[0]:
+                new_removes = set(rp[0][remove_from])
+                rp[0][remove_from] = list(new_removes.difference(add_set))
 
-                rp[0][add_to] = list(add_set)
-
-                if remove_from in rp[0]:
-                    new_removes = set(rp[0][remove_from])
-                    rp[0][remove_from] = list(new_removes.difference(add_set))
-
-                out_str = RepositoryConf.convert_dict_to_config_json_str(conf)
-
-        except JSONDecodeError:
-            raise VersionedDbExceptionBadConfigFile()
+            out_str = RepositoryConf.convert_dict_to_config_json_str(conf)
 
         RepositoryConf.save_config(out_str)
 
@@ -509,29 +460,17 @@ class RepositoryConf(object):
         conf = RepositoryConf._get_repo_dict()
         remove_set = set(remove_list)
 
-        if not os.path.isfile(RepositoryConf.config_file_name()):
-            raise VersionedDbExceptionFileMissing(
-                RepositoryConf.config_file_name()
-            )
+        with open(RepositoryConf.config_file_name()):
+            repos = conf[REPOSITORIES_PROP]
+            rp = [r for r in repos if r[NAME_PROP] == repo_name]
 
-        try:
-            with open(RepositoryConf.config_file_name()):
-                repos = conf[REPOSITORIES]
-                rp = [r for r in repos if r[NAME] == repo_name]
+            if remove_from in rp[0]:
+                current_set = set(rp[0][remove_from])
+                rp[0][remove_from] = list(
+                    current_set.difference(remove_set)
+                )
 
-                if not rp:
-                    raise VersionedDbExceptionRepoDoesNotExits(repo_name)
-
-                if remove_from in rp[0]:
-                    current_set = set(rp[0][remove_from])
-                    rp[0][remove_from] = list(
-                        current_set.difference(remove_set)
-                    )
-
-                out_str = RepositoryConf.convert_dict_to_config_json_str(conf)
-
-        except JSONDecodeError:
-            raise VersionedDbExceptionBadConfigFile()
+            out_str = RepositoryConf.convert_dict_to_config_json_str(conf)
 
         RepositoryConf.save_config(out_str)
 

@@ -14,17 +14,42 @@ from plumbum import local
 
 import dbversioning.dbvctrlConst as Const
 from dbversioning.osUtil import ensure_dir_exists
+from dbversioning.versionedDbShellUtil import STDOUT
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dbversioning.dbvctrl import DbVctrl, parse_args
 
+# NOTICE:
+#   Only change these constants for your postgres environment if you need to for testing.
+LOCAL_HOST = "localhost"
+PORT = "5432"
+PG_TEST_SERVICE = "pgvctrl_test"
+PG_USER = "87admin"
+PG_PSW = ""
+
+#
+# [pgvctrl_test:test]
+#     host=localhost
+#     port=5432
+#     dbname=pgvctrl_test_db
+
+# DON'T CHANGE LINES BELOW
+
 
 class TestUtil(object):
+    local_host_server = LOCAL_HOST
+    port = PORT
+    svc = PG_TEST_SERVICE
+    user = PG_USER
+    psw = PG_PSW
+    user_bad = "BADUSER_asdfafasdfda"
+    psw_bad = "BADPSW_aslkjfdoija"
     return_code = 0
     stdout = 1
     stderr = 2
     invalid_repo_name = "/////"
     pgvctrl_test_repo = "pgvctrl_test"
+    pgvctrl_bad_repo = "BAD_REPO"
     pgvctrl_test_temp_repo = "pgvctrl_temp_test"
     pgvctrl_test_temp_repo_path = "databases/pgvctrl_temp_test"
     pgvctrl_no_files_repo = "pgvctrl_no_files"
@@ -33,10 +58,18 @@ class TestUtil(object):
     pgvctrl_test_db_snapshots_path = (
         f"databases/_snapshots/{pgvctrl_test_repo}"
     )
+    pgvctrl_std_qa_reply = "Do you want to dump the database? [YES/NO]\n"
+    pgvctrl_std_dump_reply = f"{pgvctrl_std_qa_reply}"
+    pgvctrl_std_dump_cancelled_reply = f"{pgvctrl_std_qa_reply}Dump database cancelled.\n"
+    pgvctrl_test_db_backups_path = (
+        f"databases/_databaseBackup/{pgvctrl_test_repo}"
+    )
+    test_bad_version_number = "one.0.0.first"
     test_first_version = "0.0.0.first"
     test_first_version_path = (
         f"databases/{pgvctrl_test_repo}/{test_first_version}"
     )
+    test_second_version_no_name = "1.0.0"
     test_version = "2.0.0.NewVersion"
     test_version_ff_path = (
         f"databases/_fastForward/{pgvctrl_test_repo}/{test_version}.sql"
@@ -57,6 +90,7 @@ class TestUtil(object):
     env_test = "test"
     env_qa = "qa"
     env_prod = "prod"
+    version_table_owner = "test_owner"
     schema_membership = "membership"
     schema_public = "public"
     schema_bad = "badschemaname"
@@ -64,14 +98,21 @@ class TestUtil(object):
     table_public_item = f"{schema_public}.item"
     table_bad = "badtablename"
     error_set_table_name = "error_set"
+    error_set_table_error_set_table = '{\n        "apply-order": 0,\n        "column-inserts": true,\n        "table": "error_set"\n    }'
+    bad_table_name = "asdeeiaoivjaiosdj"
     custom_error_message = "WHY WOULD YOU DO THAT!"
     error_set_data_folder_path = f"databases/{pgvctrl_test_repo}/data"
+    app_error_set_data_path = f"{error_set_data_folder_path}/app_error_set.sql"
     error_set_data_path = f"{error_set_data_folder_path}/error_set.sql"
     config_file = "dbRepoConfig.json"
     data_file_default = "data.json.default"
+    data_file_applying_default = "data.json.applying.default"
+    app_error_set_file_default = "app_error_set.sql.default"
     error_set_file_default = "error_set.sql.default"
 
-    sql_return = 'Running: 100.AddUsersTable\n\n' \
+    sql_return = 'Running: 90.\n' \
+                 '\t6: NOTICE:  No name sql!\n\n' \
+                 'Running: 100.AddUsersTable\n\n' \
                  'Running: 110.Notice\n' \
                  '\t8: NOTICE:  WHO DAT? 87admin\n' \
                  '\t8: NOTICE:  Just me, 87admin\n' \
@@ -98,6 +139,41 @@ class TestUtil(object):
         print(rtn)
 
     @staticmethod
+    def create_table_owner_role():
+        psql = TestUtil.local_psql()
+        rtn = psql.run(
+                ["-c", f"CREATE ROLE {TestUtil.version_table_owner};"],
+                retcode=(0, 1)
+        )
+        print(rtn)
+
+    @staticmethod
+    def remove_table_owner_role():
+        psql = TestUtil.local_psql()
+        rtn = psql.run(
+                ["-c", f"DROP ROLE {TestUtil.version_table_owner};"],
+                retcode=(0, 1)
+        )
+        print(rtn)
+
+    @staticmethod
+    def get_table_owner(db_name: str, table_name: str):
+        psql = TestUtil.local_psql()
+        rtn = psql.run(
+                ["-d",
+                 db_name,
+                 "-A",
+                 "-c",
+                 f"SELECT tableowner FROM pg_tables where tablename = '{table_name}';"],
+                retcode=0
+        )
+        rtn_array = rtn[STDOUT].split("|")
+        owner = rtn_array[0].split("\n")[1]
+
+        print(owner)
+        return owner
+
+    @staticmethod
     def drop_database():
         psql = TestUtil.local_psql()
         rtn = psql.run(
@@ -105,6 +181,30 @@ class TestUtil(object):
             retcode=0,
         )
         print(rtn)
+
+    @staticmethod
+    def remove_rev_recs(db_name: str):
+        psql = TestUtil.local_psql()
+        psql.run(
+                ["-d",
+                 db_name,
+                 "-A",
+                 "-c",
+                 "DELETE FROM repository_version;"],
+                retcode=0
+        )
+
+    @staticmethod
+    def add_rev_recs(db_name: str):
+        psql = TestUtil.local_psql()
+        psql.run(
+                ["-d",
+                 db_name,
+                 "-A",
+                 "-c",
+                 "INSERT INTO repository_version (repository_name, is_production, env) VALUES ('test', false, 'test');"],
+                retcode=0
+        )
 
     @staticmethod
     def delete_file(file_name):
@@ -141,9 +241,23 @@ class TestUtil(object):
         copy2(f"{TestUtil.config_file}.default", TestUtil.config_file)
 
     @staticmethod
+    def get_static_snapshot_config():
+        copy2(f"{TestUtil.config_file}.snapshot.default", TestUtil.config_file)
+
+    @staticmethod
     def get_static_data_config():
         ensure_dir_exists(TestUtil.error_set_data_folder_path)
         copy2(TestUtil.data_file_default, TestUtil.test_version_data_path)
+
+    @staticmethod
+    def get_static_data_applying_config():
+        ensure_dir_exists(TestUtil.error_set_data_folder_path)
+        copy2(TestUtil.data_file_applying_default, TestUtil.test_version_data_path)
+
+    @staticmethod
+    def get_static_app_error_set_data():
+        ensure_dir_exists(TestUtil.error_set_data_folder_path)
+        copy2(TestUtil.app_error_set_file_default, TestUtil.app_error_set_data_path)
 
     @staticmethod
     def get_static_error_set_data():
@@ -153,6 +267,18 @@ class TestUtil(object):
     @staticmethod
     def get_static_bad_config():
         copy2(f"{TestUtil.config_file}.bad.default", TestUtil.config_file)
+
+    @staticmethod
+    def get_static_bad_repositories_config():
+        copy2(f"{TestUtil.config_file}.bad.repositories.default", TestUtil.config_file)
+
+    @staticmethod
+    def get_static_bad_config_multi_repos():
+        copy2(f"{TestUtil.config_file}.bad.multi.repos.default", TestUtil.config_file)
+
+    @staticmethod
+    def get_static_invalid_config():
+        copy2(f"{TestUtil.config_file}.badjson.default", TestUtil.config_file)
 
     @staticmethod
     def get_error_sql():
@@ -171,6 +297,10 @@ class TestUtil(object):
             f"{TestUtil.error_sql_rollback_path}.good.default",
             TestUtil.error_sql_rollback_path,
         )
+
+    @staticmethod
+    def get_backup_file_name(repo: str):
+        return os.listdir(f"databases/_databaseBackup/{repo}")
 
     @staticmethod
     def get_repo_dict():

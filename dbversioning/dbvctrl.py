@@ -58,11 +58,21 @@ def parse_args(args):
         help="Push data from repository to database",
         action="store_true",
     )
+    group.add_argument(
+        Const.SET_VERSION_STORAGE_TABLE_OWNER_ARG,
+        help="Set postgres owner for the version storage table",
+    )
 
     parser.add_argument(
         Const.FORCE_ARG,
         help="Force push data from repository to database",
         action="store_true",
+    )
+
+    group.add_argument(
+            Const.DUMP_DATABASE_ARG,
+            help="Dump database from server to local file (requires confirmation)",
+            action="store_true",
     )
 
     parser.add_argument(
@@ -226,6 +236,18 @@ def push_repo_data_to_db(arg_set):
         db_conn=db_conn,
         repo_name=arg_set.repo,
         force=arg_set.force,
+        table_list=arg_set.t,
+        is_production=arg_set.production,
+    )
+
+
+def repo_database_dump(arg_set):
+    vdb = VersionedDbHelper()
+    db_conn = connection_list(arg_set)
+
+    vdb.repo_database_dump(
+        db_conn=db_conn,
+        repo_name=arg_set.repo,
         is_production=arg_set.production,
     )
 
@@ -267,6 +289,11 @@ def create_repository_env_type(repo_name: str, env: str):
 def remove_repository_env_type(repo_name: str, env: str):
     vdb = VersionedDbHelper()
     vdb.remove_repository_environment(repo_name=repo_name, env=env)
+
+
+def set_repository_version_storage_owner(repo_name: str, owner: str):
+    vdb = VersionedDbHelper()
+    vdb.set_repository_version_storage_owner(repo_name=repo_name, owner=owner)
 
 
 def set_repository_env_version(arg_set):
@@ -367,6 +394,9 @@ class DbVctrl(object):
             elif arg_set.rmenv:
                 # -rmenv test -repo test_db
                 remove_repository_env_type(repo_name=arg_set.repo, env=arg_set.rmenv)
+            elif arg_set.set_version_storage_owner:
+                # --set-version-storage-owner dbowner -repo test_db
+                set_repository_version_storage_owner(repo_name=arg_set.repo, owner=arg_set.set_version_storage_owner)
             elif arg_set.setenv:
                 # -setenv test -repo test_db -v 1.0.0
                 set_repository_env_version(arg_set)
@@ -407,11 +437,17 @@ class DbVctrl(object):
                 # -pulldata -t error_set -t membership.user_state -repo test_db -d postgresPlay
                 pull_table_for_repo_data(arg_set)
             elif arg_set.pushdata:
-                # -pushdata -repo test_db -d postgresPlay
+                # -pushdata [-t error_set ... ] -repo test_db -d postgresPlay
                 push_repo_data_to_db(arg_set)
             elif arg_set.version:
                 # -version
                 show_version()
+            elif arg_set.dump_database:
+                # -dump-database -repo test_db -d postgresPlay [-production]
+                if user_yes_no_query("Do you want to dump the database?"):
+                    repo_database_dump(arg_set)
+                else:
+                    error_message("Dump database cancelled.")
             else:
                 prj_name = pkg_resources.require(Const.PGVCTRL)[0].project_name
                 error_message(
@@ -431,6 +467,11 @@ def main():
     arg_set = parse_args(sys.argv[1:])
     c = DbVctrl()
     c.run(arg_set)
+
+
+def user_yes_no_query(question):
+    sys.stdout.write('%s [YES/NO]\n' % question)
+    return input() == 'YES'
 
 
 if __name__ == "__main__":

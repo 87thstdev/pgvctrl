@@ -15,4 +15,5 @@ htmlcov
 /test/dbRepoConfig.json
 /test/databases/_fastForward/
 /test/databases/_snapshots/
+/test/databases/_databaseBackup/
 /test/databases/pgvctrl_test/data/*.sql

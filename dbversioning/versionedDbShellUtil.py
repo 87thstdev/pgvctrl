@@ -21,15 +21,14 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionTooManyVersionRecordsFound,
     VersionedDbExceptionDatabaseAlreadyInit,
     VersionedDbExceptionSqlExecutionError,
-    VersionedDbExceptionBadDataConfigFile,
-    VersionedDbExceptionMissingDataTable,
+    VersionedDbExceptionBadDataConfigFile
 )
 from dbversioning.repositoryconf import (
     RepositoryConf,
     ROLLBACK_FILE_ENDING,
-    INCLUDE_TABLES,
-    EXCLUDE_TABLES,
-)
+    INCLUDE_TABLES_PROP,
+    EXCLUDE_TABLES_PROP,
+    Version_Table)
 
 DATA_DUMP_CONFIG_NAME = "data.json"
 RETCODE = 0
@@ -66,7 +65,7 @@ class VersionDbShellUtil:
 
     @staticmethod
     def init_db(
-        repo_name, v_stg=None, db_conn=None, is_production=False, env=None
+        repo_name: str, v_stg: Version_Table=None, db_conn=None, is_production: bool=False, env: str=None
     ):
         psql = _local_psql()
         conf = RepositoryConf()
@@ -75,16 +74,21 @@ class VersionDbShellUtil:
         try:
             dbv = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
             if dbv:
-                warning_message("Already initialized")
-                return False
+                raise VersionedDbExceptionDatabaseAlreadyInit()
 
         except VersionedDbExceptionMissingVersionTable:
             missing_tbl = True
-        except VersionedDbExceptionDatabaseAlreadyInit as e:
-            error_message(e.message)
-            return False
 
-        create_v_tbl = f"CREATE TABLE IF NOT EXISTS {v_stg.tbl} (" f"{v_stg.v} VARCHAR," f"{v_stg.repo} VARCHAR NOT NULL," f"{v_stg.is_prod} BOOLEAN NOT NULL," f"{v_stg.env} VARCHAR," f"{v_stg.rev} INTEGER NOT NULL DEFAULT(0)," f"{v_stg.hash} JSONB);"
+        create_v_tbl = f"CREATE TABLE IF NOT EXISTS {v_stg.tbl} (" \
+                       f"{v_stg.v} VARCHAR," \
+                       f"{v_stg.repo} VARCHAR NOT NULL," \
+                       f"{v_stg.is_prod} BOOLEAN NOT NULL," \
+                       f"{v_stg.env} VARCHAR," \
+                       f"{v_stg.rev} INTEGER NOT NULL DEFAULT(0)," \
+                       f"{v_stg.hash} JSONB);"
+
+        if v_stg.owner:
+            create_v_tbl = f"SET ROLE {v_stg.owner}; {create_v_tbl} RESET ROLE;"
 
         if env:
             env_var = f"'{env}'"
@@ -159,11 +163,10 @@ class VersionDbShellUtil:
         conf = RepositoryConf()
 
         ensure_dir_exists(conf.get_data_dump_dir(repo_name))
-        table_list = VersionDbShellUtil._get_data_dump_dict(repo_name)
+        table_list = VersionDbShellUtil.get_data_dump_dict(repo_name)
 
         if len(table_list) == 0:
-            information_message("No tables to pull!")
-            return
+            raise VersionedDbException("No tables to pull!")
 
         for tbl in table_list:
             sql_loc = conf.get_data_dump_sql_dir(
@@ -181,12 +184,9 @@ class VersionDbShellUtil:
             pg_dump_parm_list.append("-f")
             pg_dump_parm_list.append(sql_loc)
 
-            try:
-                size_num, size_txt = get_table_size(tbl, db_conn)
-                information_message(f"Pulling: {tbl['table']}, {size_txt}")
-                pg_dump(pg_dump_parm_list, retcode=0)
-            except ProcessExecutionError as e:
-                raise VersionedDbExceptionSqlExecutionError(e.stderr)
+            size_num, size_txt = get_table_size(tbl, db_conn)
+            information_message(f"Pulling: {tbl['table']}, {size_txt}")
+            pg_dump(pg_dump_parm_list, retcode=0)
 
     @staticmethod
     def apply_sql_file(db_conn, sql_file, break_on_error=False):
@@ -286,29 +286,8 @@ class VersionDbShellUtil:
         ensure_dir_exists(repo_ff)
 
         ff = os.path.join(repo_ff, f"{dbver.version}.sql")
-        inc_sch = conf.get_repo_include_schemas(repo_name)
-        exc_sch = conf.get_repo_exclude_schemas(repo_name)
 
-        inc_tbl = conf.get_repo_list(
-            repo_name=repo_name, list_name=INCLUDE_TABLES
-        )
-        exc_tbl = conf.get_repo_list(
-            repo_name=repo_name, list_name=EXCLUDE_TABLES
-        )
-        tbl_args = []
-        schema_args = []
-
-        if inc_sch:
-            schema_args = _build_arg_list(inc_sch, Const.PG_INCLUDE_SCHEMA_ARG)
-
-        if exc_sch:
-            schema_args = _build_arg_list(exc_sch, Const.PG_EXCLUDE_SCHEMA_ARG)
-
-        if inc_tbl:
-            tbl_args = _build_arg_list(inc_tbl, Const.PG_INCLUDE_TABLE_ARG)
-
-        if exc_tbl:
-            tbl_args = _build_arg_list(exc_tbl, Const.PG_EXCLUDE_TABLE_ARG)
+        schema_args, tbl_args = _get_schema_table_args(conf, repo_name)
 
         pg_dump(db_conn, "-s", "-f", ff, schema_args, tbl_args, retcode=0)
 
@@ -332,6 +311,27 @@ class VersionDbShellUtil:
         ss = os.path.join(repo_sh, f"{dbver.version}.{d}.sql")
 
         pg_dump(db_conn, "-s", "-f", ss, retcode=0)
+
+    @staticmethod
+    def dump_database_backup(db_conn, v_stg, dump_options: List[str]):
+        pg_dump = _local_pg_dump()
+        conf = RepositoryConf()
+
+        dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
+
+        ensure_dir_exists(conf.database_backup_dir())
+
+        repo_db_bak = os.path.join(conf.database_backup_dir(), dbver.repo_name)
+
+        ensure_dir_exists(repo_db_bak)
+
+        d = datetime.datetime.now().strftime(SNAPSHOT_DATE_FORMAT)
+
+        db_bak = os.path.join(repo_db_bak, f"{dbver.repo_name}.{d}.sql")
+
+        schema_args, tbl_args = _get_schema_table_args(conf, dbver.repo_name)
+
+        pg_dump(db_conn, dump_options, schema_args, tbl_args, "-f", db_bak, retcode=0)
 
     @staticmethod
     def display_db_instance_version(v_tbl, db_conn):
@@ -376,10 +376,10 @@ class VersionDbShellUtil:
 
     @staticmethod
     def get_col_inserts_setting(repo_name, tbl_name):
-        conf = VersionDbShellUtil._get_data_dump_dict(repo_name)
-        x = [tbl for tbl in conf if tbl["table"] == tbl_name]
+        conf = VersionDbShellUtil.get_data_dump_dict(repo_name)
+        x = [tbl for tbl in conf if tbl[Const.DATA_TABLE] == tbl_name]
         if len(x) == 1:
-            return x[0]["column-inserts"]
+            return x[0][Const.DATA_COLUMN_INSERTS]
         elif len(x) > 1:
             raise VersionedDbExceptionBadDataConfigFile()
 
@@ -388,15 +388,19 @@ class VersionDbShellUtil:
 
     @staticmethod
     def add_col_inserts_setting(repo_name, tbl_name, value):
-        conf = VersionDbShellUtil._get_data_dump_dict(repo_name)
+        conf = VersionDbShellUtil.get_data_dump_dict(repo_name)
         conf_file = VersionDbShellUtil._get_data_dump_config_file(repo_name)
 
-        x = [tbl for tbl in conf if tbl["table"] == tbl_name]
+        x = [tbl for tbl in conf if tbl[Const.DATA_TABLE] == tbl_name]
 
         if len(x) == 0:
-            conf.append({"table": tbl_name, "column-inserts": value})
+            conf.append({
+                Const.DATA_TABLE: tbl_name,
+                Const.DATA_COLUMN_INSERTS: value,
+                Const.DATA_APPLY_ORDER: 0
+            })
         else:
-            x[0]["column-inserts"] = value
+            x[0][Const.DATA_COLUMN_INSERTS] = value
 
         with open(conf_file, "w") as f:
             str_ = json.dumps(
@@ -409,11 +413,13 @@ class VersionDbShellUtil:
             f.write(to_unicode(str_))
 
     @staticmethod
-    def _get_data_dump_dict(repo_name):
+    def get_data_dump_dict(repo_name):
         d = None
         conf_file = VersionDbShellUtil._get_data_dump_config_file(repo_name)
 
         if not os.path.isfile(conf_file):
+            conf = RepositoryConf()
+            ensure_dir_exists(conf.get_data_dump_dir(repo_name))
             make_data_file(conf_file)
 
         try:
@@ -480,15 +486,41 @@ def _good_version_table(v_tbl, db_conn):
     return good_table
 
 
+def _get_schema_table_args(conf, repo_name: str) -> (List[str], List[str]):
+    inc_sch = conf.get_repo_include_schemas(repo_name)
+    exc_sch = conf.get_repo_exclude_schemas(repo_name)
+
+    inc_tbl = conf.get_repo_list(
+            repo_name=repo_name, list_name=INCLUDE_TABLES_PROP
+    )
+    exc_tbl = conf.get_repo_list(
+            repo_name=repo_name, list_name=EXCLUDE_TABLES_PROP
+    )
+
+    tbl_args = []
+    schema_args = []
+
+    if inc_sch:
+        schema_args = _build_arg_list(inc_sch, Const.PG_INCLUDE_SCHEMA_ARG)
+
+    if exc_sch:
+        schema_args = _build_arg_list(exc_sch, Const.PG_EXCLUDE_SCHEMA_ARG)
+
+    if inc_tbl:
+        tbl_args = _build_arg_list(inc_tbl, Const.PG_INCLUDE_TABLE_ARG)
+
+    if exc_tbl:
+        tbl_args = _build_arg_list(exc_tbl, Const.PG_EXCLUDE_TABLE_ARG)
+
+    return schema_args, tbl_args
+
+
 def get_table_size(tbl, db_conn):
     psql = _local_psql()
 
     tbl_sql = f"SELECT pg_size_pretty(pg_total_relation_size('{tbl['table']}')) " f"As tbl_size, pg_total_relation_size('{tbl['table']}') num_size;"
 
     rtn = psql[db_conn, Const.TBL_ARG, "-A", "-c", tbl_sql].run()
-    if rtn[RETCODE] > 0:
-
-        raise VersionedDbExceptionMissingDataTable(tbl["table"])
 
     rtn_array = rtn[STDOUT].split("|")
     size_txt = rtn_array[0]
@@ -531,8 +563,16 @@ def information_message(message):
     print(colors.blue & colors.bold | message)
 
 
+def notice_message(msg):
+    print(colors.green & colors.bold | msg)
+
+
 def repo_version_information_message(version, env):
     print(colors.blue & colors.bold | version, colors.green & colors.bold | env)
+
+
+def sql_rollback_information_message(sql_message: str):
+    print(colors.blue & colors.bold | sql_message, colors.green & colors.bold | "ROLLBACK")
 
 
 def repo_unregistered_message(repo_name):

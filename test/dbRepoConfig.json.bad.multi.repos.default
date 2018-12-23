@@ -1,6 +1,5 @@
 {
     "autoSnapshots": false,
-    "dumpDatabaseOptionsDefault": "-Fc -Z 9",
     "defaultVersionStorage": {
         "env": "env",
         "isProduction": "is_production",
@@ -13,10 +12,19 @@
     },
     "repositories": [
         {
-           "dumpDatabaseOptions": "-Fc -Z 9",
-           "envs": {
-                "test": "0.0.0"
-            },
+            "name": "pgvctrl_test",
+            "versionStorage": {
+                "env": "env",
+                "isProduction": "is_production",
+                "repository": "repository_name",
+                "revision": "revision",
+                "table": "repository_version",
+                "version": "version",
+                "versionHash": "version_hash",
+                "tableOwner": null
+            }
+        },
+        {
             "name": "pgvctrl_test",
             "versionStorage": {
                 "env": "env",

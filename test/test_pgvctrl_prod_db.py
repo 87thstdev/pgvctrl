@@ -6,7 +6,7 @@ from test.test_util import (
 
 NO_PROD_FLG = "Production changes need the -production flag: {0}\n"
 NO_PROD_FLG_APPLY = NO_PROD_FLG.format(Const.APPLY_ARG)
-NO_PROD_FLG_PUSHDATA = NO_PROD_FLG.format(Const.PULL_DATA_ARG)
+NO_PROD_FLG_PUSHDATA = NO_PROD_FLG.format(Const.PUSH_DATA_ARG)
 
 NO_PROD_USE = "Production changes not allowed for: {0}\n"
 NO_USE_APPLYFF = "Fast forwards only allowed on empty databases.\n"

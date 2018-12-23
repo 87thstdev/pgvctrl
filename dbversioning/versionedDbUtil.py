@@ -6,12 +6,10 @@ import simplejson as json
 from os.path import join
 
 import dbversioning.dbvctrlConst as Const
-from dbversioning.osUtil import dir_exists
 from dbversioning.versionedDbHelper import get_valid_elements
 from dbversioning.errorUtil import (
     VersionedDbExceptionFileExits,
     VersionedDbExceptionVersionIsHigherThanApplying,
-    VersionedDbExceptionFolderMissing,
     VersionedDbExceptionRepoVersionExits,
     VersionedDbExceptionRepoVersionDoesNotExits,
     VersionedDbExceptionProductionChangeNoProductionFlag,
@@ -19,31 +17,34 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionFastForwardNotAllowed,
     VersionedDbExceptionRepoDoesNotExits,
     VersionedDbExceptionRepoExits,
-    VersionedDbExceptionNoVersionFound,
     VersionedDbExceptionEnvDoesMatchDbEnv,
     VersionedDbExceptionRepoVersionNumber,
-    VersionedDbException, VersionedDbExceptionRepoNameInvalid)
+    VersionedDbExceptionRepoNameInvalid)
 from dbversioning.versionedDbShellUtil import (
     VersionDbShellUtil,
     error_message,
     information_message,
-    DATA_DUMP_CONFIG_NAME,
     repo_version_information_message,
     repo_unregistered_message,
-)
-from dbversioning.versionedDb import VersionDb, FastForwardDb, GenericSql
+    notice_message,
+    warning_message,
+    sql_rollback_information_message)
+from dbversioning.versionedDb import (
+    VersionDb,
+    FastForwardDb,
+    GenericSql)
 from dbversioning.repositoryconf import (
     RepositoryConf,
-    VERSION_STORAGE,
-    SNAPSHOTS,
-    FAST_FORWARD,
-    ROLLBACK_FILE_ENDING,
-    ENVS,
-    INCLUDE_SCHEMAS,
-    EXCLUDE_SCHEMAS,
-    INCLUDE_TABLES,
-    EXCLUDE_TABLES,
-)
+    VERSION_STORAGE_PROP,
+    SNAPSHOTS_DIR,
+    FAST_FORWARD_DIR,
+    DATABASE_BACKUP_DIR,
+    ENVS_PROP,
+    INCLUDE_SCHEMAS_PROP,
+    EXCLUDE_SCHEMAS_PROP,
+    INCLUDE_TABLES_PROP,
+    EXCLUDE_TABLES_PROP,
+    DUMP_DATABASE_OPTIONS_DEFAULT)
 
 to_unicode = str
 
@@ -70,7 +71,7 @@ class VersionedDbHelper:
         conf = RepositoryConf()
         root = conf.root()
 
-        ignored = {FAST_FORWARD, SNAPSHOTS}
+        ignored = {FAST_FORWARD_DIR, SNAPSHOTS_DIR, DATABASE_BACKUP_DIR}
         repo_locations = get_valid_elements(root, ignored)
 
         for repo_location in repo_locations:
@@ -84,20 +85,43 @@ class VersionedDbHelper:
             repo_conf = conf.get_repo(db_repo.db_name)
             if repo_conf:
                 information_message(db_repo.db_name)
+                inc_exc = []
+                if INCLUDE_SCHEMAS_PROP in repo_conf:
+                    inc_exc.append(f"{INCLUDE_SCHEMAS_PROP}: {repo_conf[INCLUDE_SCHEMAS_PROP]}")
+
+                if EXCLUDE_SCHEMAS_PROP in repo_conf:
+                    inc_exc.append(f"{EXCLUDE_SCHEMAS_PROP}: {repo_conf[EXCLUDE_SCHEMAS_PROP]}")
+
+                if INCLUDE_TABLES_PROP in repo_conf:
+                    inc_exc.append(f"{INCLUDE_TABLES_PROP}: {repo_conf[INCLUDE_TABLES_PROP]}")
+
+                if EXCLUDE_TABLES_PROP in repo_conf:
+                    inc_exc.append(f"{EXCLUDE_TABLES_PROP}: {repo_conf[EXCLUDE_TABLES_PROP]}")
+
+                if inc_exc:
+                    msg = ", ".join(inc_exc)
+                    notice_message(f"\t({msg})")
             else:
                 repo_unregistered_message(db_repo.db_name)
-            for v in v_sorted:
-                env = ""
-                if repo_conf and repo_conf[ENVS]:
-                    for e in repo_conf[ENVS]:
-                        if repo_conf[ENVS][e] == v.version_number:
-                            env = e
 
-                repo_version_information_message(f"\tv {v.full_name}", f"{env}")
+            for v in v_sorted:
+                env = []
+                if repo_conf and repo_conf[ENVS_PROP]:
+                    for e in repo_conf[ENVS_PROP]:
+                        if repo_conf[ENVS_PROP][e] == v.version_number:
+                            env.append(e)
+                if env:
+                    repo_version_information_message(f"\tv {v.full_name}", f"{env}")
+                else:
+                    repo_version_information_message(f"\tv {v.full_name}", "")
 
                 if verbose:
                     for s in v.sql_files:
-                        information_message(f"\t\t{s.number} {s.name}")
+                        sql_msg = f"\t\t{s.number} {s.name}"
+                        if s.is_rollback:
+                            sql_rollback_information_message(sql_message=sql_msg)
+                        else:
+                            information_message(message=sql_msg)
 
     @staticmethod
     def valid_repository(repository: str):
@@ -125,9 +149,6 @@ class VersionedDbHelper:
         root = conf.root()
 
         vdb = VersionDb(join(os.getcwd(), root, repository))
-
-        if version is None:
-            raise VersionedDbExceptionNoVersionFound()
 
         rtn = [
             v
@@ -218,35 +239,58 @@ class VersionedDbHelper:
             error_message(f"Fast forward not found {full_version}")
 
     @staticmethod
-    def push_data_to_database(repo_name, db_conn, force, is_production):
+    def push_data_to_database(repo_name, db_conn, force, is_production, table_list=None):
         v_stg = VersionedDbHelper._get_v_stg(repo_name)
         dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
 
         if is_production != dbver.is_production:
             raise VersionedDbExceptionProductionChangeNoProductionFlag(
-                Const.PULL_DATA_ARG
+                Const.PUSH_DATA_ARG
             )
 
         conf = RepositoryConf()
         data_files = []
         data_dump = conf.get_data_dump_dir(repo_name)
+        data_push_set = VersionDbShellUtil.get_data_dump_dict(repo_name)
+        if table_list:
+            data_push_set = [t for t in data_push_set if t[Const.DATA_TABLE] in table_list]
+        apply_order = set([p[Const.DATA_APPLY_ORDER] for p in data_push_set])
 
-        if dir_exists(data_dump):
-            ignored = {DATA_DUMP_CONFIG_NAME}
-            data_file_list = get_valid_elements(
-                conf.get_data_dump_dir(repo_name), ignored
+        if len(data_push_set) == 0:
+            warning_message("No tables found to push")
+
+        for o in apply_order:
+            for data_table in data_push_set:
+                if data_table[Const.DATA_APPLY_ORDER] == o:
+                    sql_path = os.path.join(data_dump, f"{data_table[Const.DATA_TABLE]}.sql")
+                    gs = GenericSql(sql_path)
+                    data_files.append(gs)
+
+        VersionedDbHelper.apply_data_sql_files_to_database(
+            db_conn, data_files, force
+        )
+
+    @staticmethod
+    def repo_database_dump(repo_name, db_conn, is_production):
+        v_stg = VersionedDbHelper._get_v_stg(repo_name)
+        dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
+
+        if is_production != dbver.is_production:
+            raise VersionedDbExceptionProductionChangeNoProductionFlag(
+                Const.DUMP_DATABASE_ARG
             )
+        # dump_database_backup
+        conf = RepositoryConf()
+        dump_options = conf.get_repo_dump_database_options(repo_name=repo_name)
 
-            for sql in data_file_list:
-                sql_path = os.path.join(data_dump, sql)
-                gs = GenericSql(sql_path)
-                data_files.append(gs)
+        if not dump_options:
+            dump_options = DUMP_DATABASE_OPTIONS_DEFAULT
 
-            VersionedDbHelper.apply_data_sql_files_to_database(
-                db_conn, data_files, force
-            )
-        else:
-            raise VersionedDbExceptionFolderMissing(data_dump)
+        dump_options_list = dump_options.split(" ")
+
+        VersionDbShellUtil.dump_database_backup(db_conn, v_stg, dump_options_list)
+        information_message(f"Repository {repo_name} database backup")
+
 
     @staticmethod
     def pull_table_for_repo_data(repo_name, db_conn, table_list=None):
@@ -294,7 +338,7 @@ class VersionedDbHelper:
         standing = VersionedDbHelper._version_standing(ver_nums, repo_nums)
         if standing < 0:
             raise VersionedDbExceptionVersionIsHigherThanApplying(
-                ver_nums, version
+                dbver.version, version
             )
 
         VersionedDbHelper.apply_sql_files_to_database(
@@ -340,7 +384,7 @@ class VersionedDbHelper:
     @staticmethod
     def apply_sql_files_to_database(db_conn, sql_files):
         for sql_file in sql_files:
-            if not sql_file.path.endswith(ROLLBACK_FILE_ENDING):
+            if not sql_file.is_rollback:
                 VersionDbShellUtil.apply_sql_file(db_conn, sql_file)
 
     @staticmethod
@@ -427,6 +471,15 @@ class VersionedDbHelper:
         return RepositoryConf.get_repo_env(repo_name=repo_name, env=env)
 
     @staticmethod
+    def set_repository_version_storage_owner(repo_name: str, owner: str):
+        VersionedDbHelper.valid_repository_throwing(repo_name)
+
+        if RepositoryConf.set_repo_version_storage_owner(repo_name=repo_name, owner=owner):
+            information_message(
+                f"Repository version storage owner set: {repo_name} {owner}"
+            )
+
+    @staticmethod
     def set_repository_environment_version(repo_name, env, version):
         VersionedDbHelper.valid_repository_throwing(repo_name)
         version_nums = VersionedDbHelper.get_version_numbers(version)
@@ -440,7 +493,7 @@ class VersionedDbHelper:
             )
 
         if RepositoryConf.set_repo_env(
-            repo_name=repo_name, env=env, version=version
+            repo_name=repo_name, env=env, version=version_found[0].version_number
         ):
             information_message(
                 f"Repository environment set: {repo_name} {env} {version}"
@@ -453,8 +506,8 @@ class VersionedDbHelper:
         if RepositoryConf.balance_repo_lists(
             repo_name=repo_name,
             add_list=include_schemas,
-            add_to=INCLUDE_SCHEMAS,
-            remove_from=EXCLUDE_SCHEMAS,
+            add_to=INCLUDE_SCHEMAS_PROP,
+            remove_from=EXCLUDE_SCHEMAS_PROP,
         ):
             information_message(
                 f"Repository added: {repo_name} include-schemas {include_schemas}"
@@ -467,7 +520,7 @@ class VersionedDbHelper:
         if RepositoryConf.remove_from_repo_list(
             repo_name=repo_name,
             remove_list=rminclude_schemas,
-            remove_from=INCLUDE_SCHEMAS,
+            remove_from=INCLUDE_SCHEMAS_PROP,
         ):
             information_message(
                 f"Repository removed: {repo_name} include-schemas {rminclude_schemas}"
@@ -480,8 +533,8 @@ class VersionedDbHelper:
         if RepositoryConf.balance_repo_lists(
             repo_name=repo_name,
             add_list=exclude_schemas,
-            add_to=EXCLUDE_SCHEMAS,
-            remove_from=INCLUDE_SCHEMAS,
+            add_to=EXCLUDE_SCHEMAS_PROP,
+            remove_from=INCLUDE_SCHEMAS_PROP,
         ):
             information_message(
                 f"Repository added: {repo_name} exclude-schemas {exclude_schemas}"
@@ -494,7 +547,7 @@ class VersionedDbHelper:
         if RepositoryConf.remove_from_repo_list(
             repo_name=repo_name,
             remove_list=rmexclude_schemas,
-            remove_from=EXCLUDE_SCHEMAS,
+            remove_from=EXCLUDE_SCHEMAS_PROP,
         ):
             information_message(
                 f"Repository removed: {repo_name} exclude-schemas {rmexclude_schemas}"
@@ -507,8 +560,8 @@ class VersionedDbHelper:
         if RepositoryConf.balance_repo_lists(
             repo_name=repo_name,
             add_list=include_tables,
-            add_to=INCLUDE_TABLES,
-            remove_from=EXCLUDE_TABLES,
+            add_to=INCLUDE_TABLES_PROP,
+            remove_from=EXCLUDE_TABLES_PROP,
         ):
             information_message(
                 f"Repository added: {repo_name} include-table {include_tables}"
@@ -521,7 +574,7 @@ class VersionedDbHelper:
         if RepositoryConf.remove_from_repo_list(
             repo_name=repo_name,
             remove_list=rminclude_table,
-            remove_from=INCLUDE_TABLES,
+            remove_from=INCLUDE_TABLES_PROP,
         ):
             information_message(
                 f"Repository removed: {repo_name} include-table {rminclude_table}"
@@ -534,8 +587,8 @@ class VersionedDbHelper:
         if RepositoryConf.balance_repo_lists(
             repo_name=repo_name,
             add_list=exclude_tables,
-            add_to=EXCLUDE_TABLES,
-            remove_from=INCLUDE_TABLES,
+            add_to=EXCLUDE_TABLES_PROP,
+            remove_from=INCLUDE_TABLES_PROP,
         ):
             information_message(
                 f"Repository added: {repo_name} exclude-table {exclude_tables}"
@@ -548,7 +601,7 @@ class VersionedDbHelper:
         if RepositoryConf.remove_from_repo_list(
             repo_name=repo_name,
             remove_list=rmexclude_table,
-            remove_from=EXCLUDE_TABLES,
+            remove_from=EXCLUDE_TABLES_PROP,
         ):
             information_message(
                 f"Repository removed: {repo_name} exclude-table {rmexclude_table}"
@@ -579,7 +632,7 @@ class VersionedDbHelper:
         v_stg = None
 
         if repo:
-            v_stg = repo[VERSION_STORAGE]
+            v_stg = repo[VERSION_STORAGE_PROP]
         else:
             raise VersionedDbExceptionRepoDoesNotExits(repo_name)
 

@@ -1,0 +1,15 @@
+{
+    "autoSnapshots": true,
+    "defaultVersionStorage": {
+        "env": "env",
+        "isProduction": "is_production",
+        "repository": "repository_name",
+        "revision": "revision",
+        "table": "repository_version",
+        "tableOwner": null,
+        "version": "version",
+        "versionHash": "version_hash"
+    },
+    "repositoriesBAD": [],
+    "root": "databases"
+}
