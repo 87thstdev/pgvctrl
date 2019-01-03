@@ -11,7 +11,7 @@ def readme():
 
 setup(
     name="pgvctrl",
-    version="0.8.4",
+    version="0.8.5",
     description="postgreSQL database version control tool",
     long_description=readme(),
     python_requires=">=3.6",
