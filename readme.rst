@@ -664,4 +664,4 @@ This project is licensed under the MIT License, provided in repository.
 Authors
 -------
 
--  Heath Sutton - *Initial work* - `87th Street Development <>`__
+-  Heath Sutton - *Initial work* - `87th Street Development <https://github.com/87thstdev/pgvctrl/>`_.
