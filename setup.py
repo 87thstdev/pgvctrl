@@ -4,18 +4,16 @@ from pathlib import Path
 CURRENT_DIR = Path(__file__).parent
 
 
-def get_long_description() -> str:
-    readme_md = CURRENT_DIR / "README.md"
-    with open(readme_md, encoding="utf8") as ld_file:
-        return ld_file.read()
+def readme():
+    with open('readme.rst') as f:
+        return f.read()
 
 
 setup(
     name="pgvctrl",
-    version="0.8.3",
+    version="0.8.4",
     description="postgreSQL database version control tool",
-    long_description=get_long_description(),
-    long_description_content_type="text/markdown",
+    long_description=readme(),
     python_requires=">=3.6",
     keywords="postgres version control sql migrate migration patch patches",
     author="Heath Sutton",
