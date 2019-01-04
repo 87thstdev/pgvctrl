@@ -7,9 +7,9 @@
         "repository": "repository_name",
         "revision": "revision",
         "table": "repository_version",
+        "tableOwner": null,
         "version": "version",
-        "versionHash": "version_hash",
-        "tableOwner": null
+        "versionHash": "version_hash"
     },
     "repositories": [
         {
@@ -24,9 +24,9 @@
                 "repository": "repository_name",
                 "revision": "revision",
                 "table": "repository_version",
+                "tableOwner": null,
                 "version": "version",
                 "versionHash": "version_hash",
-                "tableOwner": null
             }
         }
      ],
