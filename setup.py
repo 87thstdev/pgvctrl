@@ -11,9 +11,10 @@ def readme():
 
 setup(
     name="pgvctrl",
-    version="0.8.5",
+    version="0.8.6",
     description="postgreSQL database version control tool",
     long_description=readme(),
+    long_description_content_type="text/x-rst",
     python_requires=">=3.6",
     keywords="postgres version control sql migrate migration patch patches",
     author="Heath Sutton",

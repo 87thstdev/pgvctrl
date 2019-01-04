@@ -19,9 +19,9 @@ Getting started:
 pip install
 -----------
 
-.. raw:: html
+.. code-block::
 
-   <pre>pip install pgvctrl</pre>
+    pip install pgvctrl
 
 github
 ------
@@ -31,30 +31,30 @@ Download or clone the repository
 Install
 -------
 
-.. raw:: html
+.. code-block::
 
-   <pre>python setup.py install</pre>
+   python setup.py install
 
 Get help:
 
-.. raw:: html
+.. code-block::
 
-   <pre>pgvctrl -h</pre>
+   pgvctrl -h
 
 Get version:
 
-.. raw:: html
+.. code-block::
 
-   <pre>pgvctrl -version</pre>
+    pgvctrl -version
 
 Running the tests
 -----------------
 
 In the test directory:
 
-.. raw:: html
+.. code-block::
 
-   <pre>pytest</pre>
+   pytest
 
 .. _getting-started-1:
 
@@ -67,9 +67,9 @@ Getting Started
 
    1. Make a directory where you want you database repositories to live.
 
-      .. raw:: html
+      .. code-block::
 
-         <pre>pgvctrl -mkconf</pre>
+         pgvctrl -mkconf
 
       This will create a dbRepoConfig.json file.
 
@@ -77,21 +77,21 @@ Getting Started
 
    1. In the same directory as the dbRepoConfig.json file, run:
 
-      .. raw:: html
+      .. code-block::
 
-         <pre>pgvctrl -mkrepo [repository name]</pre>
+         pgvctrl -mkrepo [repository name]
 
       e.g
 
-      .. raw:: html
+      .. code-block::
 
-         <pre>pgvctrl -mkrepo mydb</pre>
+         pgvctrl -mkrepo mydb
 
       Output:
 
-      .. raw:: html
+      .. code-block::
 
-         <pre>Repository created: mydb</pre>
+         Repository created: mydb
 
    **What just happened?**\ 
 
@@ -104,56 +104,54 @@ Getting Started
 
    1. In the same directory as the dbRepoConfig.json file, run:
 
-      .. raw:: html
+      .. code-block::
 
-         <pre>pgvctrl -init [db connection information] -repo [repository name]</pre>
+         pgvctrl -init [db connection information] -repo [repository name]
 
       For production databases:
 
-      .. raw:: html
+      .. code-block::
 
-         <pre>pgvctrl -init [db connection information] -repo [repository name] -production</pre>
+         pgvctrl -init [db connection information] -repo [repository name] -production
 
       **NOTE:**\  **Database connection information should include at a
       minimum.**
 
    *Standard Information*
 
-   .. raw:: html
+   .. code-block::
 
-      <pre>-d [database name on server]</pre>
+      -d [database name on server]
 
    e.g.
 
-   .. raw:: html
+   .. code-block::
 
-      <pre>pgvctrl -init -d mylocaldb -repo mydb</pre>
+      pgvctrl -init -d mylocaldb -repo mydb
 
    Other information as needed:
 
-   .. raw:: html
+   .. code-block::
 
-      <pre>
        -host [postgres server host]
        -p [port]
        -u [database username]
        -pwd [password]
-       </pre>
 
    *Or*
 
    *Service
    Information*\ `.pg_service <https://www.postgresql.org/docs/9.6/static/libpq-pgservice.html>`__
 
-   .. raw:: html
+   .. code-block::
 
-      <pre>-svc [pg service information]</pre>
+      -svc [pg service information]
 
    e.g.
 
-   .. raw:: html
+   .. code-block::
 
-      <pre>pgvctrl -svc mydatabase:test -repo mydb</pre>
+      pgvctrl -svc mydatabase:test -repo mydb
 
    **What just happened?**\  After initialization is complete:
 
@@ -165,21 +163,21 @@ Getting Started
 
 5. Make repository version for repository: -mkv: Make version number:
 
-   .. raw:: html
+   .. code-block::
 
-      <pre>pgvctrl -mkv [x.x.x.version_name] -repo [repository name]</pre>
+      pgvctrl -mkv [x.x.x.version_name] -repo [repository name]
 
    e.g.:
 
-   .. raw:: html
+   .. code-block::
 
-      <pre>pgvctrl -mkv 1.0.0.my_new_version -repo mydb</pre>
+      pgvctrl -mkv 1.0.0.my_new_version -repo mydb
 
    Output:
 
-   .. raw:: html
+   .. code-block::
 
-      <pre>Version mydb/1.0.0.my_new_version created.</pre>
+      Version mydb/1.0.0.my_new_version created.
 
 6. Create sql change files in the versioned directory! These files will
    be used to update your database and should have the naming convention
@@ -188,57 +186,58 @@ Getting Started
    **Notes:**\  \* For best results with sql files, wrap all statements
    in a Transactions.
 
-   .. raw:: html
+   .. code-block::
 
-      <pre>
        BEGIN TRANSACTION;
            [Your sql changes] 
-       COMMIT;</pre>
+       COMMIT;
 
 7. List repositories and changes:
 
-   .. raw:: html
+   .. code-block::
 
-      <pre>pgvctrl -rl</pre>
+      pgvctrl -rl
 
    Output:
 
-   .. raw:: html
+   .. code-block::
 
-      <pre>mydb
-           v 1.0.0.my_new_version</pre>
+      mydb
+           v 1.0.0.my_new_version
 
    Verbose:
 
-   .. raw:: html
+   .. code-block::
 
-      <pre>pgvctrl -rlv</pre>
+      pgvctrl -rlv
 
    Output:
 
-   .. raw:: html
+   .. code-block::
 
-      <pre>mydb
+      mydb
            v 0.0.0.my_new_version
-               100 AddUsersTable</pre>
+               100 AddUsersTable
 
 8. When you are ready to apply your changes to your database:
 
-   .. raw:: html
+   .. code-block::
 
-      <pre>pgvctrl -apply -v [version number] -repo [repository name] [db connection information]</pre>
+      pgvctrl -apply -v [version number] -repo [repository name] [db connection information]
 
    e.g.
 
-   .. raw:: html
+   .. code-block::
 
-      <pre>pgvctrl -apply -v 0.0.0 -repo mydb -d mylocaldb</pre>
+      pgvctrl -apply -v 0.0.0 -repo mydb -d mylocaldb
 
    Output:
 
-   .. raw:: html
+   .. code-block::
 
-      <pre>Running: 100.AddUsersTable<br />...<br />Running: 500.AddStatesTable</pre>
+      Running: 100.AddUsersTable
+      ...
+      Running: 500.AddStatesTable
 
    **Notes:**\ 
 
@@ -258,11 +257,11 @@ Getting Started
 
    e.g
 
-   .. raw:: html
+   .. code-block::
 
-      <pre>
-       100.AddUsers.sql 
-       100.AddUsers_rollback.sql - rollback file for 100.AddUsers.sql</pre>
+
+        100.AddUsers.sql
+        100.AddUsers_rollback.sql - rollback file for 100.AddUsers.sql
 
    -  If your rollback file does not exist or fails, the -apply command
       fails and no sql after the first failing sql file will be ran.
@@ -281,78 +280,81 @@ Making and setting environments.
 -mkenv: Make environment type:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. raw:: html
+.. code-block::
 
-   <pre>pgvctrl -mkenv [env_name] -repo [repository name]</pre>
+   pgvctrl -mkenv [env_name] -repo [repository name]
 
 e.g.:
 
-.. raw:: html
+.. code-block::
 
-   <pre>pgvctrl -mkenv test -repo mydb</pre>
+   pgvctrl -mkenv test -repo mydb
 
 Output:
 
-.. raw:: html
+.. code-block::
 
-   <pre>Repository environment created: mydb test</pre>
+   Repository environment created: mydb test
 
 -setenv: Set environment type to a version:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. raw:: html
+.. code-block::
 
-   <pre>pgvctrl -setenv [env_name] -v [x.x] -repo [repository name]</pre>
+   pgvctrl -setenv [env_name] -v [x.x] -repo [repository name]
 
 e.g.:
 
-.. raw:: html
+.. code-block::
 
-   <pre>pgvctrl -setenv test -v 1.0.0 -repo mydb</pre>
+   pgvctrl -setenv test -v 1.0.0 -repo mydb
 
 Output:
 
-.. raw:: html
+.. code-block::
 
-   <pre>Repository environment set: mydb test 1.0.0</pre>
+   Repository environment set: mydb test 1.0.0
 
 -init database with environment:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. raw:: html
+.. code-block::
 
-   <pre>pgvctrl -init [db connection information] -repo [repository name] -setenv [env_name]</pre>
+   pgvctrl -init [db connection information] -repo [repository name] -setenv [env_name]
 
 For production databases:
 
-.. raw:: html
+.. code-block::
 
-   <pre>pgvctrl -init [db connection information] -repo [repository name] -setenv [env_name] -production</pre>
+   pgvctrl -init [db connection information] -repo [repository name] -setenv [env_name] -production
 
 Output:
 
-.. raw:: html
+.. code-block::
 
-   <pre>Database initialized environment [env_name]</pre>
+   Database initialized environment [env_name]
 
 -apply using -env:
 ~~~~~~~~~~~~~~~~~~
 
-.. raw:: html
+.. code-block::
 
-   <pre>pgvctrl -apply -env [env_name] -repo [repository name] [db connection information]</pre>
+   pgvctrl -apply -env [env_name] -repo [repository name] [db connection information]
 
 e.g.
 
-.. raw:: html
+.. code-block::
 
-   <pre>pgvctrl -apply -env test -repo mydb -d mylocaldb</pre>
+   pgvctrl -apply -env test -repo mydb -d mylocaldb
 
 Output:
 
-.. raw:: html
+.. code-block::
 
-   <pre>Running: 100.AddUsersTable<br />...<br />Running: 500.AddStatesTable<br />Applied: mydb v 1.1.0.MyVersion.0</pre>
+   Running: 100.AddUsersTable
+   ...
+   Running: 500.AddStatesTable
+   Applied: mydb v 1.1.0.MyVersion.0
 
 What else can pgvctrl do?
 -------------------------
@@ -360,59 +362,59 @@ What else can pgvctrl do?
 -chkver: Check the version and repo on a database:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. raw:: html
+.. code-block::
 
-   <pre>pgvctrl -chkver -repo [repository name] [db connection information]</pre>
+   pgvctrl -chkver -repo [repository name] [db connection information]
 
 e.g:
 
-.. raw:: html
+.. code-block::
 
-   <pre>pgvctrl -chkver -repo mydb -d mylocaldb</pre>
+    pgvctrl -chkver -repo mydb -d mylocaldb
 
 Output:
 
-.. raw:: html
+.. code-block::
 
-   <pre>mydb: 0.0.0.first.0</pre>
+   mydb: 0.0.0.first.0
 
 -rmenv: Remove environment type:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. raw:: html
+.. code-block::
 
-   <pre>pgvctrl -rmenv [env_name] -repo [repository name]</pre>
+   pgvctrl -rmenv [env_name] -repo [repository name]
 
 e.g.:
 
-.. raw:: html
+.. code-block::
 
-   <pre>pgvctrl -rmenv test -repo mydb</pre>
+   pgvctrl -rmenv test -repo mydb
 
 Output:
 
-.. raw:: html
+.. code-block::
 
-   <pre>Repository environment removed: mydb test</pre>
+   Repository environment removed: mydb test
 
 -rmrepo: Remove Repository
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. raw:: html
+.. code-block::
 
-   <pre>pgvctrl -rmrepo [repository name]</pre>
+   pgvctrl -rmrepo [repository name]
 
 e.g.:
 
-.. raw:: html
+.. code-block::
 
-   <pre>pgvctrl -rmrepo test</pre>
+   pgvctrl -rmrepo test
 
 Output:
 
-.. raw:: html
+.. code-block::
 
-   <pre>Repository removed: test</pre>
+   Repository removed: test
 
 **Notes:**\  \* If this command does not remove the folder from
 database, you must remove it and its contents yourself. This is a safety
@@ -432,16 +434,16 @@ Manage schemas (–schema, –exclude-schema, –rm-schema, –rmexclude-schema)
 
 To include a schema:
 
-.. raw:: html
+.. code-block::
 
-   <pre>pgvctrl --schema membership -repo pgvctrl_test</pre>
+   pgvctrl --schema membership -repo pgvctrl_test
 
 Output:
 
-.. raw:: html
+.. code-block::
 
-   <pre>Repository added: pgvctrl_test
-   include-schemas ['membership']</pre>
+   Repository added: pgvctrl_test
+   include-schemas ['membership']
 
 **What happens?**\ 
 
@@ -458,16 +460,16 @@ Manage table (–table, –exclude-table, –rm-table, –rmexclude-table):
 
 To include a table:
 
-.. raw:: html
+.. code-block::
 
-   <pre>pgvctrl --table membership.user -repo pgvctrl_test</pre>
+   pgvctrl --table membership.user -repo pgvctrl_test
 
 Output:
 
-.. raw:: html
+.. code-block::
 
-   <pre>Repository added: pgvctrl_test
-   include-table ['membership.user']</pre>
+   Repository added: pgvctrl_test
+   include-table ['membership.user']
 
 **Notes:** 1. If a table/schema is included and then later excluded, the
 table/schema is moved from included to exclude and vice versa. 1.
@@ -488,16 +490,16 @@ databases.
 -setff: Set version fast forward
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. raw:: html
+.. code-block::
 
-   <pre>-setff -repo [repository name] [db connection information]</pre>
+   -setff -repo [repository name] [db connection information]
 
 -applyff: Apply version fast forward
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. raw:: html
+.. code-block::
 
-   <pre>-applyff [Fast Forward Name] -repo [repository name] [db connection information]</pre>
+   -applyff [Fast Forward Name] -repo [repository name] [db connection information]
 
 Manage data (-pulldata, -pushdata)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -508,24 +510,24 @@ tables. 1. Testing data. 1. Just because your boss wants you too.
 -pulldata: Pull data from repository by table
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. raw:: html
+.. code-block::
 
-   <pre>-pulldata [-t [table name]] -repo [repository name] [db connection information]</pre>
+   -pulldata [-t [table name]] -repo [repository name] [db connection information]
 
 e.g.
 
-.. raw:: html
+.. code-block::
 
-   <pre>-pulldata -t error_set -t membership.user_state -repo mydb -d mylocaldb</pre>
+   -pulldata -t error_set -t membership.user_state -repo mydb -d mylocaldb
 
 Output:
 
-.. raw:: html
+.. code-block::
 
-   <pre>
+   
    Pulling: error_set
    Pulling: membership.user_state
-   </pre>
+   
 
 **What happens?**\ 
 
@@ -542,30 +544,28 @@ you can add one or more tables with the [-t [table name]] option.
 
 Once you have your data in your repository, pushing data is easy.
 
-.. raw:: html
+.. code-block::
 
-   <pre>-pushdata -repo [repository name] [db connection information]</pre>
+   -pushdata -repo [repository name] [db connection information]
 
 e.g. For pushing by table(s).
 
-.. raw:: html
+.. code-block::
 
-   <pre>-pushdata -t error_set -t process_state -repo mydb -d mylocaldb</pre>
+   -pushdata -t error_set -t process_state -repo mydb -d mylocaldb
 
 e.g. For pushing all tables.
 
-.. raw:: html
+.. code-block::
 
-   <pre>-pushdata -repo mydb -d mylocaldb</pre>
+   -pushdata -repo mydb -d mylocaldb
 
 Output:
 
-.. raw:: html
+.. code-block::
 
-   <pre>
    Pushing Data
    Running: error_set.sql
-   </pre>
 
 -dump-database: Dump the repositories database
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -574,9 +574,9 @@ You can dump the database based on the repository backing it. This means
 includes/excludes for schemas and tables are honored during the database
 backup.
 
-.. raw:: html
+.. code-block::
 
-   <pre>-dump-database -repo [repository name] [db connection information]</pre>
+   -dump-database -repo [repository name] [db connection information]
 
 dbRepoConfig.json
 ~~~~~~~~~~~~~~~~~
@@ -590,44 +590,44 @@ initialization. Each repository can be set up with different repository
 table structures as you see fit. The root setting tells pgvctrl where to
 look for the repositories.
 
-.. raw:: html
+.. code-block::
 
-   <pre>
-   {
-       "autoSnapshots": true,
-       "dumpDatabaseOptionsDefault": "-Fc -Z 9",
-       "defaultVersionStorage": {
-           "env": "env",
-           "isProduction": "is_production",
-           "repository": "repository_name",
-           "revision": "revision",
-           "table": "repository_version",
-           "version": "version",
-           "versionHash": "version_hash"
-       },
-       "repositories": [
-           {
-               "dumpDatabaseOptions": "-Fc -Z 9",
-               "envs": { 
-                   "your_test": "1.0.1",
-                   "your_qa": "1.0.0",
-                   "your_prod": "0.9.0"
-                },
-               "name": "YouRepoName",
-               "versionStorage": {
-                   "env": "env",
-                   "isProduction": "is_production",
-                   "repository": "repository_name",
-                   "revision": "revision",
-                   "table": "repository_version",
-                   "version": "version",
-                   "versionHash": "version_hash"
-               }
-           }
-       ],
-       "root": "databases"
-   }
-   </pre>
+    {
+        "autoSnapshots": true,
+        "dumpDatabaseOptionsDefault": "-Fc -Z 9",
+        "defaultVersionStorage": {
+            "env": "env",
+            "isProduction": "is_production",
+            "repository": "repository_name",
+            "revision": "revision",
+            "table": "repository_version",
+            "tableOwner": null,
+            "version": "version",
+            "versionHash": "version_hash"
+    },
+        "repositories": [
+            {
+            "dumpDatabaseOptions": "-Fc -Z 9",
+            "envs": {
+                "your_test": "1.0.1",
+                "your_qa": "1.0.0",
+                "your_prod": "0.9.0"
+            },
+            "name": "YouRepoName",
+                "versionStorage": {
+                    "env": "env",
+                    "isProduction": "is_production",
+                    "repository": "repository_name",
+                    "revision": "revision",
+                    "table": "repository_version",
+                    "tableOwner": null,
+                    "version": "version",
+                    "versionHash": "version_hash"
+                }
+            }
+        ],
+        "root": "databases"
+    }
 
 data.json
 ~~~~~~~~~
@@ -641,9 +641,8 @@ complete.
 
 Example data.json file:
 
-.. raw:: html
+.. code-block::
 
-   <pre>
    [
        {
            "column-inserts": true,
@@ -654,7 +653,6 @@ Example data.json file:
            "table": "membership.user_state"
        }
    ]
-   </pre>
 
 License
 -------
