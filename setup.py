@@ -5,13 +5,13 @@ CURRENT_DIR = Path(__file__).parent
 
 
 def readme():
-    with open('readme.rst') as f:
+    with open('readme.rst', encoding="utf8") as f:
         return f.read()
 
 
 setup(
     name="pgvctrl",
-    version="0.8.6",
+    version="0.8.7",
     description="postgreSQL database version control tool",
     long_description=readme(),
     long_description_content_type="text/x-rst",
