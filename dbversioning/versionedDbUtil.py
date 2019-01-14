@@ -259,6 +259,10 @@ class VersionedDbHelper:
         if len(data_push_set) == 0:
             warning_message("No tables found to push")
 
+        pre_sql = VersionedDbHelper._get_wrapper_push_sql(data_dump, Const.DATA_PRE_PUSH_FILE)
+        if pre_sql:
+            data_files.append(pre_sql)
+
         for o in apply_order:
             for data_table in data_push_set:
                 if data_table[Const.DATA_APPLY_ORDER] == o:
@@ -266,9 +270,21 @@ class VersionedDbHelper:
                     gs = GenericSql(sql_path)
                     data_files.append(gs)
 
+        post_sql = VersionedDbHelper._get_wrapper_push_sql(data_dump, Const.DATA_POST_PUSH_FILE)
+        if post_sql:
+            data_files.append(post_sql)
+
         VersionedDbHelper.apply_data_sql_files_to_database(
             db_conn, data_files, force
         )
+
+    @staticmethod
+    def _get_wrapper_push_sql(data_path: str, file_name: str):
+        post_name = os.path.join(data_path, file_name)
+        if os.path.isfile(post_name):
+            return GenericSql(post_name)
+
+        return None
 
     @staticmethod
     def repo_database_dump(repo_name, db_conn, is_production):
