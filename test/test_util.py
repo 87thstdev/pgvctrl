@@ -109,6 +109,8 @@ class TestUtil(object):
     data_file_applying_default = "data.json.applying.default"
     app_error_set_file_default = "app_error_set.sql.default"
     error_set_file_default = "error_set.sql.default"
+    test_version_pre_push_path = f"databases/{pgvctrl_test_repo}/data/{Const.DATA_PRE_PUSH_FILE}"
+    test_version_post_push_path = f"databases/{pgvctrl_test_repo}/data/{Const.DATA_POST_PUSH_FILE}"
 
     sql_return = 'Running: 90.\n' \
                  '\t6: NOTICE:  No name sql!\n\n' \
@@ -263,6 +265,16 @@ class TestUtil(object):
     def get_static_error_set_data():
         ensure_dir_exists(TestUtil.error_set_data_folder_path)
         copy2(TestUtil.error_set_file_default, TestUtil.error_set_data_path)
+
+    @staticmethod
+    def get_static_pre_push_sql():
+        ensure_dir_exists(TestUtil.error_set_data_folder_path)
+        copy2(f"{Const.DATA_PRE_PUSH_FILE}.default", TestUtil.test_version_pre_push_path)
+
+    @staticmethod
+    def get_static_post_push_sql():
+        ensure_dir_exists(TestUtil.error_set_data_folder_path)
+        copy2(f"{Const.DATA_POST_PUSH_FILE}.default", TestUtil.test_version_post_push_path)
 
     @staticmethod
     def get_static_bad_config():

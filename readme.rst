@@ -567,6 +567,20 @@ Output:
    Pushing Data
    Running: error_set.sql
 
+**Notes:**
+For interdependent data pushes, create _pre_push.sql and _post_push.sql files in the
+data folder to have pgvctrl execute before and after the data push.
+
+e.g.
+
+.. code-block::
+
+    data/
+        _pre_push.sql
+        error_set.sql
+        membership.user_state.sql
+        _post_push.sql
+
 -dump-database: Dump the repositories database
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -645,10 +659,12 @@ Example data.json file:
 
    [
        {
+           "apply-order": 0,
            "column-inserts": true,
            "table": "error_set"
        },
        {
+           "apply-order": 0,
            "column-inserts": true,
            "table": "membership.user_state"
        }
