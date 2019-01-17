@@ -1,0 +1,196 @@
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import dbversioning.dbvctrlConst as Const
+from dbversioning.repositoryconf import (
+    INCLUDE_TABLES_PROP,
+    EXCLUDE_TABLES_PROP,
+    INCLUDE_SCHEMAS_PROP,
+    EXCLUDE_SCHEMAS_PROP)
+from test.test_util import (
+    TestUtil,
+    capture_dbvctrl_out,
+    dbvctrl_assert_simple_msg)
+
+
+class TestRepoList:
+    def setup_method(self):
+        TestUtil.get_static_config()
+        TestUtil.mkrepo_ver(
+            TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
+        )
+        TestUtil.mkrepo_ver(
+                TestUtil.pgvctrl_test_repo, TestUtil.test_second_version_no_name
+        )
+        TestUtil.get_error_sql()
+        TestUtil.get_error_rollback_good_sql()
+
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.delete_folder(TestUtil.test_make_version_path)
+        TestUtil.delete_folder(TestUtil.test_first_version_path)
+        TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
+        TestUtil.delete_file(TestUtil.error_sql_path)
+        TestUtil.delete_file(TestUtil.error_sql_rollback_path)
+
+    def test_repo_list(self):
+        dbvctrl_assert_simple_msg(
+                arg_list=[Const.LIST_REPOS_ARG],
+                msg=f"{TestUtil.pgvctrl_test_repo}\n"
+                    f"\tv {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
+                    f"\tv {TestUtil.test_second_version_no_name} \n"
+                    f"\tv {TestUtil.test_version} \n"
+        )
+
+    def test_repo_list_verbose(self):
+        dbvctrl_assert_simple_msg(
+                arg_list=[Const.LIST_REPOS_VERBOSE_ARG],
+                msg=f"{TestUtil.pgvctrl_test_repo}\n"
+                    f"\tv {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
+                    f"\tv {TestUtil.test_second_version_no_name} \n"
+                    f"\tv {TestUtil.test_version} \n"
+                    f"\t\t90 \n"
+                    f"\t\t100 AddUsersTable\n"
+                    f"\t\t110 Notice\n"
+                    f"\t\t120 ItemTable\n"
+                    f"\t\t130 Error\n"
+                    f"\t\t130 Error_rollback ROLLBACK\n"
+                    f"\t\t140 ItemsAddMore\n"
+                    f"\t\t200 AddEmailTable\n"
+                    f"\t\t300 UserStateTable\n"
+                    f"\t\t400 ErrorSet\n"
+        )
+
+    def test_repo_list_verbose_includes_excludes(self):
+        base_msg = (
+            f"\tv {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
+            f"\tv {TestUtil.test_second_version_no_name} \n"
+            f"\tv {TestUtil.test_version} \n"
+            f"\t\t90 \n"
+            f"\t\t100 AddUsersTable\n"
+            f"\t\t110 Notice\n"
+            f"\t\t120 ItemTable\n"
+            f"\t\t130 Error\n"
+            f"\t\t130 Error_rollback ROLLBACK\n"
+            f"\t\t140 ItemsAddMore\n"
+            f"\t\t200 AddEmailTable\n"
+            f"\t\t300 UserStateTable\n"
+            f"\t\t400 ErrorSet\n"
+        )
+
+        capture_dbvctrl_out(
+                arg_list=[
+                    Const.INCLUDE_SCHEMA_ARG,
+                    TestUtil.schema_membership,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                ]
+        )
+
+        dbvctrl_assert_simple_msg(
+                arg_list=[Const.LIST_REPOS_VERBOSE_ARG],
+                msg=f"{TestUtil.pgvctrl_test_repo}\n"
+                    f"\t({INCLUDE_SCHEMAS_PROP}: ['{TestUtil.schema_membership}'])\n"
+                    f"{base_msg}"
+        )
+
+        capture_dbvctrl_out(
+                arg_list=[
+                    Const.INCLUDE_TABLE_ARG,
+                    TestUtil.table_membership_user_state,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                ]
+        )
+
+        dbvctrl_assert_simple_msg(
+                arg_list=[Const.LIST_REPOS_VERBOSE_ARG],
+                msg=f"{TestUtil.pgvctrl_test_repo}\n"
+                    f"\t({INCLUDE_SCHEMAS_PROP}: ['{TestUtil.schema_membership}'], "
+                    f"{INCLUDE_TABLES_PROP}: ['{TestUtil.table_membership_user_state}'])\n"
+                    f"{base_msg}"
+        )
+
+        capture_dbvctrl_out(
+                arg_list=[
+                    Const.EXCLUDE_SCHEMA_ARG,
+                    TestUtil.schema_public,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                ]
+        )
+
+        dbvctrl_assert_simple_msg(
+                arg_list=[Const.LIST_REPOS_VERBOSE_ARG],
+                msg=f"{TestUtil.pgvctrl_test_repo}\n"
+                    f"\t({INCLUDE_SCHEMAS_PROP}: ['{TestUtil.schema_membership}'], "
+                    f"{EXCLUDE_SCHEMAS_PROP}: ['{TestUtil.schema_public}'], "
+                    f"{INCLUDE_TABLES_PROP}: ['{TestUtil.table_membership_user_state}'])\n"
+                    f"{base_msg}"
+        )
+
+        capture_dbvctrl_out(
+                arg_list=[
+                    Const.EXCLUDE_TABLE_ARG,
+                    TestUtil.table_public_item,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                ]
+        )
+
+        dbvctrl_assert_simple_msg(
+                arg_list=[Const.LIST_REPOS_VERBOSE_ARG],
+                msg=f"{TestUtil.pgvctrl_test_repo}\n"
+                    f"\t({INCLUDE_SCHEMAS_PROP}: ['{TestUtil.schema_membership}'], "
+                    f"{EXCLUDE_SCHEMAS_PROP}: ['{TestUtil.schema_public}'], "
+                    f"{INCLUDE_TABLES_PROP}: ['{TestUtil.table_membership_user_state}'], "
+                    f"{EXCLUDE_TABLES_PROP}: ['{TestUtil.table_public_item}'])\n"
+                    f"{base_msg}"
+        )
+
+    def test_repo_list_unregistered(self):
+        capture_dbvctrl_out(arg_list=[Const.MAKE_REPO_ARG, TestUtil.pgvctrl_test_temp_repo])
+        capture_dbvctrl_out(arg_list=[Const.REMOVE_REPO_ARG, TestUtil.pgvctrl_test_temp_repo])
+        dbvctrl_assert_simple_msg(
+                arg_list=[Const.LIST_REPOS_ARG],
+                msg=f"{TestUtil.pgvctrl_test_temp_repo} UNREGISTERED\n"
+                f"{TestUtil.pgvctrl_test_repo}\n"
+                f"\tv {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
+                f"\tv {TestUtil.test_second_version_no_name} \n"
+                f"\tv {TestUtil.test_version} \n"
+        )
+
+    def test_repo_list_missing_repo(self):
+        capture_dbvctrl_out(arg_list=[Const.MAKE_REPO_ARG, TestUtil.pgvctrl_test_temp_repo])
+
+        TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
+
+        dbvctrl_assert_simple_msg(
+                arg_list=[Const.LIST_REPOS_ARG],
+                msg=f"{TestUtil.pgvctrl_test_repo}\n"
+                f"\tv {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
+                f"\tv {TestUtil.test_second_version_no_name} \n"
+                f"\tv {TestUtil.test_version} \n"
+        )
+
+
+class TestBadRepoList:
+    def setup_method(self):
+        TestUtil.get_static_config()
+        TestUtil.mkrepo(TestUtil.pgvctrl_test_temp_repo)
+
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
+
+    def test_make_bad_repo_version(self):
+        dbvctrl_assert_simple_msg(
+                arg_list=[Const.REPO_ARG,
+                          TestUtil.pgvctrl_test_temp_repo,
+                          Const.MAKE_V_ARG,
+                          TestUtil.test_bad_version_number],
+                msg=f"Repository version number invalid, should be [Major].[Minor].[Maintenance] "
+                    f"at a minimum: {TestUtil.test_bad_version_number}\n",
+                error_code=1
+        )
