@@ -71,8 +71,11 @@ class TestUtil(object):
     )
     test_second_version_no_name = "1.0.0"
     test_version = "2.0.0.NewVersion"
+    pgvctrl_test_db_ff_path = (
+        f"databases/_fastForward/{pgvctrl_test_repo}"
+    )
     test_version_ff_path = (
-        f"databases/_fastForward/{pgvctrl_test_repo}/{test_version}.sql"
+        f"{pgvctrl_test_db_ff_path}/{test_version}.sql"
     )
     test_version_data_path = f"databases/{pgvctrl_test_repo}/data/data.json"
     test_make_version = "3.0.0.MakeNewVersion"

@@ -291,6 +291,11 @@ class VersionDbShellUtil:
 
         pg_dump(db_conn, "-s", "-f", ff, schema_args, tbl_args, retcode=0)
 
+        rtn = pg_dump(db_conn, "--column-inserts", "-a", "-t", v_stg.tbl)
+
+        with open(ff, "a") as file:  # Use file to refer to the file object
+            file.write(rtn)
+
         return True
 
     @staticmethod

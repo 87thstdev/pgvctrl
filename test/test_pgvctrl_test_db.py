@@ -1,4 +1,5 @@
 import dbversioning.dbvctrlConst as Const
+from dbversioning.osUtil import ensure_dir_exists
 from test.test_util import (
     TestUtil,
     print_cmd_error_details,
@@ -173,6 +174,39 @@ class TestPgvctrlTestDb:
                 msg=f"Version and environment args are mutually exclusive.\n",
                 error_code=1
         )
+
+
+class TestPgvctrlTestDbFastForward:
+    def setup_method(self):
+        TestUtil.drop_database()
+        TestUtil.create_database()
+        TestUtil.get_static_config()
+        capture_dbvctrl_out(arg_list=[
+            Const.INIT_ARG,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+        TestUtil.mkrepo_ver(
+                TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
+        )
+        capture_dbvctrl_out(arg_list=[
+            Const.APPLY_ARG,
+            Const.V_ARG,
+            TestUtil.test_first_version,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+
+    def teardown_method(self):
+        TestUtil.delete_folder(TestUtil.test_first_version_path)
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ff_path)
+        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.drop_database()
 
     def test_set_fast_forward(self):
         dbvctrl_assert_simple_msg(
@@ -591,6 +625,17 @@ class TestPgvctrlTestDb:
     def test_apply_fast_forward_fail(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[
+                    Const.SETFF_ARG,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ],
+                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo}\n"
+        )
+
+        dbvctrl_assert_simple_msg(
+                arg_list=[
                     Const.APPLY_FF_ARG,
                     TestUtil.test_first_version,
                     Const.REPO_ARG,
@@ -600,6 +645,44 @@ class TestPgvctrlTestDb:
                 ],
                 msg="Fast forwards only allowed on empty databases.\n",
                 error_code=1
+        )
+
+    def test_apply_fast_forward(self):
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.SETFF_ARG,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ],
+                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo}\n"
+        )
+
+        TestUtil.drop_database()
+        TestUtil.create_database()
+
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.APPLY_FF_ARG,
+                    TestUtil.test_first_version,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ],
+                msg=f"Applying: {TestUtil.test_first_version}\n\n"
+        )
+
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.CHECK_VER_ARG,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ],
+                msg=f"{TestUtil.test_first_version}.0: {TestUtil.pgvctrl_test_repo} environment (None)\n"
         )
 
 
@@ -928,24 +1011,13 @@ class TestPgvctrlTestPullDb:
 class TestPgvctrlTestCleanDb:
     def setup_method(self):
         TestUtil.create_database()
+        ensure_dir_exists(TestUtil.pgvctrl_test_db_ff_path)
         TestUtil.get_static_config()
 
     def teardown_method(self):
         TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.delete_folder(TestUtil.pgvctrl_test_db_ff_path)
         TestUtil.drop_database()
-
-    def test_apply_fast_forward(self):
-        dbvctrl_assert_simple_msg(
-                arg_list=[
-                    Const.APPLY_FF_ARG,
-                    TestUtil.test_first_version,
-                    Const.REPO_ARG,
-                    TestUtil.pgvctrl_test_repo,
-                    Const.DATABASE_ARG,
-                    TestUtil.pgvctrl_test_db,
-                ],
-                msg=f"Applying: {TestUtil.test_first_version}\n\n"
-        )
 
     def test_apply_bad_fast_forward(self):
         bad_ff = "BAD"
