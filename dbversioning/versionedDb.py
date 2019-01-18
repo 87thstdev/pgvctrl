@@ -3,7 +3,6 @@ import os
 from typing import List
 
 from dbversioning.errorUtil import (
-    VersionedDbExceptionFastForwardVersion,
     VersionedDbExceptionRepoVersionNumber,
     VersionedDbExceptionRepoDoesNotExits,
     VersionedDbExceptionRepoNameInvalid,
@@ -148,9 +147,6 @@ class VersionDb(object):
 
 def _set_version_info(version_dir, ver):
     ver_array = version_dir.split(".")
-
-    if not ver_array:
-        raise VersionedDbExceptionFastForwardVersion(version_dir)
 
     try:
         ver.major = int(ver_array[0])
