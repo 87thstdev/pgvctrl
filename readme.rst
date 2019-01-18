@@ -183,8 +183,9 @@ Getting Started
    be used to update your database and should have the naming convention
    of: [order number].[change name].sql e.g.: 100.AddedUserTable.sql
 
-   **Notes:**\  \* For best results with sql files, wrap all statements
-   in a Transactions.
+   **Notes:**
+
+   * For best results with sql files, wrap all statements in a Transactions.
 
    .. code-block::
 
@@ -239,12 +240,12 @@ Getting Started
       ...
       Running: 500.AddStatesTable
 
-   **Notes:**\ 
+   **Notes:**
 
    -  If you are applying changes to a production database, you must use
       the -production flag.
 
-   **What just happened?**\ 
+   **What just happened?**
 
    -  All of the sql files with [number].[change name].sql were ran
       against your database.
@@ -252,21 +253,21 @@ Getting Started
       the \_snapshots/[repository] directory
    -  The repository_version table was update with the new version hash.
 
-   #### SQL Error handling on -apply In the event of an SQL error,
-   pgvctrl will attempt to run the rollback version of your sql.
+SQL Error handling
+~~~~~~~~~~~~~~~~~~
 
-   e.g
+SQL Error handling on -apply In the event of an SQL error, pgvctrl will attempt to run the rollback version of your sql.
 
-   .. code-block::
+e.g
+
+.. code-block::
 
 
-        100.AddUsers.sql
-        100.AddUsers_rollback.sql - rollback file for 100.AddUsers.sql
+    100.AddUsers.sql
+    100.AddUsers_rollback.sql - rollback file for 100.AddUsers.sql
 
-   -  If your rollback file does not exist or fails, the -apply command
-      fails and no sql after the first failing sql file will be ran.
-   -  If the rollback file succeeds, all other sql files will be ran
-      until all files have been applied if they can be.
+-  If your rollback file does not exist or fails, the -apply command fails and no sql after the first failing sql file will be ran.
+-  If the rollback file succeeds, all other sql files will be ran until all files have been applied if they can be.
 
 Working with environments:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -416,10 +417,10 @@ Output:
 
    Repository removed: test
 
-**Notes:**\  \* If this command does not remove the folder from
-database, you must remove it and its contents yourself. This is a safety
-measure. \* Any repository folders left behind will be displayed as
-UNREGISTERED when the -rl option is used.
+**Notes:**\
+
+* If this command does not remove the folder from database, you must remove it and its contents yourself. This is a safety measure.
+* Any repository folders left behind will be displayed as UNREGISTERED when the -rl option is used.
 
 Manage schemas and tables in Snapshots and Fast Forwards
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -427,9 +428,9 @@ Manage schemas and tables in Snapshots and Fast Forwards
 Manage schemas (–schema, –exclude-schema, –rm-schema, –rmexclude-schema):
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1. Allows the user to say what schemas structures to include/exclude
+#. Allows the user to say what schemas structures to include/exclude
    when snapshots and Fast Forwards are created.
-2. The ‘rm’ arguments allow the user to remove schemas from the included
+#. The ‘rm’ arguments allow the user to remove schemas from the included
    and excluded lists.
 
 To include a schema:
@@ -453,9 +454,9 @@ Output:
 Manage table (–table, –exclude-table, –rm-table, –rmexclude-table):
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1. Allows the user to say what tables structures to include/exclude when
+#. Allows the user to say what tables structures to include/exclude when
    snapshots and Fast Forwards are created.
-2. The ‘rm’ arguments allow the user to remove tables from the included
+#. The ‘rm’ arguments allow the user to remove tables from the included
    and excluded lists.
 
 To include a table:
@@ -471,9 +472,10 @@ Output:
    Repository added: pgvctrl_test
    include-table ['membership.user']
 
-**Notes:** 1. If a table/schema is included and then later excluded, the
-table/schema is moved from included to exclude and vice versa. 1.
-Include table/schema works the same as with pg_dump.
+**Notes:**
+
+#. If a table/schema is included and then later excluded, the table/schema is moved from included to exclude and vice versa.
+#. Include table/schema works the same as with pg_dump.
 
 Fast Forward (-setff, -applyff)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -481,11 +483,13 @@ Fast Forward (-setff, -applyff)
 **What are Fast Forwards?**\  Fast forwards are snapshots of the
 database structure at the time the snapshot was taken.
 
-**Notes:** 1. There can be only one per repository version! 1.
-Currently, only the schema is saved with fast forwards. 1. If there were
-database schema changes outside of pgvctrl, it will be captured in the
-fast forward. 1. Fast forwards should only be applied to empty
-databases.
+**Notes:**
+
+#. There can be only one per repository version!
+#. The table holding the repository information (repository_version) will be saved as an insert in the fast forward and snapshots.
+#. Currently, only the schema is saved with fast forwards.
+#. If there were database schema changes outside of pgvctrl, it will be captured in the fast forward.
+#. Fast forwards should only be applied to empty databases.
 
 -setff: Set version fast forward
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -504,8 +508,11 @@ databases.
 Manage data (-pulldata, -pushdata)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There could be many reason why one would want to manage data: 1. Lookup
-tables. 1. Testing data. 1. Just because your boss wants you too.
+There could be many reason why one would want to manage data:
+
+#. Lookup tables.
+#. Testing data.
+#. Just because your boss wants you too.
 
 -pulldata: Pull data from repository by table
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
