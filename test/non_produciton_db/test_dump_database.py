@@ -8,7 +8,7 @@ from test.test_util import (
     capture_dbvctrl_out)
 
 
-class TestPgvctrlTestDbDataDump:
+class TestDataDump:
     def setup_method(self):
         TestUtil.drop_database()
         TestUtil.create_database()
