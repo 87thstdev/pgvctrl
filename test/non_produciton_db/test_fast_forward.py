@@ -524,7 +524,8 @@ class TestFastForwardOnCleanDb:
 
     def teardown_method(self):
         TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.delete_folder(TestUtil.pgvctrl_test_db_ff_path)
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ff_path)
         TestUtil.drop_database()
 
     def test_apply_bad_fast_forward(self):

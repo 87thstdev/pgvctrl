@@ -39,6 +39,8 @@ class TestBasicProductionDatabaseOperation:
     def teardown_method(self):
         TestUtil.drop_database()
         TestUtil.delete_folder(TestUtil.test_first_version_path)
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ff_path)
         TestUtil.delete_file(TestUtil.config_file)
 
     def test_chkver_no_env(self):
