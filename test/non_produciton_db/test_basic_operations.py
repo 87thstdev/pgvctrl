@@ -107,6 +107,25 @@ class TestBasicDatabaseOperation:
                 msg=TestUtil.sql_return
         )
 
+    def test_apply_good_version_bad_sql_name(self):
+        TestUtil.get_static_bad_sql_name()
+
+        out_rtn, errors = capture_dbvctrl_out(arg_list=[
+                    Const.APPLY_ARG,
+                    Const.V_ARG,
+                    "2.0.0",
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ])
+
+        assert errors.code == 1
+        assert out_rtn.startswith("Sql filename error:")
+        assert TestUtil.bad_sql_name in out_rtn
+
+        TestUtil.delete_file(f"{TestUtil.test_sql_path}/{TestUtil.bad_sql_name}")
+
     def test_apply_good_version_twice(self):
         capture_dbvctrl_out(arg_list=[
             Const.APPLY_ARG,

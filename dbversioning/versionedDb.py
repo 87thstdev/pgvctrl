@@ -6,7 +6,8 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionFastForwardVersion,
     VersionedDbExceptionRepoVersionNumber,
     VersionedDbExceptionRepoDoesNotExits,
-    VersionedDbExceptionRepoNameInvalid)
+    VersionedDbExceptionRepoNameInvalid,
+    VersionedDbExceptionSqlNamingError)
 from dbversioning.osUtil import dir_exists
 from dbversioning.repositoryconf import (
     DATA_DUMP_DIR,
@@ -167,7 +168,12 @@ class SqlPatch(object):
         file_array = os.path.basename(sql_path).split(".")
 
         self._path = sql_path
-        self._number = int(file_array[0])
+
+        try:
+            self._number = int(file_array[0])
+        except ValueError:
+            raise VersionedDbExceptionSqlNamingError(sql_path)
+
         self._name = ".".join(file_array[1:(len(file_array)-1)])
 
     @property

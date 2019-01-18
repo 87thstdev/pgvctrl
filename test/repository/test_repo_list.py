@@ -174,6 +174,17 @@ class TestRepoList:
                 f"\tv {TestUtil.test_version} \n"
         )
 
+    def test_repo_list_bad_sql_name(self):
+        TestUtil.get_static_bad_sql_name()
+
+        out_rtn, errors = capture_dbvctrl_out(arg_list=[Const.LIST_REPOS_VERBOSE_ARG])
+
+        assert errors.code == 1
+        assert out_rtn.startswith("Sql filename error:")
+        assert TestUtil.bad_sql_name in out_rtn
+
+        TestUtil.delete_file(f"{TestUtil.test_sql_path}/{TestUtil.bad_sql_name}")
+
 
 class TestBadRepoList:
     def setup_method(self):

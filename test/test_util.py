@@ -84,6 +84,7 @@ class TestUtil(object):
     )
     test_bad_version = "999.1.bad_version"
     test_version_path = f"databases/pgvctrl_temp_test/{test_version}"
+    test_sql_path = f"databases/pgvctrl_test/{test_version}/"
     error_sql = "130.Error.sql"
     error_sql_path = f"databases/pgvctrl_test/{test_version}/{error_sql}"
     error_sql_rollback = "130.Error_rollback.sql"
@@ -104,6 +105,7 @@ class TestUtil(object):
     error_set_table_error_set_table = '{\n        "apply-order": 0,\n        "column-inserts": true,\n        "table": "error_set"\n    }'
     bad_table_name = "asdeeiaoivjaiosdj"
     custom_error_message = "WHY WOULD YOU DO THAT!"
+    bad_sql_name = "one.bad_number.sql"
     error_set_data_folder_path = f"databases/{pgvctrl_test_repo}/data"
     app_error_set_data_path = f"{error_set_data_folder_path}/app_error_set.sql"
     error_set_data_path = f"{error_set_data_folder_path}/error_set.sql"
@@ -263,6 +265,10 @@ class TestUtil(object):
     def get_static_app_error_set_data():
         ensure_dir_exists(TestUtil.error_set_data_folder_path)
         copy2(TestUtil.app_error_set_file_default, TestUtil.app_error_set_data_path)
+
+    @staticmethod
+    def get_static_bad_sql_name():
+        copy2(TestUtil.bad_sql_name, TestUtil.test_sql_path)
 
     @staticmethod
     def get_static_error_set_data():

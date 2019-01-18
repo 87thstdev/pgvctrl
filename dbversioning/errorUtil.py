@@ -131,6 +131,12 @@ class VersionedDbExceptionDatabaseAlreadyInit(VersionedDbException):
         pass
 
 
+class VersionedDbExceptionSqlNamingError(VersionedDbException):
+    def __init__(self, filename):
+        self.message = f"Sql filename error: {filename}"
+        pass
+
+
 class VersionedDbExceptionSqlExecutionError(VersionedDbException):
     def __init__(self, stderr):
         self.message = f"Sql Error: {stderr}"
