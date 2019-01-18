@@ -324,6 +324,10 @@ class TestUtil(object):
         return os.listdir(f"databases/_databaseBackup/{repo}")
 
     @staticmethod
+    def get_snapshot_file_names(repo: str):
+        return os.listdir(f"databases/_snapshots/{repo}")
+
+    @staticmethod
     def get_repo_dict():
         d = None
         if os.path.isfile(TestUtil.config_file):

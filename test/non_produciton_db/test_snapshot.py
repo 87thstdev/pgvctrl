@@ -35,4 +35,14 @@ class TestPgvctrlTestSnapshotDb:
     # TODO: flesh out better snapshot functionality
     # Turn on/off per repo?
     def test_snapshot_data(self):
-        assert True == True
+        files = TestUtil.get_snapshot_file_names(TestUtil.pgvctrl_test_repo)
+
+        file_contains_insert = TestUtil.file_contains(
+                f"{TestUtil.pgvctrl_test_db_snapshots_path}/{files[0]}",
+                f"INSERT INTO public.repository_version (version, repository_name, is_production, env, revision, "
+                f"version_hash) VALUES (NULL, 'pgvctrl_test', false, NULL, 0, NULL);"
+        )
+
+        assert files[0].split(".")[0] == "None"
+        assert files[0].split(".")[2] == "sql"
+        assert file_contains_insert is True
