@@ -201,10 +201,6 @@ class GenericSql(object):
         self._name = file_name
 
     @property
-    def name(self):
-        return self._name
-
-    @property
     def fullname(self):
         return self._name
 

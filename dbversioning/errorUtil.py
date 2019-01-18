@@ -89,12 +89,6 @@ class VersionedDbExceptionMissingArgs(VersionedDbException):
         pass
 
 
-class VersionedDbExceptionFolderMissing(VersionedDbException):
-    def __init__(self, folder_name):
-        self.message = f"Folder missing: {folder_name}"
-        pass
-
-
 class VersionedDbExceptionFileMissing(VersionedDbException):
     def __init__(self, file_name):
         self.message = f"File missing: {file_name}"
