@@ -293,10 +293,8 @@ class VersionDbShellUtil:
 
         rtn = pg_dump(db_conn, "--column-inserts", "-a", "-t", v_stg.tbl)
 
-        insert_str = _get_insert_from_table_dump(rtn)
-
-        with open(ff, "a") as file:  # Use file to refer to the file object
-            file.write(insert_str)
+        with open(ff, "a") as file:
+            file.write(rtn)
 
         return True
 
@@ -321,10 +319,8 @@ class VersionDbShellUtil:
 
         rtn = pg_dump(db_conn, "--column-inserts", "-a", "-t", v_stg.tbl)
 
-        insert_str = _get_insert_from_table_dump(rtn)
-
-        with open(ss, "a") as file:  # Use file to refer to the file object
-            file.write(insert_str)
+        with open(ss, "a") as file:
+            file.write(rtn)
 
     @staticmethod
     def dump_database_backup(db_conn, v_stg, dump_options: List[str]):
@@ -498,17 +494,6 @@ def _good_version_table(v_tbl, db_conn):
         raise VersionedDbExceptionTooManyVersionRecordsFound()
 
     return good_table
-
-
-def _get_insert_from_table_dump(dump_str: str):
-    dump_array = dump_str.split("\n")
-    insert_str = ""
-
-    for l in dump_array:
-        if l.startswith("INSERT INTO "):
-            insert_str = l
-
-    return insert_str
 
 
 def _get_schema_table_args(conf, repo_name: str) -> (List[str], List[str]):
