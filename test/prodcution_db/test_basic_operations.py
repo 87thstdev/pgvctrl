@@ -126,7 +126,7 @@ class TestBasicProductionDatabaseOperation:
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo}\n"
+                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_first_version}.sql)\n"
         )
 
     def test_apply_fast_forward(self):

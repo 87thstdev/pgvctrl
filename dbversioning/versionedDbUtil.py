@@ -391,11 +391,11 @@ class VersionedDbHelper:
     @staticmethod
     def set_repository_fast_forward(repo_name, db_conn):
         v_stg = VersionedDbHelper._get_v_stg(repo_name)
-
-        if VersionDbShellUtil.dump_version_fast_forward(
+        file_name = VersionDbShellUtil.dump_version_fast_forward(
             db_conn, v_stg, repo_name
-        ):
-            information_message(f"Fast forward set: {repo_name}")
+        )
+        if file_name:
+            information_message(f"Fast forward set: {repo_name} ({file_name})")
 
     @staticmethod
     def apply_sql_files_to_database(db_conn, sql_files):

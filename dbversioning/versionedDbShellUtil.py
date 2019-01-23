@@ -272,7 +272,7 @@ class VersionDbShellUtil:
         psql(db_conn, "-c", update_version_sql, retcode=0)
 
     @staticmethod
-    def dump_version_fast_forward(db_conn, v_stg, repo_name):
+    def dump_version_fast_forward(db_conn, v_stg, repo_name) -> str:
         pg_dump = _local_pg_dump()
         conf = RepositoryConf()
         conf.check_include_exclude_violation(repo_name)
@@ -285,7 +285,9 @@ class VersionDbShellUtil:
 
         ensure_dir_exists(repo_ff)
 
-        ff = os.path.join(repo_ff, f"{dbver.version}.sql")
+        file_name = f"{dbver.version}.{dbver.env}.sql" if dbver.env else f"{dbver.version}.sql"
+
+        ff = os.path.join(repo_ff, file_name)
 
         schema_args, tbl_args = _get_schema_table_args(conf, repo_name)
 
@@ -296,7 +298,7 @@ class VersionDbShellUtil:
         with open(ff, "a") as file:
             file.write(rtn)
 
-        return True
+        return file_name
 
     @staticmethod
     def dump_version_snapshot(db_conn, v_stg):
