@@ -31,6 +31,9 @@ def parse_args(args):
         Const.LIST_REPOS_ARG, help="List repositories", action="store_true"
     )
     group.add_argument(
+            Const.LIST_REPOS_FF_ARG, help="List repository version fast forwards", action="store_true"
+    )
+    group.add_argument(
         Const.LIST_REPOS_VERBOSE_ARG,
         help="List repositories verbose",
         action="store_true",
@@ -171,6 +174,11 @@ def parse_args(args):
 def display_repo_list(verbose=False):
     c = VersionedDbHelper()
     c.display_repo_list(verbose)
+
+
+def display_repo_ff_list():
+    c = VersionedDbHelper()
+    c.display_repo_ff_list()
 
 
 def check_db_version_on_server(arg_set):
@@ -370,6 +378,9 @@ class DbVctrl(object):
             elif arg_set.rlv:
                 # -rlv
                 display_repo_list(verbose=True)
+            elif arg_set.rff:
+                # -rff
+                display_repo_ff_list()
             elif arg_set.chkver:
                 # -chkver -repo test_db -d postgresPlay
                 check_db_version_on_server(arg_set)

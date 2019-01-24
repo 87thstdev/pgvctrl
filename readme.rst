@@ -8,10 +8,10 @@ order of execution set by the programmer.
 Prerequisites:
 --------------
 
-1. `postgres <https://www.postgresql.org/>`__ ;)
-2. A general knowledge of postgres sql.
+#. `postgres <https://www.postgresql.org/>`__ ;)
+#. A general knowledge of postgres sql.
    `tutorial <http://www.postgresqltutorial.com/>`__
-3. Python3
+#. Python3
 
 Getting started:
 ----------------
@@ -61,9 +61,9 @@ In the test directory:
 Getting Started
 ---------------
 
-1. If you don’t already have a database, create one on your postgres
+#. If you don’t already have a database, create one on your postgres
    server.
-2. Create pgvctrl dbRepoConfig:
+#. Create pgvctrl dbRepoConfig:
 
    1. Make a directory where you want you database repositories to live.
 
@@ -73,7 +73,7 @@ Getting Started
 
       This will create a dbRepoConfig.json file.
 
-3. Create database repository:
+#. Create database repository:
 
    1. In the same directory as the dbRepoConfig.json file, run:
 
@@ -100,7 +100,7 @@ Getting Started
    -  The dbRepoConfig.json file will be updated to reflect the new
       repository.
 
-4. Initialize database repository:
+#. Initialize database repository:
 
    1. In the same directory as the dbRepoConfig.json file, run:
 
@@ -161,7 +161,7 @@ Getting Started
       environment name, revision (number of times the same version has
       been applied with different sql hash) and production flag.
 
-5. Make repository version for repository: -mkv: Make version number:
+#. Make repository version for repository: -mkv: Make version number:
 
    .. code-block::
 
@@ -179,7 +179,7 @@ Getting Started
 
       Version mydb/1.0.0.my_new_version created.
 
-6. Create sql change files in the versioned directory! These files will
+#. Create sql change files in the versioned directory! These files will
    be used to update your database and should have the naming convention
    of: [order number].[change name].sql e.g.: 100.AddedUserTable.sql
 
@@ -193,7 +193,7 @@ Getting Started
            [Your sql changes] 
        COMMIT;
 
-7. List repositories and changes:
+#. List repositories and changes:
 
    .. code-block::
 
@@ -220,7 +220,21 @@ Getting Started
            v 0.0.0.my_new_version
                100 AddUsersTable
 
-8. When you are ready to apply your changes to your database:
+
+#. List repository Fast Forwards:
+
+   .. code-block::
+
+      pgvctrl -rff
+
+   Output:
+
+   .. code-block::
+
+      mydb
+           1.0.0.my_new_version
+
+#. When you are ready to apply your changes to your database:
 
    .. code-block::
 

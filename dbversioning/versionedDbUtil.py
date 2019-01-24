@@ -32,7 +32,8 @@ from dbversioning.versionedDbShellUtil import (
 from dbversioning.versionedDb import (
     VersionDb,
     FastForwardDb,
-    GenericSql)
+    GenericSql,
+    FastForwardVersion)
 from dbversioning.repositoryconf import (
     RepositoryConf,
     VERSION_STORAGE_PROP,
@@ -122,6 +123,34 @@ class VersionedDbHelper:
                             sql_rollback_information_message(sql_message=sql_msg)
                         else:
                             information_message(message=sql_msg)
+
+    @staticmethod
+    def display_repo_ff_list():
+        """
+        :return: list of repository version fast forwards
+        """
+        conf = RepositoryConf()
+        root = conf.root()
+        ff_root = f"{root}/{FAST_FORWARD_DIR}"
+
+        ignored = {root, SNAPSHOTS_DIR, DATABASE_BACKUP_DIR}
+        repo_ff_locations = get_valid_elements(ff_root, ignored)
+        ff_sql_ver = []
+        for repo_location in repo_ff_locations:
+            ff_locations = get_valid_elements(f"{ff_root}/{repo_location}")
+            information_message(repo_location)
+            for ff_sql in ff_locations:
+                ff_sql_ver.append(FastForwardVersion(ff_sql))
+
+            ff_sql_ver = sorted(
+                    ff_sql_ver,
+                    key=lambda vs: (vs.major, vs.minor, vs.maintenance),
+            )
+
+            for ff_v in ff_sql_ver:
+                information_message(f"\t{ff_v.full_name}")
+
+            ff_sql_ver = []
 
     @staticmethod
     def valid_repository(repository: str):

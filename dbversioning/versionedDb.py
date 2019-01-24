@@ -38,19 +38,18 @@ class FastForwardDb(object):
 class FastForwardVersion(object):
     def __init__(self, ff_version_path):
         self._version_path = ff_version_path
-        self.name = ""
         self.major = None
         self.minor = None
         self.maintenance = None
 
         _set_version_info(os.path.basename(self._version_path), self)
+        file_array = os.path.splitext(os.path.basename(ff_version_path))
+
+        self.name = file_array[0]
 
     @property
     def full_name(self):
-        if self.name == "":
-            return self.version_number
-
-        return f"{self.version_number}.{self.name}"
+        return self.name
 
     @property
     def version_number(self):
@@ -58,7 +57,7 @@ class FastForwardVersion(object):
 
     @property
     def sql_file(self):
-        return GeneratorExit(self._version_path)
+        return self._version_path
 
 
 class Version(object):

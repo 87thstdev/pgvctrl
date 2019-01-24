@@ -71,6 +71,9 @@ class TestUtil(object):
     )
     test_second_version_no_name = "1.0.0"
     test_version = "2.0.0.NewVersion"
+    pgvctrl_databases_ff_path = (
+        f"databases/_fastForward"
+    )
     pgvctrl_test_db_ff_path = (
         f"databases/_fastForward/{pgvctrl_test_repo}"
     )
@@ -269,6 +272,14 @@ class TestUtil(object):
     @staticmethod
     def get_static_bad_sql_name():
         copy2(TestUtil.bad_sql_name, TestUtil.test_sql_path)
+
+    @staticmethod
+    def create_repo_ff_sql_file(repo_name: str, file_nane: str):
+        ensure_dir_exists(f"databases/_fastForward/{repo_name}")
+        full_file_name = f'databases/_fastForward/{repo_name}/{file_nane}'
+        if not os.path.exists(full_file_name):
+            with open(full_file_name, 'w'):
+                pass
 
     @staticmethod
     def get_static_error_set_data():
