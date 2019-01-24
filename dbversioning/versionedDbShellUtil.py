@@ -141,7 +141,7 @@ class VersionDbShellUtil:
             sql_loc = conf.get_data_dump_sql_dir(repo_name, f"{tbl}.sql")
 
             pg_dump_parm_list = copy.copy(db_conn)
-            if VersionDbShellUtil.get_col_inserts_setting(repo_name, tbl):
+            if VersionDbShellUtil.get_col_inserts_setting(repo_name=repo_name, tbl_name=tbl):
                 pg_dump_parm_list.append("--column-inserts")
             pg_dump_parm_list.append("--disable-triggers")
             pg_dump_parm_list.append("--if-exists")
@@ -154,6 +154,7 @@ class VersionDbShellUtil:
             try:
                 information_message(f"Pulling: {tbl}")
                 pg_dump(pg_dump_parm_list, retcode=0)
+                VersionDbShellUtil.add_col_inserts_setting(repo_name=repo_name, tbl_name=tbl, value=True)
             except ProcessExecutionError as e:
                 raise VersionedDbExceptionSqlExecutionError(e.stderr)
 
@@ -387,7 +388,7 @@ class VersionDbShellUtil:
             return None
 
     @staticmethod
-    def get_col_inserts_setting(repo_name, tbl_name):
+    def get_col_inserts_setting(repo_name: str, tbl_name: str):
         conf = VersionDbShellUtil.get_data_dump_dict(repo_name)
         x = [tbl for tbl in conf if tbl[Const.DATA_TABLE] == tbl_name]
         if len(x) == 1:
@@ -395,11 +396,10 @@ class VersionDbShellUtil:
         elif len(x) > 1:
             raise VersionedDbExceptionBadDataConfigFile()
 
-        VersionDbShellUtil.add_col_inserts_setting(repo_name, tbl_name, True)
         return True
 
     @staticmethod
-    def add_col_inserts_setting(repo_name, tbl_name, value):
+    def add_col_inserts_setting(repo_name: str, tbl_name: str, value: bool):
         conf = VersionDbShellUtil.get_data_dump_dict(repo_name)
         conf_file = VersionDbShellUtil._get_data_dump_config_file(repo_name)
 

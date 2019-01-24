@@ -66,6 +66,9 @@ class TestPullData:
                 error_code=1
         )
 
+        has_table = TestUtil.file_contains(TestUtil.test_version_data_path, TestUtil.bad_table_name)
+        assert not has_table
+
     def test_pull_data_from_repos_table_list(self):
         arg_list = [
             Const.PULL_DATA_ARG,
