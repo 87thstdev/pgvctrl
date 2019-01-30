@@ -611,7 +611,28 @@ backup.
 
 .. code-block::
 
-   -dump-database -repo [repository name] [db connection information]
+    -dump-database -repo [repository name] [db connection information]
+
+e.g. For dumping the database.
+
+.. code-block::
+
+    -dump-database -repo mydb -d mylocaldb
+
+Output:
+
+.. code-block::
+
+    Do you want to dump the database? [YES/NO]
+    :[Type YES]
+    Repository mydb database backed up
+
+
+**What happens?**\
+
+-  The _databaseBackup/[repository name] folder is created if it doesn't exist.
+-  The backup [repository name][.environment].[sting date].sql file is created.
+
 
 dbRepoConfig.json
 ~~~~~~~~~~~~~~~~~

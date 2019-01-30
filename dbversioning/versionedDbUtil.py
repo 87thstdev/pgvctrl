@@ -334,7 +334,7 @@ class VersionedDbHelper:
         dump_options_list = dump_options.split(" ")
 
         VersionDbShellUtil.dump_database_backup(db_conn, v_stg, dump_options_list)
-        information_message(f"Repository {repo_name} database backup")
+        information_message(f"Repository {repo_name} database backed up")
 
 
     @staticmethod

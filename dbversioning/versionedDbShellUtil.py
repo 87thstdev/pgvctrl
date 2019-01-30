@@ -340,7 +340,12 @@ class VersionDbShellUtil:
 
         d = datetime.datetime.now().strftime(SNAPSHOT_DATE_FORMAT)
 
-        db_bak = os.path.join(repo_db_bak, f"{dbver.repo_name}.{d}.sql")
+        if dbver.env:
+            file_name = f"{dbver.repo_name}.{dbver.env}.{d}.sql"
+        else:
+            file_name = f"{dbver.repo_name}.{d}.sql"
+
+        db_bak = os.path.join(repo_db_bak, file_name)
 
         schema_args, tbl_args = _get_schema_table_args(conf, dbver.repo_name)
 
