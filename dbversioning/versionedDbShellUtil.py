@@ -341,9 +341,9 @@ class VersionDbShellUtil:
         d = datetime.datetime.now().strftime(SNAPSHOT_DATE_FORMAT)
 
         if dbver.env:
-            file_name = f"{dbver.repo_name}.{dbver.env}.{d}.sql"
+            file_name = f"{dbver.repo_name}.{dbver.env}.{d}"
         else:
-            file_name = f"{dbver.repo_name}.{d}.sql"
+            file_name = f"{dbver.repo_name}.{d}"
 
         db_bak = os.path.join(repo_db_bak, file_name)
 
