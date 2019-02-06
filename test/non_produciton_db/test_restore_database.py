@@ -12,7 +12,30 @@ class TestDatabaseRestore:
         TestUtil.drop_database()
         TestUtil.create_database()
         TestUtil.get_static_config()
-        TestUtil.get_backup_file()
+        capture_dbvctrl_out(arg_list=[
+            Const.INIT_ARG,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+        capture_dbvctrl_out(arg_list=[
+            Const.APPLY_ARG,
+            Const.V_ARG,
+            TestUtil.test_version,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+        with mock.patch('builtins.input', return_value="YES"):
+            capture_dbvctrl_out(arg_list=[
+                Const.DUMP_DATABASE_ARG,
+                Const.REPO_ARG,
+                TestUtil.pgvctrl_test_repo,
+                Const.DATABASE_ARG,
+                TestUtil.pgvctrl_test_db,
+            ])
 
     def teardown_method(self):
         TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_backups_path)
@@ -23,10 +46,13 @@ class TestDatabaseRestore:
         TestUtil.drop_database()
         TestUtil.create_database()
 
+        files = TestUtil.get_backup_file_name(TestUtil.pgvctrl_test_repo)
+        backup_file = files[0]
+
         with mock.patch('builtins.input', return_value="YES"):
             out, errors = capture_dbvctrl_out(arg_list=[
                 Const.RESTORE_DATABASE_ARG,
-                TestUtil.restore_db_test_file,
+                backup_file,
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,
                 Const.DATABASE_ARG,
@@ -34,7 +60,7 @@ class TestDatabaseRestore:
             ])
             assert out == (
                 f"{TestUtil.pgvctrl_std_restore_qa_reply}"
-                f"Database pgvctrl_test.bkup "
+                f"Database {backup_file} "
                 f"from repository pgvctrl_test restored ['-d', '{TestUtil.pgvctrl_test_db}'].\n"
             )
 
@@ -48,7 +74,6 @@ class TestDatabaseRestore:
                 ],
                 msg=f"{TestUtil.test_version}.0: {TestUtil.pgvctrl_test_repo} environment (None)\n"
         )
-
 
     def test_database_restore_db_not_found(self):
         with mock.patch('builtins.input', return_value="YES"):

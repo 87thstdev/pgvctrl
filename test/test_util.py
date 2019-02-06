@@ -127,7 +127,6 @@ class TestUtil(object):
     error_set_file_default = "error_set.sql.default"
     test_version_pre_push_path = f"databases/{pgvctrl_test_repo}/data/{Const.DATA_PRE_PUSH_FILE}"
     test_version_post_push_path = f"databases/{pgvctrl_test_repo}/data/{Const.DATA_POST_PUSH_FILE}"
-    restore_db_test_file = "pgvctrl_test.bkup"
 
     sql_return = 'Running: 90.\n' \
                  '\t6: NOTICE:  No name sql!\n\n' \
