@@ -52,7 +52,7 @@ class TestDataDump:
         backup_file = files[0]
         date_str = backup_file.split(".")[1]
         date_of = datetime.strptime(date_str, SNAPSHOT_DATE_FORMAT)
-        test_file_name = f"{TestUtil.pgvctrl_test_repo}.{date_str}.sql"
+        test_file_name = f"{TestUtil.pgvctrl_test_repo}.{date_str}"
 
         assert backup_file is not None
         assert type(date_of) is datetime
@@ -244,7 +244,7 @@ class TestDataDumpENv:
         backup_file = files[0]
         date_str = backup_file.split(".")[2]
         date_of = datetime.strptime(date_str, SNAPSHOT_DATE_FORMAT)
-        test_file_name = f"{TestUtil.pgvctrl_test_repo}.{TestUtil.env_test}.{date_str}.sql"
+        test_file_name = f"{TestUtil.pgvctrl_test_repo}.{TestUtil.env_test}.{date_str}"
 
         assert type(date_of) is datetime
         assert test_file_name == backup_file

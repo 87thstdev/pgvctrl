@@ -12,8 +12,9 @@
     },
     "repositories": [
         {
-           "dumpDatabaseOptions": "-Fc -Z 9",
+           "dumpDatabaseOptions": "-Fc -Z 4",
            "name": "pgvctrl_test",
+           "restoreDatabaseOptions": "-Fc -j 8",
             "versionStorage": {
                 "env": "env",
                 "isProduction": "is_production",
@@ -26,5 +27,6 @@
             }
         }
      ],
+    "restoreDatabaseOptionsDefault": "-Fc -j 8",
     "root": "databases"
 }

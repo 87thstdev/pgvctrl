@@ -58,11 +58,19 @@ class TestUtil(object):
     pgvctrl_test_db_snapshots_path = (
         f"databases/_snapshots/{pgvctrl_test_repo}"
     )
-    pgvctrl_std_qa_reply = "Do you want to dump the database? [YES/NO]\n"
-    pgvctrl_std_dump_reply = f"{pgvctrl_std_qa_reply}"
-    pgvctrl_std_dump_cancelled_reply = f"{pgvctrl_std_qa_reply}Dump database cancelled.\n"
+    pgvctrl_std_dump_qa_reply = "Do you want to dump the database? [YES/NO]\n"
+    pgvctrl_std_dump_reply = f"{pgvctrl_std_dump_qa_reply}"
+    pgvctrl_std_dump_cancelled_reply = f"{pgvctrl_std_dump_qa_reply}Dump database cancelled.\n"
     pgvctrl_test_db_backups_path = (
         f"databases/_databaseBackup/{pgvctrl_test_repo}"
+    )
+    pgvctrl_std_restore_qa_reply = "Do you want to restore the database? [YES/NO]\n"
+    pgvctrl_std_restore_reply = f"{pgvctrl_std_restore_qa_reply}"
+    pgvctrl_std_restore_cancelled_reply = (
+        f"{pgvctrl_std_restore_qa_reply}Restore database cancelled.\n"
+    )
+    pgvctrl_std_restore_none_empty_db_reply = (
+        f"{pgvctrl_std_restore_qa_reply}Database restores only allowed on empty databases.\n"
     )
     test_bad_version_number = "one.0.0.first"
     test_first_version = "0.0.0.first"
@@ -119,6 +127,7 @@ class TestUtil(object):
     error_set_file_default = "error_set.sql.default"
     test_version_pre_push_path = f"databases/{pgvctrl_test_repo}/data/{Const.DATA_PRE_PUSH_FILE}"
     test_version_post_push_path = f"databases/{pgvctrl_test_repo}/data/{Const.DATA_POST_PUSH_FILE}"
+    restore_db_test_file = "pgvctrl_test.bkup"
 
     sql_return = 'Running: 90.\n' \
                  '\t6: NOTICE:  No name sql!\n\n' \
@@ -280,6 +289,11 @@ class TestUtil(object):
         if not os.path.exists(full_file_name):
             with open(full_file_name, 'w'):
                 pass
+
+    @staticmethod
+    def get_backup_file():
+        ensure_dir_exists(TestUtil.pgvctrl_test_db_backups_path)
+        copy2(TestUtil.restore_db_test_file, TestUtil.pgvctrl_test_db_backups_path)
 
     @staticmethod
     def get_static_error_set_data():

@@ -1,6 +1,6 @@
 {
     "autoSnapshots": false,
-    "dumpDatabaseOptionsDefault": "-Fc -Z 9",
+    "dumpDatabaseOptionsDefault": "-Fc -Z4",
     "defaultVersionStorage": {
         "env": "env",
         "isProduction": "is_production",
@@ -13,11 +13,12 @@
     },
     "repositories": [
         {
-           "dumpDatabaseOptions": "-Fc -Z 9",
+           "dumpDatabaseOptions": "-Fc -Z4",
            "envs": {
                 "test": "0.0.0"
             },
             "name": "pgvctrl_test",
+            "restoreDatabaseOptions": "-Fc -j 8",
             "versionStorage": {
                 "env": "env",
                 "isProduction": "is_production",
@@ -30,5 +31,6 @@
             }
         }
      ],
+    "restoreDatabaseOptionsDefault": "-Fc -j 8",
     "root": "databases"
 }
