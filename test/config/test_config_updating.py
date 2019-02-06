@@ -456,3 +456,39 @@ class TestConfigUpdating:
         )
         assert inc_tbl_name == [TestUtil.table_membership_user_state]
         assert exc_tbl_name == []
+
+
+class TestConfigMakeRepo:
+    def setup_method(self):
+        TestUtil.get_static_config()
+
+    def teardown_method(self):
+        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
+
+    def test_mkrepo(self):
+        dbvctrl_assert_simple_msg(
+                arg_list=[Const.MAKE_REPO_ARG, TestUtil.pgvctrl_test_temp_repo],
+                msg=f"Repository created: {TestUtil.pgvctrl_test_temp_repo}\n"
+        )
+        repo_json = (
+            '        {\n'
+            '            "dumpDatabaseOptions": "-Fc -Z4",\n'
+            '            "envs": {},\n'
+            f'            "name": "{TestUtil.pgvctrl_test_temp_repo}",\n'
+            '            "restoreDatabaseOptions": "-Fc -j 8",\n'
+            '            "versionStorage": {\n'
+            '                "env": "env",\n'
+            '                "isProduction": "is_production",\n'
+            '                "repository": "repository_name",\n'
+            '                "revision": "revision",\n'
+            '                "table": "repository_version",\n'
+            '                "tableOwner": null,\n'
+            '                "version": "version",\n'
+            '                "versionHash": "version_hash"\n'
+            '            }\n'
+            '        }'
+        )
+        has_repo = TestUtil.file_contains(TestUtil.config_file, repo_json)
+
+        assert has_repo is True
