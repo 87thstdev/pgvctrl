@@ -61,27 +61,28 @@ def parse_args(args):
         help="Push data from repository to database",
         action="store_true",
     )
+    parser.add_argument(
+            Const.TBL_ARG, metavar="", help="Pull/Push table for data", action="append"
+    )
+    parser.add_argument(
+            Const.FORCE_ARG,
+            help="Force push data from repository to database",
+            action="store_true",
+    )
     group.add_argument(
         Const.SET_VERSION_STORAGE_TABLE_OWNER_ARG,
         help="Set postgres owner for the version storage table",
     )
-
-    parser.add_argument(
-        Const.FORCE_ARG,
-        help="Force push data from repository to database",
-        action="store_true",
-    )
-
     group.add_argument(
             Const.DUMP_DATABASE_ARG,
             help="Dump database from server to local file (requires confirmation)",
             action="store_true",
     )
-
-    parser.add_argument(
-        Const.TBL_ARG, metavar="", help="Pull table for data", action="append"
+    group.add_argument(
+            Const.RESTORE_DATABASE_ARG,
+            help="Restore database dump from file to server (requires confirmation)",
+            metavar="",
     )
-
     parser.add_argument(Const.V_ARG, metavar="", help="Version number")
     parser.add_argument(Const.MAKE_REPO_ARG, metavar="", help="Make Repository")
     parser.add_argument(
@@ -257,6 +258,17 @@ def repo_database_dump(arg_set):
         db_conn=db_conn,
         repo_name=arg_set.repo,
         is_production=arg_set.production,
+    )
+
+
+def repo_database_restore(arg_set):
+    vdb = VersionedDbHelper()
+    db_conn = connection_list(arg_set)
+
+    vdb.repo_database_restore(
+        db_conn=db_conn,
+        repo_name=arg_set.repo,
+        file_name=arg_set.restore_database
     )
 
 
@@ -459,6 +471,12 @@ class DbVctrl(object):
                     repo_database_dump(arg_set)
                 else:
                     error_message("Dump database cancelled.")
+            elif arg_set.restore_database:
+                # -restore-database dump_file -repo test_db -d postgresPlay
+                if user_yes_no_query("Do you want to restore the database?"):
+                    repo_database_restore(arg_set)
+                else:
+                    error_message("Restore database cancelled.")
             else:
                 prj_name = pkg_resources.require(Const.PGVCTRL)[0].project_name
                 error_message(

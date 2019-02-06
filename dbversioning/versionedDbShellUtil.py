@@ -123,10 +123,6 @@ class VersionDbShellUtil:
             msg_formatted = msg.replace(f"psql:{sql_file.full_name}:", "\t")
             information_message(f"{msg_formatted}")
 
-            # TODO: Make this happen, could be an -init call?
-            # v_stg = VersionedDbHelper._get_v_stg(repo_name)
-            # DbVersionShellHelper.set_db_instance_version(db_conn, v_stg, sql_file.full_name)
-
         except ProcessExecutionError as e:
             raise VersionedDbExceptionSqlExecutionError(e.stderr)
 
@@ -352,6 +348,12 @@ class VersionDbShellUtil:
         pg_dump(db_conn, dump_options, schema_args, tbl_args, "-f", db_bak, retcode=0)
 
     @staticmethod
+    def restore_database_backup(db_conn, file_path: str, restore_options: List[str]):
+        pg_restore = _local_pg_restore()
+
+        pg_restore(db_conn, restore_options, file_path, retcode=0)
+
+    @staticmethod
     def display_db_instance_version(v_tbl, db_conn):
         dbv = VersionDbShellUtil.get_db_instance_version(v_tbl, db_conn)
 
@@ -446,6 +448,34 @@ class VersionDbShellUtil:
             raise VersionedDbExceptionBadDataConfigFile()
 
         return d
+
+    @staticmethod
+    def is_database_empty(db_conn):
+        psql = _local_psql()
+
+        user_tbl_count_sql = f"SELECT COUNT(*) cnt, 'notused' throwaway FROM pg_stat_user_tables;"
+
+        psql_parm_list = copy.copy(db_conn)
+
+        psql_parm_list.append(Const.TBL_ARG)
+        psql_parm_list.append("-A")
+        psql_parm_list.append("-c")
+        psql_parm_list.append(user_tbl_count_sql)
+
+        try:
+            rtn = psql.run(psql_parm_list, retcode=0)
+        except ProcessExecutionError as e:
+            if e.retcode == 1:
+                return True
+            elif e.retcode == 2:
+                raise VersionedDbExceptionBadDateSource(db_conn)
+            elif e.retcode > 2:
+                raise VersionedDbException(e.stderr)
+
+        rtn_array = rtn[STDOUT].split("|")
+        count = int(rtn_array[0])
+
+        return count == 0
 
     @staticmethod
     def _get_data_dump_config_file(repo_name):

@@ -19,7 +19,9 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionRepoExits,
     VersionedDbExceptionEnvDoesMatchDbEnv,
     VersionedDbExceptionRepoVersionNumber,
-    VersionedDbExceptionRepoNameInvalid)
+    VersionedDbExceptionRepoNameInvalid,
+    VersionedDbExceptionRestoreNotAllowed,
+    VersionedDbExceptionFileMissing)
 from dbversioning.versionedDbShellUtil import (
     VersionDbShellUtil,
     error_message,
@@ -45,7 +47,8 @@ from dbversioning.repositoryconf import (
     EXCLUDE_SCHEMAS_PROP,
     INCLUDE_TABLES_PROP,
     EXCLUDE_TABLES_PROP,
-    DUMP_DATABASE_OPTIONS_DEFAULT)
+    DUMP_DATABASE_OPTIONS_DEFAULT,
+    RESTORE_DATABASE_OPTIONS_DEFAULT)
 
 to_unicode = str
 
@@ -247,14 +250,7 @@ class VersionedDbHelper:
     def apply_repository_fast_forward_to_database(
         repo_name, db_conn, full_version
     ):
-        has_version_tbl = True
-        try:
-            v_stg = VersionedDbHelper._get_v_stg(repo_name)
-            VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
-        except VersionedDbExceptionMissingVersionTable:
-            has_version_tbl = False
-
-        if has_version_tbl:
+        if not VersionDbShellUtil.is_database_empty(db_conn):
             raise VersionedDbExceptionFastForwardNotAllowed()
 
         fast_forward_to = VersionedDbHelper.get_repository_fast_forward_version(
@@ -336,6 +332,34 @@ class VersionedDbHelper:
         VersionDbShellUtil.dump_database_backup(db_conn, v_stg, dump_options_list)
         information_message(f"Repository {repo_name} database backed up")
 
+    @staticmethod
+    def repo_database_restore(db_conn, repo_name: str, file_name: str):
+        VersionedDbHelper.valid_repository(repo_name)
+        conf = RepositoryConf()
+
+        repo_db_bak = os.path.join(conf.database_backup_dir(), repo_name)
+        file_path = os.path.join(repo_db_bak, file_name)
+
+        if not os.path.isfile(file_path):
+            raise VersionedDbExceptionFileMissing(file_path)
+
+        if not VersionDbShellUtil.is_database_empty(db_conn):
+            raise VersionedDbExceptionRestoreNotAllowed()
+
+        conf = RepositoryConf()
+        restore_options = conf.get_repo_restore_database_options(repo_name=repo_name)
+
+        if not restore_options:
+            restore_options = RESTORE_DATABASE_OPTIONS_DEFAULT
+
+        restore_options_list = restore_options.split(" ")
+
+        VersionDbShellUtil.restore_database_backup(
+                db_conn=db_conn,
+                restore_options=restore_options_list,
+                file_path=file_path
+        )
+        information_message(f"Database {file_name} from repository {repo_name} restored {db_conn}.")
 
     @staticmethod
     def pull_table_for_repo_data(repo_name, db_conn, table_list=None):

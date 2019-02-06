@@ -631,7 +631,39 @@ Output:
 **What happens?**\
 
 -  The _databaseBackup/[repository name] folder is created if it doesn't exist.
--  The backup [repository name][.environment].[sting date].sql file is created.
+-  The backup [repository name][.environment].[string date] file is created.
+
+-restore-database: Restore a repositories database from -dump-database
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can restore a repositories database based on a previous repository database dump.
+
+.. code-block::
+
+    -restore-database [repository name][.environment].[string date] -repo [repository name] [db connection information]
+
+e.g. For dumping the database.
+
+.. code-block::
+
+    -restore-database mylocaldb.test.20190101 -repo mydb -d mylocaldb
+
+Output:
+
+.. code-block::
+
+    Do you want to restore the database? [YES/NO]
+    :[Type YES]
+    Database mylocaldb.20190101 from repository mydb restored ['-d', 'mylocaldb'].
+
+
+**What happens?**\
+
+-  The _databaseBackup/[repository name]/[dump file] file is used to fill the empty database at [db connection information].
+
+**Notes:**
+
+#. Database for restore should an empty databases.
 
 
 dbRepoConfig.json
@@ -647,10 +679,8 @@ table structures as you see fit. The root setting tells pgvctrl where to
 look for the repositories.
 
 .. code-block::
-
     {
         "autoSnapshots": true,
-        "dumpDatabaseOptionsDefault": "-Fc -Z 9",
         "defaultVersionStorage": {
             "env": "env",
             "isProduction": "is_production",
@@ -660,16 +690,18 @@ look for the repositories.
             "tableOwner": null,
             "version": "version",
             "versionHash": "version_hash"
-    },
+        },
+        "dumpDatabaseOptionsDefault": "-Fc -Z4",
         "repositories": [
             {
-            "dumpDatabaseOptions": "-Fc -Z 9",
-            "envs": {
-                "your_test": "1.0.1",
-                "your_qa": "1.0.0",
-                "your_prod": "0.9.0"
-            },
-            "name": "YouRepoName",
+                "dumpDatabaseOptions": "-Fc -Z4",
+                "envs": {
+                    "your_test": "1.0.1",
+                    "your_qa": "1.0.0",
+                    "your_prod": "0.9.0"
+                },
+                "name": "YouRepoName",
+                "restoreDatabaseOptions": "-Fc -j 8",
                 "versionStorage": {
                     "env": "env",
                     "isProduction": "is_production",
@@ -682,6 +714,7 @@ look for the repositories.
                 }
             }
         ],
+        "restoreDatabaseOptionsDefault": "-Fc -j 8",
         "root": "databases"
     }
 

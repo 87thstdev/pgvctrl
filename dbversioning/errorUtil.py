@@ -83,6 +83,12 @@ class VersionedDbExceptionFastForwardNotAllowed(VersionedDbException):
         pass
 
 
+class VersionedDbExceptionRestoreNotAllowed(VersionedDbException):
+    def __init__(self):
+        self.message = "Database restores only allowed on empty databases."
+        pass
+
+
 class VersionedDbExceptionMissingArgs(VersionedDbException):
     def __init__(self):
         self.message = "Missing connection args"
