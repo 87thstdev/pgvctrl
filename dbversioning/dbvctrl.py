@@ -31,12 +31,12 @@ def parse_args(args):
         Const.LIST_REPOS_ARG, help="List repositories", action="store_true"
     )
     group.add_argument(
-            Const.LIST_REPOS_FF_ARG, help="List repository version fast forwards", action="store_true"
+            Const.LIST_REPOS_VERBOSE_ARG,
+            help="List repositories verbose",
+            action="store_true",
     )
     group.add_argument(
-        Const.LIST_REPOS_VERBOSE_ARG,
-        help="List repositories verbose",
-        action="store_true",
+            Const.LIST_REPOS_FF_ARG, help="List repository version fast forwards", action="store_true"
     )
     group.add_argument(
         Const.CHECK_VER_ARG, help="Check database version", action="store_true"
