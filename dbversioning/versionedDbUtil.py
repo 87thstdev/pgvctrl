@@ -6,6 +6,7 @@ import simplejson as json
 from os.path import join
 
 import dbversioning.dbvctrlConst as Const
+from dbversioning.osUtil import dir_exists
 from dbversioning.versionedDbHelper import get_valid_elements
 from dbversioning.errorUtil import (
     VersionedDbExceptionFileExits,
@@ -13,7 +14,6 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionRepoVersionExits,
     VersionedDbExceptionRepoVersionDoesNotExits,
     VersionedDbExceptionProductionChangeNoProductionFlag,
-    VersionedDbExceptionMissingVersionTable,
     VersionedDbExceptionFastForwardNotAllowed,
     VersionedDbExceptionRepoDoesNotExits,
     VersionedDbExceptionRepoExits,
@@ -128,18 +128,23 @@ class VersionedDbHelper:
                             information_message(message=sql_msg)
 
     @staticmethod
-    def display_repo_ff_list():
+    def display_repo_ff_list() -> bool:
         """
         :return: list of repository version fast forwards
         """
+        has_ffs = False
         conf = RepositoryConf()
         root = conf.root()
         ff_root = f"{root}/{FAST_FORWARD_DIR}"
+
+        if not dir_exists(ff_root):
+            return False
 
         ignored = {root, SNAPSHOTS_DIR, DATABASE_BACKUP_DIR}
         repo_ff_locations = get_valid_elements(ff_root, ignored)
         ff_sql_ver = []
         for repo_location in repo_ff_locations:
+            has_ffs = True
             ff_locations = get_valid_elements(f"{ff_root}/{repo_location}")
             information_message(repo_location)
             for ff_sql in ff_locations:
@@ -154,6 +159,37 @@ class VersionedDbHelper:
                 information_message(f"\t{ff_v.full_name}")
 
             ff_sql_ver = []
+
+        return has_ffs
+
+    @staticmethod
+    def display_repo_dd_list():
+        """
+        :return: list of repository version fast forwards
+        """
+        has_dd = False
+        conf = RepositoryConf()
+        root = conf.root()
+        dd_root = f"{root}/{DATABASE_BACKUP_DIR}"
+
+        ignored = {root, SNAPSHOTS_DIR, FAST_FORWARD_DIR}
+
+        if not dir_exists(dd_root):
+            return False
+
+        repo_dd_locations = get_valid_elements(dd_root, ignored)
+
+        for repo_location in repo_dd_locations:
+            has_dd = True
+            dd_locations = get_valid_elements(f"{dd_root}/{repo_location}")
+            information_message(repo_location)
+
+            dd_locations = sorted(dd_locations)
+
+            for dd_file in dd_locations:
+                information_message(f"\t{dd_file}")
+
+        return has_dd
 
     @staticmethod
     def valid_repository(repository: str):

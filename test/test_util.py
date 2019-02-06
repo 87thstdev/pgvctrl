@@ -61,8 +61,11 @@ class TestUtil(object):
     pgvctrl_std_dump_qa_reply = "Do you want to dump the database? [YES/NO]\n"
     pgvctrl_std_dump_reply = f"{pgvctrl_std_dump_qa_reply}"
     pgvctrl_std_dump_cancelled_reply = f"{pgvctrl_std_dump_qa_reply}Dump database cancelled.\n"
+    db_backups_path = (
+        f"databases/_databaseBackup/"
+    )
     pgvctrl_test_db_backups_path = (
-        f"databases/_databaseBackup/{pgvctrl_test_repo}"
+        f"{db_backups_path}{pgvctrl_test_repo}"
     )
     pgvctrl_std_restore_qa_reply = "Do you want to restore the database? [YES/NO]\n"
     pgvctrl_std_restore_reply = f"{pgvctrl_std_restore_qa_reply}"
@@ -282,17 +285,20 @@ class TestUtil(object):
         copy2(TestUtil.bad_sql_name, TestUtil.test_sql_path)
 
     @staticmethod
-    def create_repo_ff_sql_file(repo_name: str, file_nane: str):
+    def create_repo_ff_sql_file(repo_name: str, file_name: str):
         ensure_dir_exists(f"databases/_fastForward/{repo_name}")
-        full_file_name = f'databases/_fastForward/{repo_name}/{file_nane}'
+        full_file_name = f'databases/_fastForward/{repo_name}/{file_name}'
         if not os.path.exists(full_file_name):
             with open(full_file_name, 'w'):
                 pass
 
     @staticmethod
-    def get_backup_file():
-        ensure_dir_exists(TestUtil.pgvctrl_test_db_backups_path)
-        copy2(TestUtil.restore_db_test_file, TestUtil.pgvctrl_test_db_backups_path)
+    def create_repo_dd_file(repo_name: str, file_name: str):
+        ensure_dir_exists(f"databases/_databaseBackup/{repo_name}")
+        full_file_name = f'databases/_databaseBackup/{repo_name}/{file_name}'
+        if not os.path.exists(full_file_name):
+            with open(full_file_name, 'w'):
+                pass
 
     @staticmethod
     def get_static_error_set_data():

@@ -10,7 +10,7 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionProductionChangeNoProductionFlag,
 )
 from dbversioning.versionedDbConnection import connection_list
-from dbversioning.versionedDbShellUtil import information_message, error_message
+from dbversioning.versionedDbShellUtil import information_message, error_message, error_message_non_terminating
 from dbversioning.versionedDbUtil import VersionedDbHelper
 
 
@@ -36,7 +36,10 @@ def parse_args(args):
             action="store_true",
     )
     group.add_argument(
-            Const.LIST_REPOS_FF_ARG, help="List repository version fast forwards", action="store_true"
+            Const.LIST_REPOS_FF_ARG, help="List repository fast forwards", action="store_true"
+    )
+    group.add_argument(
+            Const.LIST_REPOS_DD_ARG, help="List repository data dumps", action="store_true"
     )
     group.add_argument(
         Const.CHECK_VER_ARG, help="Check database version", action="store_true"
@@ -179,7 +182,14 @@ def display_repo_list(verbose=False):
 
 def display_repo_ff_list():
     c = VersionedDbHelper()
-    c.display_repo_ff_list()
+    if not c.display_repo_ff_list():
+        error_message_non_terminating("No fast forwards available.")
+
+
+def display_repo_dd_list():
+    c = VersionedDbHelper()
+    if not c.display_repo_dd_list():
+        error_message_non_terminating("No database dumps available.")
 
 
 def check_db_version_on_server(arg_set):
@@ -393,6 +403,9 @@ class DbVctrl(object):
             elif arg_set.rff:
                 # -rff
                 display_repo_ff_list()
+            elif arg_set.rdd:
+                # -rdd
+                display_repo_dd_list()
             elif arg_set.chkver:
                 # -chkver -repo test_db -d postgresPlay
                 check_db_version_on_server(arg_set)

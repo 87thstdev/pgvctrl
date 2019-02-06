@@ -234,6 +234,20 @@ Getting Started
       mydb
            1.0.0.my_new_version
 
+#. List repository database dumps:
+
+   .. code-block::
+
+      pgvctrl -rdd
+
+   Output:
+
+   .. code-block::
+
+      mydb
+           mydb.test.20190101
+
+
 #. When you are ready to apply your changes to your database:
 
    .. code-block::
