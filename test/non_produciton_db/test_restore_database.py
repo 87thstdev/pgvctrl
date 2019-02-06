@@ -37,6 +37,9 @@ class TestDatabaseRestore:
                 TestUtil.pgvctrl_test_db,
             ])
 
+        files = TestUtil.get_backup_file_name(TestUtil.pgvctrl_test_repo)
+        self.backup_file = files[0]
+
     def teardown_method(self):
         TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_backups_path)
         TestUtil.delete_file(TestUtil.config_file)
@@ -46,13 +49,10 @@ class TestDatabaseRestore:
         TestUtil.drop_database()
         TestUtil.create_database()
 
-        files = TestUtil.get_backup_file_name(TestUtil.pgvctrl_test_repo)
-        backup_file = files[0]
-
         with mock.patch('builtins.input', return_value="YES"):
             out, errors = capture_dbvctrl_out(arg_list=[
                 Const.RESTORE_DATABASE_ARG,
-                backup_file,
+                self.backup_file,
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,
                 Const.DATABASE_ARG,
@@ -60,7 +60,7 @@ class TestDatabaseRestore:
             ])
             assert out == (
                 f"{TestUtil.pgvctrl_std_restore_qa_reply}"
-                f"Database {backup_file} "
+                f"Database {self.backup_file} "
                 f"from repository pgvctrl_test restored ['-d', '{TestUtil.pgvctrl_test_db}'].\n"
             )
 
@@ -79,7 +79,7 @@ class TestDatabaseRestore:
         with mock.patch('builtins.input', return_value="YES"):
             out, errors = capture_dbvctrl_out(arg_list=[
                 Const.RESTORE_DATABASE_ARG,
-                TestUtil.restore_db_test_file,
+                self.backup_file,
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,
                 Const.DATABASE_ARG,
@@ -111,7 +111,7 @@ class TestDatabaseRestore:
         with mock.patch('builtins.input', return_value="NO"):
             out, errors = capture_dbvctrl_out(arg_list=[
                 Const.RESTORE_DATABASE_ARG,
-                TestUtil.restore_db_test_file,
+                self.backup_file,
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,
                 Const.DATABASE_ARG,
