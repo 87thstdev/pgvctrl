@@ -35,6 +35,12 @@ class VersionedDbExceptionRepoNameInvalid(VersionedDbException):
         pass
 
 
+class VersionedDbExceptionMissingRepo(VersionedDbException):
+    def __init__(self, repo_name):
+        self.message = f"Missing repository folder: {repo_name}"
+        pass
+
+
 class VersionedDbExceptionRepoVersionDoesNotExits(VersionedDbException):
     def __init__(self, repo_name, version_name):
         self.message = (

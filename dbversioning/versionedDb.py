@@ -85,19 +85,10 @@ class Version(object):
         return f"{self.major}.{self.minor}.{self.maintenance}"
 
     def get_version_hash_set(self):
-        BUF_SIZE = 65536
         file_hashes = []
 
-        sha1 = hashlib.sha1()
-
         for sql in self.sql_files:
-            with open(sql.path, "rb") as f:
-                while True:
-                    data = f.read(BUF_SIZE)
-                    if not data:
-                        break
-                    sha1.update(data)
-            file_hashes.append({"file": sql.fullname, "hash": sha1.hexdigest()})
+            file_hashes.append({"file": sql.fullname, "hash": get_file_hash(file_path=sql.path)})
 
         return file_hashes
 
@@ -206,3 +197,17 @@ class GenericSql(object):
     @property
     def path(self):
         return self._path
+
+
+def get_file_hash(file_path) -> str:
+    buffer_size = 65536
+    sha1 = hashlib.sha1()
+
+    with open(file_path, "rb") as f:
+        while True:
+            data = f.read(buffer_size)
+            if not data:
+                break
+            sha1.update(data)
+
+    return sha1.hexdigest()

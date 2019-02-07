@@ -21,7 +21,9 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionRepoVersionNumber,
     VersionedDbExceptionRepoNameInvalid,
     VersionedDbExceptionRestoreNotAllowed,
-    VersionedDbExceptionFileMissing)
+    VersionedDbExceptionFileMissing,
+    VersionedDbExceptionNoVersionFound,
+    VersionedDbExceptionMissingRepo)
 from dbversioning.versionedDbShellUtil import (
     VersionDbShellUtil,
     error_message,
@@ -30,12 +32,17 @@ from dbversioning.versionedDbShellUtil import (
     repo_unregistered_message,
     notice_message,
     warning_message,
-    sql_rollback_information_message)
+    sql_rollback_information_message,
+    sql_applied_message,
+    sql_not_applied_message,
+    sql_different_message,
+    sql_missing_applied_message)
 from dbversioning.versionedDb import (
     VersionDb,
     FastForwardDb,
     GenericSql,
-    FastForwardVersion)
+    FastForwardVersion,
+    get_file_hash)
 from dbversioning.repositoryconf import (
     RepositoryConf,
     VERSION_STORAGE_PROP,
@@ -126,6 +133,101 @@ class VersionedDbHelper:
                             sql_rollback_information_message(sql_message=sql_msg)
                         else:
                             information_message(message=sql_msg)
+
+    @staticmethod
+    def display_db_version_status(v_tbl, repo_name, db_conn):
+        dbv = VersionDbShellUtil.get_db_instance_version(v_tbl, db_conn)
+        if dbv and dbv.version is None:
+            raise VersionedDbExceptionNoVersionFound()
+
+        conf = RepositoryConf()
+        root = conf.root()
+
+        ignored = {FAST_FORWARD_DIR, SNAPSHOTS_DIR, DATABASE_BACKUP_DIR}
+        repo_locations = get_valid_elements(root, ignored)
+
+        if repo_name not in repo_locations:
+            raise VersionedDbExceptionMissingRepo(repo_name)
+
+        db_repo = VersionDb(join(os.getcwd(), root, repo_name))
+        v = [ver for ver in db_repo.versions if ver.full_name == dbv.version]
+
+        if not v:
+            raise VersionedDbExceptionRepoVersionDoesNotExits(
+                    repo_name=repo_name,
+                    version_name=dbv.version
+            )
+
+        version = v[0]
+
+        repo_conf = conf.get_repo(db_repo.db_name)
+        if repo_conf:
+            information_message(db_repo.db_name)
+            inc_exc = []
+            if INCLUDE_SCHEMAS_PROP in repo_conf:
+                inc_exc.append(f"{INCLUDE_SCHEMAS_PROP}: {repo_conf[INCLUDE_SCHEMAS_PROP]}")
+
+            if EXCLUDE_SCHEMAS_PROP in repo_conf:
+                inc_exc.append(f"{EXCLUDE_SCHEMAS_PROP}: {repo_conf[EXCLUDE_SCHEMAS_PROP]}")
+
+            if INCLUDE_TABLES_PROP in repo_conf:
+                inc_exc.append(f"{INCLUDE_TABLES_PROP}: {repo_conf[INCLUDE_TABLES_PROP]}")
+
+            if EXCLUDE_TABLES_PROP in repo_conf:
+                inc_exc.append(f"{EXCLUDE_TABLES_PROP}: {repo_conf[EXCLUDE_TABLES_PROP]}")
+
+            if inc_exc:
+                msg = ", ".join(inc_exc)
+                notice_message(f"\t({msg})")
+        else:
+            repo_unregistered_message(db_repo.db_name)
+
+        env = []
+        if repo_conf and repo_conf[ENVS_PROP]:
+            for e in repo_conf[ENVS_PROP]:
+                if repo_conf[ENVS_PROP][e] == version.version_number:
+                    env.append(e)
+        if env:
+            repo_version_information_message(f"\tv {version.full_name}", f"{env}")
+        else:
+            repo_version_information_message(f"\tv {version.full_name}", "")
+
+        file_hashes = json.loads(dbv.version_hash)
+
+        for s in version.sql_files:
+            if s.is_rollback:
+                continue
+
+            fh = [f for f in file_hashes if f["file"] == s.fullname]
+            if fh and fh[0]:
+                sql_hash = get_file_hash(file_path=s.path)
+                fh[0]["hash_match"] = sql_hash == fh[0]["hash"]
+                fh[0]["db_has_sql"] = True
+            else:
+                file_hashes.append({
+                    "file": s.fullname,
+                    "hash_match": False,
+                    "db_has_sql": False,
+                })
+        sorted_h = sorted(
+                file_hashes,
+                key=lambda file: file["file"],
+        )
+        for h in sorted_h:
+            if "hash_match" not in h:
+                sql_missing_applied_message(sql_name=h["file"])
+                continue
+
+            if h["db_has_sql"] and h["hash_match"]:
+                sql_applied_message(sql_name=h["file"])
+                continue
+
+            if h["db_has_sql"] is False:
+                sql_not_applied_message(sql_name=h["file"])
+                continue
+
+            if h["db_has_sql"] is True and h["hash_match"] is False:
+                sql_different_message(sql_name=h["file"])
 
     @staticmethod
     def display_repo_ff_list() -> bool:
@@ -258,6 +360,11 @@ class VersionedDbHelper:
     def display_db_version_on_server(db_conn, repo_name):
         v_stg = VersionedDbHelper._get_v_stg(repo_name)
         VersionDbShellUtil.display_db_instance_version(v_stg, db_conn)
+
+    @staticmethod
+    def display_db_version_status_on_server(db_conn, repo_name):
+        v_stg = VersionedDbHelper._get_v_stg(repo_name)
+        VersionedDbHelper.display_db_version_status(v_stg, repo_name, db_conn)
 
     @staticmethod
     def initialize_db_version_on_server(

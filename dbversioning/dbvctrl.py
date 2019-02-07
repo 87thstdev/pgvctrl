@@ -45,6 +45,9 @@ def parse_args(args):
         Const.CHECK_VER_ARG, help="Check database version", action="store_true"
     )
     group.add_argument(
+            Const.STATUS, help="Check database repository version status", action="store_true"
+    )
+    group.add_argument(
         Const.MKCONF_ARG, help="Create dbRepoConfig.json", action="store_true"
     )
     group.add_argument(
@@ -190,6 +193,13 @@ def display_repo_dd_list():
     c = VersionedDbHelper()
     if not c.display_repo_dd_list():
         error_message_non_terminating("No database dumps available.")
+
+
+def display_repo_status(arg_set):
+    c = VersionedDbHelper()
+    db_conn = connection_list(arg_set)
+
+    c.display_db_version_status_on_server(db_conn, arg_set.repo)
 
 
 def check_db_version_on_server(arg_set):
@@ -406,6 +416,9 @@ class DbVctrl(object):
             elif arg_set.rdd:
                 # -rdd
                 display_repo_dd_list()
+            elif arg_set.status:
+                # -status -repo test_db -d postgresPlay
+                display_repo_status(arg_set)
             elif arg_set.chkver:
                 # -chkver -repo test_db -d postgresPlay
                 check_db_version_on_server(arg_set)

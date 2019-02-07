@@ -629,6 +629,22 @@ def repo_unregistered_message(repo_name):
     )
 
 
+def sql_applied_message(sql_name):
+    print(colors.green & colors.bold | f"\t\tApplied\t\t{sql_name}")
+
+
+def sql_not_applied_message(sql_name):
+    print(colors.yellow & colors.bold | f"\t\tNot Applied\t{sql_name}")
+
+
+def sql_different_message(sql_name):
+    print(colors.yellow & colors.bold | f"\t\tDifferent\t{sql_name}")
+
+
+def sql_missing_applied_message(sql_name):
+    print(colors.red & colors.bold | f"\t\tMissing\t\t{sql_name}")
+
+
 def _local_psql():
     return local["psql"]
 

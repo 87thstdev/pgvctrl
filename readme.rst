@@ -407,6 +407,35 @@ Output:
 
    mydb: 0.0.0.first.0
 
+-status: Check database repository version status:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block::
+
+   pgvctrl -status -repo [repository name] [db connection information]
+
+e.g:
+
+.. code-block::
+
+    pgvctrl -status -repo mydb -d mylocaldb
+
+Output:
+
+.. code-block::
+
+    mydb
+        v 0.0.0.first ['test']
+            Applied        100.some_sql
+            Not Applied    200.some_sql
+            Different      300.some_sql
+            Missing        400.some_sql
+
+- Applied (green) - The sql file has been applied to the database.
+- Not Applied (yellow)- The sql file has not yet been applied to the database.
+- Different (yellow) - The sql file has been applied to the database, but the file has been altered/updated.
+- Missing (red) - The file had been applied to the database, but was removed from the version.
+
 -rmenv: Remove environment type:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -693,6 +722,7 @@ table structures as you see fit. The root setting tells pgvctrl where to
 look for the repositories.
 
 .. code-block::
+
     {
         "autoSnapshots": true,
         "defaultVersionStorage": {

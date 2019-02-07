@@ -285,6 +285,20 @@ class TestUtil(object):
         copy2(TestUtil.bad_sql_name, TestUtil.test_sql_path)
 
     @staticmethod
+    def create_simple_sql_file(repo_name: str, version: str, file_name: str):
+        full_file_name = f'databases/{repo_name}/{version}/{file_name}'
+        if not os.path.exists(full_file_name):
+            with open(full_file_name, 'w') as f:
+                f.write(f"SELECT '{file_name}' as file_name;\n")
+
+    @staticmethod
+    def append_simple_sql_file(repo_name: str, version: str, file_name: str, append: str):
+        full_file_name = f'databases/{repo_name}/{version}/{file_name}'
+        if os.path.exists(full_file_name):
+            with open(full_file_name, "a") as f:
+                f.write(f"{append}\n")
+
+    @staticmethod
     def create_repo_ff_sql_file(repo_name: str, file_name: str):
         ensure_dir_exists(f"databases/_fastForward/{repo_name}")
         full_file_name = f'databases/_fastForward/{repo_name}/{file_name}'
