@@ -358,7 +358,7 @@ class VersionDbShellUtil:
         dbv = VersionDbShellUtil.get_db_instance_version(v_tbl, db_conn)
 
         if dbv and dbv.version is None:
-            error_message("No version found!")
+            raise VersionedDbExceptionNoVersionFound()
         else:
             prod_display = " PRODUCTION" if dbv.is_production else ""
             env_display = (
@@ -465,12 +465,7 @@ class VersionDbShellUtil:
         try:
             rtn = psql.run(psql_parm_list, retcode=0)
         except ProcessExecutionError as e:
-            if e.retcode == 1:
-                return True
-            elif e.retcode == 2:
-                raise VersionedDbExceptionBadDateSource(db_conn)
-            elif e.retcode > 2:
-                raise VersionedDbException(e.stderr)
+            raise VersionedDbExceptionBadDateSource(db_conn)
 
         rtn_array = rtn[STDOUT].split("|")
         count = int(rtn_array[0])
@@ -517,7 +512,7 @@ def _good_version_table(v_tbl, db_conn):
             raise VersionedDbExceptionMissingVersionTable(v_tbl.tbl)
         elif e.retcode == 2:
             raise VersionedDbExceptionBadDateSource(db_conn)
-        elif e.retcode > 2:
+        else:
             raise VersionedDbException(e.stderr)
 
     rtn_array = rtn[STDOUT].split("|")

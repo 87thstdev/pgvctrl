@@ -75,6 +75,21 @@ class TestDatabaseRestore:
                 msg=f"{TestUtil.test_version}.0: {TestUtil.pgvctrl_test_repo} environment (None)\n"
         )
 
+    def test_database_restore_db_not_empty(self):
+        with mock.patch('builtins.input', return_value="YES"):
+            out, errors = capture_dbvctrl_out(arg_list=[
+                Const.RESTORE_DATABASE_ARG,
+                self.backup_file,
+                Const.REPO_ARG,
+                TestUtil.pgvctrl_test_repo,
+                Const.DATABASE_ARG,
+                TestUtil.pgvctrl_test_db,
+            ])
+            assert out == (
+                f"{TestUtil.pgvctrl_std_restore_qa_reply}"
+                f"Database restores only allowed on empty databases.\n"
+            )
+
     def test_database_restore_db_not_found(self):
         with mock.patch('builtins.input', return_value="YES"):
             out, errors = capture_dbvctrl_out(arg_list=[
