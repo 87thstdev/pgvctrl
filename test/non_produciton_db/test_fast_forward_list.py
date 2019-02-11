@@ -34,8 +34,8 @@ class TestDatabaseFastForwardList:
                     Const.LIST_REPOS_FF_ARG,
                 ],
                 msg=f"{TestUtil.pgvctrl_test_repo}\n"
-                    f"\t1.0.0\n"
-                    f"\t2.0.0\n"
+                    f"\t1.0.0\t0.0 B\n"
+                    f"\t2.0.0\t0.0 B\n"
         )
 
     def test_fast_forward_list_multi(self):
@@ -66,12 +66,12 @@ class TestDatabaseFastForwardList:
                     Const.LIST_REPOS_FF_ARG,
                 ],
                 msg=f"{TestUtil.pgvctrl_test_temp_repo}\n"
-                    f"\t12.0.0\n"
-                    f"\t13.0.0\n"
-                    f"\t13.4.0\n"
+                    f"\t12.0.0\t0.0 B\n"
+                    f"\t13.0.0\t0.0 B\n"
+                    f"\t13.4.0\t0.0 B\n"
                     f"{TestUtil.pgvctrl_test_repo}\n"
-                    f"\t1.0.0\n"
-                    f"\t2.0.0.dev\n"
+                    f"\t1.0.0\t0.0 B\n"
+                    f"\t2.0.0.dev\t0.0 B\n"
         )
 
     def test_fast_forward_list_fail(self):

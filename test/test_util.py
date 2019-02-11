@@ -145,6 +145,22 @@ class TestUtil(object):
                  'Running: 400.ErrorSet\n\n' \
                  f'Applied: {pgvctrl_test_repo} v {test_version}.0\n'
 
+    sql_return_timer = (
+        'Running: 90.\n'
+        '\t6: NOTICE:  No name sql!\n\n'
+        'Running: 100.AddUsersTable\n\n'
+        'Running: 110.Notice\n'
+        '\t8: NOTICE:  WHO DAT? 87admin\n'
+        '\t8: NOTICE:  Just me, 87admin\n'
+        '\t8: NOTICE:  Guess we are talking to ourselves!  87admin\n\n'
+        'Running: 120.ItemTable\n\n'
+        'Running: 140.ItemsAddMore\n\n'
+        'Running: 200.AddEmailTable\n\n'
+        'Running: 300.UserStateTable\n\n'
+        'Running: 400.ErrorSet\n\n'
+        f'Applied: {pgvctrl_test_repo} v {test_version}.0\n'
+    )
+
     @staticmethod
     def local_psql():
         return local["psql"]

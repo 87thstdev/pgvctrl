@@ -34,8 +34,8 @@ class TestDatabaseDumpList:
                     Const.LIST_REPOS_DD_ARG,
                 ],
                 msg=f"{TestUtil.pgvctrl_test_repo}\n"
-                    f"\t1.0.0\n"
-                    f"\t2.0.0\n"
+                    f"{Const.TAB}1.0.0                                   0.0 B\n"
+                    f"{Const.TAB}2.0.0                                   0.0 B\n"
         )
 
     def test_dump_database_list_multi(self):
@@ -66,10 +66,10 @@ class TestDatabaseDumpList:
                     Const.LIST_REPOS_DD_ARG,
                 ],
                 msg=f"{TestUtil.pgvctrl_test_temp_repo}\n"
-                    f"\t12.0.0\n"
-                    f"\t13.0.0\n"
-                    f"\t13.4.0\n"
+                    f"{Const.TAB}12.0.0                                  0.0 B\n"
+                    f"{Const.TAB}13.0.0                                  0.0 B\n"
+                    f"{Const.TAB}13.4.0                                  0.0 B\n"
                     f"{TestUtil.pgvctrl_test_repo}\n"
-                    f"\t1.0.0\n"
-                    f"\t2.0.0.dev\n"
+                    f"{Const.TAB}1.0.0                                   0.0 B\n"
+                    f"{Const.TAB}2.0.0.dev                               0.0 B\n"
         )

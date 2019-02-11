@@ -64,3 +64,14 @@ DATA_COLUMN_INSERTS = "column-inserts"
 DATA_APPLY_ORDER = "apply-order"
 DATA_PRE_PUSH_FILE = "_pre_push.sql"
 DATA_POST_PUSH_FILE = "_post_push.sql"
+
+TAB = "    "
+
+KB = float(1024)
+MB = float(KB ** 2)
+GB = float(KB ** 3)
+TB = float(KB ** 4)
+
+MINIMUM_SECONDS = 0.005
+SECONDS_IN_MINUTE = 60
+SECONDS_IN_HOUR = 60 ** 2
