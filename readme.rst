@@ -232,7 +232,7 @@ Getting Started
    .. code-block::
 
       mydb
-           1.0.0.my_new_version
+           1.0.0.my_new_version      5.21 KB
 
 #. List repository database dumps:
 
@@ -245,7 +245,7 @@ Getting Started
    .. code-block::
 
       mydb
-           mydb.test.20190101
+           mydb.test.20190101           132.22 MB
 
 
 #. When you are ready to apply your changes to your database:
@@ -431,10 +431,38 @@ Output:
             Different      300.some_sql
             Missing        400.some_sql
 
-- Applied (green) - The sql file has been applied to the database.
-- Not Applied (yellow)- The sql file has not yet been applied to the database.
-- Different (yellow) - The sql file has been applied to the database, but the file has been altered/updated.
+- Applied (whitish) - The sql file has been applied to the database.
+- Not Applied (green)- The sql file has not yet been applied to the database.
+- Different (orange) - The sql file has been applied to the database, but the file has been altered/updated.
 - Missing (red) - The file had been applied to the database, but was removed from the version.
+
+-timer-on/-timer-off: Turn executions timer on/off for -apply, -applyff, -pulldata, -pushdata, -dump-database and -restore:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block::
+
+    pgvctrl -timer-on
+
+Output:
+
+.. code-block::
+
+    Execution Timer ON
+
+.. code-block::
+
+    pgvctrl -timer-off
+
+Output:
+
+.. code-block::
+
+    Execution Timer OFF
+
+
+**What happens?**\
+
+-  The "timeExecutions" value in dbRepoConfig.json is toggled
 
 -rmenv: Remove environment type:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -724,7 +752,7 @@ look for the repositories.
 .. code-block::
 
     {
-        "autoSnapshots": true,
+        "autoSnapshots": false,
         "defaultVersionStorage": {
             "env": "env",
             "isProduction": "is_production",
@@ -759,7 +787,8 @@ look for the repositories.
             }
         ],
         "restoreDatabaseOptionsDefault": "-Fc -j 8",
-        "root": "databases"
+        "root": "databases",
+        "timeExecutions": false
     }
 
 data.json
