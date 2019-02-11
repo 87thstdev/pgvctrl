@@ -80,6 +80,16 @@ def parse_args(args):
         help="Set postgres owner for the version storage table",
     )
     group.add_argument(
+            Const.TIMER_ON_ARG,
+            help="Turn executions timer on (-apply, -applyff, -pulldata, -pushdata, -dump-database, -restore)",
+            action="store_true",
+    )
+    group.add_argument(
+            Const.TIMER_OFF_ARG,
+            help="Turn executions timer on (-apply, -applyff, -pulldata, -pushdata, -dump-database, -restore)",
+            action="store_true",
+    )
+    group.add_argument(
             Const.DUMP_DATABASE_ARG,
             help="Dump database from server to local file (requires confirmation)",
             action="store_true",
@@ -336,6 +346,11 @@ def set_repository_version_storage_owner(repo_name: str, owner: str):
     vdb.set_repository_version_storage_owner(repo_name=repo_name, owner=owner)
 
 
+def set_timer(state: bool):
+    vdb = VersionedDbHelper()
+    vdb.set_timer(state=state)
+
+
 def set_repository_env_version(arg_set):
     vdb = VersionedDbHelper()
 
@@ -446,6 +461,12 @@ class DbVctrl(object):
             elif arg_set.set_version_storage_owner:
                 # --set-version-storage-owner dbowner -repo test_db
                 set_repository_version_storage_owner(repo_name=arg_set.repo, owner=arg_set.set_version_storage_owner)
+            elif arg_set.timer_on:
+                # -timer-on
+                set_timer(True)
+            elif arg_set.timer_off:
+                # -timer-off
+                set_timer(False)
             elif arg_set.setenv:
                 # -setenv test -repo test_db -v 1.0.0
                 set_repository_env_version(arg_set)

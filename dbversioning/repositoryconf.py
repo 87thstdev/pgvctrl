@@ -20,6 +20,7 @@ Version_Table = namedtuple(
 ROOT = "root"
 HIDDEN = "."
 AUTO_SNAPSHOTS_PROP = "autoSnapshots"
+TIME_PROP = "timeExecutions"
 FAST_FORWARD_DIR = "_fastForward"
 SNAPSHOTS_DIR = "_snapshots"
 DATABASE_BACKUP_DIR = "_databaseBackup"
@@ -79,7 +80,8 @@ class RepositoryConf(object):
     def config_json():
         config_json = {
             ROOT: "databases",
-            AUTO_SNAPSHOTS_PROP: True,
+            AUTO_SNAPSHOTS_PROP: False,
+            TIME_PROP: False,
             DUMP_DATABASE_OPTIONS_PROP_DEFAULT: DUMP_DATABASE_OPTIONS_DEFAULT,
             RESTORE_DATABASE_OPTIONS_PROP_DEFAULT: RESTORE_DATABASE_OPTIONS_DEFAULT,
             DEFAULT_VERSION_STORAGE_PROP: {
@@ -119,6 +121,11 @@ class RepositoryConf(object):
     def auto_snapshots():
         conf = RepositoryConf._get_repo_dict()
         return conf[AUTO_SNAPSHOTS_PROP]
+
+    @staticmethod
+    def is_timer_on():
+        conf = RepositoryConf._get_repo_dict()
+        return conf[TIME_PROP]
 
     @staticmethod
     def dump_database_options_default():
@@ -328,6 +335,24 @@ class RepositoryConf(object):
                 outfile.write(out_str)
 
         return True
+
+    @staticmethod
+    def set_timer(state: bool):
+        conf = RepositoryConf._get_repo_dict()
+
+        with open(RepositoryConf.config_file_name()):
+            conf[TIME_PROP] = state
+
+            out_str = json.dumps(
+                    conf,
+                    indent=4,
+                    sort_keys=True,
+                    separators=(",", ": "),
+                    ensure_ascii=True,
+            )
+
+            with open(RepositoryConf.config_file_name(), "w") as outfile:
+                outfile.write(out_str)
 
     @staticmethod
     def set_repo_env(repo_name: str, env: str, version: str):

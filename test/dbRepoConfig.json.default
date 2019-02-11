@@ -32,5 +32,6 @@
         }
      ],
     "restoreDatabaseOptionsDefault": "-Fc -j 8",
-    "root": "databases"
+    "root": "databases",
+    "timeExecutions": false
 }
