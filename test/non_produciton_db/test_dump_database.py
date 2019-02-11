@@ -44,14 +44,15 @@ class TestDataDump:
                 Const.DATABASE_ARG,
                 TestUtil.pgvctrl_test_db,
             ])
-            assert out == f"{TestUtil.pgvctrl_std_dump_reply}Repository {TestUtil.pgvctrl_test_repo} database backup\n"
+            assert out == f"{TestUtil.pgvctrl_std_dump_reply}" \
+                f"Repository {TestUtil.pgvctrl_test_repo} database backed up\n"
             assert errors is None
 
         files = TestUtil.get_backup_file_name(TestUtil.pgvctrl_test_repo)
         backup_file = files[0]
         date_str = backup_file.split(".")[1]
         date_of = datetime.strptime(date_str, SNAPSHOT_DATE_FORMAT)
-        test_file_name = f"{TestUtil.pgvctrl_test_repo}.{date_str}.sql"
+        test_file_name = f"{TestUtil.pgvctrl_test_repo}.{date_str}"
 
         assert backup_file is not None
         assert type(date_of) is datetime
@@ -97,7 +98,8 @@ class TestDataDump:
                 Const.DATABASE_ARG,
                 TestUtil.pgvctrl_test_db,
             ])
-            assert out == f"{TestUtil.pgvctrl_std_dump_reply}Repository {TestUtil.pgvctrl_test_repo} database backup\n"
+            assert out == f"{TestUtil.pgvctrl_std_dump_reply}" \
+                f"Repository {TestUtil.pgvctrl_test_repo} database backed up\n"
             assert errors is None
 
         files = TestUtil.get_backup_file_name(TestUtil.pgvctrl_test_repo)
@@ -169,7 +171,8 @@ class TestDataDump:
                 Const.DATABASE_ARG,
                 TestUtil.pgvctrl_test_db,
             ])
-            assert out == f"{TestUtil.pgvctrl_std_dump_reply}Repository {TestUtil.pgvctrl_test_repo} database backup\n"
+            assert out == f"{TestUtil.pgvctrl_std_dump_reply}" \
+                f"Repository {TestUtil.pgvctrl_test_repo} database backed up\n"
             assert errors is None
 
         files = TestUtil.get_backup_file_name(TestUtil.pgvctrl_test_repo)
@@ -185,3 +188,63 @@ class TestDataDump:
         )
         assert has_member_sch is False
         assert has_public_sch is True
+
+
+class TestDataDumpENv:
+    def setup_method(self):
+        TestUtil.drop_database()
+        TestUtil.create_database()
+        TestUtil.get_static_config()
+        capture_dbvctrl_out(arg_list=[
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.V_ARG,
+            TestUtil.test_first_version,
+            Const.SET_ENV_ARG,
+            TestUtil.env_test,
+        ])
+        capture_dbvctrl_out(arg_list=[
+            Const.INIT_ARG,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+            Const.SET_ENV_ARG,
+            TestUtil.env_test,
+        ])
+        capture_dbvctrl_out(arg_list=[
+            Const.APPLY_ARG,
+            Const.ENV_ARG,
+            TestUtil.env_test,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+
+    def teardown_method(self):
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_backups_path)
+        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.drop_database()
+
+    def test_data_dump_env(self):
+        with mock.patch('builtins.input', return_value="YES"):
+            out, errors = capture_dbvctrl_out(arg_list=[
+                Const.DUMP_DATABASE_ARG,
+                Const.REPO_ARG,
+                TestUtil.pgvctrl_test_repo,
+                Const.DATABASE_ARG,
+                TestUtil.pgvctrl_test_db,
+            ])
+            assert out == f"{TestUtil.pgvctrl_std_dump_reply}" \
+                f"Repository {TestUtil.pgvctrl_test_repo} database backed up\n"
+            assert errors is None
+
+        files = TestUtil.get_backup_file_name(TestUtil.pgvctrl_test_repo)
+        backup_file = files[0]
+        date_str = backup_file.split(".")[2]
+        date_of = datetime.strptime(date_str, SNAPSHOT_DATE_FORMAT)
+        test_file_name = f"{TestUtil.pgvctrl_test_repo}.{TestUtil.env_test}.{date_str}"
+
+        assert type(date_of) is datetime
+        assert test_file_name == backup_file

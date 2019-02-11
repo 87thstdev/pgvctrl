@@ -1,11 +1,13 @@
 import os
 from collections import namedtuple
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 
 import simplejson as json
 from os.path import join
 
 import dbversioning.dbvctrlConst as Const
+from dbversioning.osUtil import dir_exists
 from dbversioning.versionedDbHelper import get_valid_elements
 from dbversioning.errorUtil import (
     VersionedDbExceptionFileExits,
@@ -13,26 +15,37 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionRepoVersionExits,
     VersionedDbExceptionRepoVersionDoesNotExits,
     VersionedDbExceptionProductionChangeNoProductionFlag,
-    VersionedDbExceptionMissingVersionTable,
     VersionedDbExceptionFastForwardNotAllowed,
     VersionedDbExceptionRepoDoesNotExits,
     VersionedDbExceptionRepoExits,
     VersionedDbExceptionEnvDoesMatchDbEnv,
     VersionedDbExceptionRepoVersionNumber,
-    VersionedDbExceptionRepoNameInvalid)
+    VersionedDbExceptionRepoNameInvalid,
+    VersionedDbExceptionRestoreNotAllowed,
+    VersionedDbExceptionFileMissing,
+    VersionedDbExceptionNoVersionFound,
+    VersionedDbExceptionMissingRepo)
 from dbversioning.versionedDbShellUtil import (
     VersionDbShellUtil,
     error_message,
+    get_file_size,
+    get_time_text,
     information_message,
     repo_version_information_message,
     repo_unregistered_message,
     notice_message,
     warning_message,
-    sql_rollback_information_message)
+    sql_rollback_information_message,
+    sql_applied_message,
+    sql_not_applied_message,
+    sql_different_message,
+    sql_missing_applied_message)
 from dbversioning.versionedDb import (
     VersionDb,
     FastForwardDb,
-    GenericSql)
+    GenericSql,
+    FastForwardVersion,
+    get_file_hash)
 from dbversioning.repositoryconf import (
     RepositoryConf,
     VERSION_STORAGE_PROP,
@@ -44,7 +57,8 @@ from dbversioning.repositoryconf import (
     EXCLUDE_SCHEMAS_PROP,
     INCLUDE_TABLES_PROP,
     EXCLUDE_TABLES_PROP,
-    DUMP_DATABASE_OPTIONS_DEFAULT)
+    DUMP_DATABASE_OPTIONS_DEFAULT,
+    RESTORE_DATABASE_OPTIONS_DEFAULT)
 
 to_unicode = str
 
@@ -124,6 +138,167 @@ class VersionedDbHelper:
                             information_message(message=sql_msg)
 
     @staticmethod
+    def display_db_version_status(v_tbl, repo_name, db_conn):
+        dbv = VersionDbShellUtil.get_db_instance_version(v_tbl, db_conn)
+        if dbv and dbv.version is None:
+            raise VersionedDbExceptionNoVersionFound()
+
+        conf = RepositoryConf()
+        root = conf.root()
+
+        ignored = {FAST_FORWARD_DIR, SNAPSHOTS_DIR, DATABASE_BACKUP_DIR}
+        repo_locations = get_valid_elements(root, ignored)
+
+        if repo_name not in repo_locations:
+            raise VersionedDbExceptionMissingRepo(repo_name)
+
+        db_repo = VersionDb(join(os.getcwd(), root, repo_name))
+        v = [ver for ver in db_repo.versions if ver.full_name == dbv.version]
+
+        if not v:
+            raise VersionedDbExceptionRepoVersionDoesNotExits(
+                    repo_name=repo_name,
+                    version_name=dbv.version
+            )
+
+        version = v[0]
+
+        repo_conf = conf.get_repo(db_repo.db_name)
+        if repo_conf:
+            information_message(db_repo.db_name)
+            inc_exc = []
+            if INCLUDE_SCHEMAS_PROP in repo_conf:
+                inc_exc.append(f"{INCLUDE_SCHEMAS_PROP}: {repo_conf[INCLUDE_SCHEMAS_PROP]}")
+
+            if EXCLUDE_SCHEMAS_PROP in repo_conf:
+                inc_exc.append(f"{EXCLUDE_SCHEMAS_PROP}: {repo_conf[EXCLUDE_SCHEMAS_PROP]}")
+
+            if INCLUDE_TABLES_PROP in repo_conf:
+                inc_exc.append(f"{INCLUDE_TABLES_PROP}: {repo_conf[INCLUDE_TABLES_PROP]}")
+
+            if EXCLUDE_TABLES_PROP in repo_conf:
+                inc_exc.append(f"{EXCLUDE_TABLES_PROP}: {repo_conf[EXCLUDE_TABLES_PROP]}")
+
+            if inc_exc:
+                msg = ", ".join(inc_exc)
+                notice_message(f"\t({msg})")
+        else:
+            repo_unregistered_message(db_repo.db_name)
+
+        env = []
+        if repo_conf and repo_conf[ENVS_PROP]:
+            for e in repo_conf[ENVS_PROP]:
+                if repo_conf[ENVS_PROP][e] == version.version_number:
+                    env.append(e)
+        if env:
+            repo_version_information_message(f"\tv {version.full_name}", f"{env}")
+        else:
+            repo_version_information_message(f"\tv {version.full_name}", "")
+
+        file_hashes = json.loads(dbv.version_hash)
+
+        for s in version.sql_files:
+            if s.is_rollback:
+                continue
+
+            fh = [f for f in file_hashes if f["file"] == s.fullname]
+            if fh and fh[0]:
+                sql_hash = get_file_hash(file_path=s.path)
+                fh[0]["hash_match"] = sql_hash == fh[0]["hash"]
+                fh[0]["db_has_sql"] = True
+            else:
+                file_hashes.append({
+                    "file": s.fullname,
+                    "hash_match": False,
+                    "db_has_sql": False,
+                })
+        sorted_h = sorted(
+                file_hashes,
+                key=lambda file: file["file"],
+        )
+        for h in sorted_h:
+            if "hash_match" not in h:
+                sql_missing_applied_message(sql_name=h["file"])
+                continue
+
+            if h["db_has_sql"] and h["hash_match"]:
+                sql_applied_message(sql_name=h["file"])
+                continue
+
+            if h["db_has_sql"] is False:
+                sql_not_applied_message(sql_name=h["file"])
+                continue
+
+            if h["db_has_sql"] is True and h["hash_match"] is False:
+                sql_different_message(sql_name=h["file"])
+
+    @staticmethod
+    def display_repo_ff_list() -> bool:
+        """
+        :return: list of repository version fast forwards
+        """
+        has_ffs = False
+        conf = RepositoryConf()
+        root = conf.root()
+        ff_root = f"{root}/{FAST_FORWARD_DIR}"
+
+        if not dir_exists(ff_root):
+            return False
+
+        ignored = {root, SNAPSHOTS_DIR, DATABASE_BACKUP_DIR}
+        repo_ff_locations = get_valid_elements(ff_root, ignored)
+        ff_sql_ver = []
+        for repo_location in repo_ff_locations:
+            has_ffs = True
+            ff_locations = get_valid_elements(f"{ff_root}/{repo_location}")
+            information_message(repo_location)
+            for ff_sql in ff_locations:
+                ff_sql_ver.append(FastForwardVersion(ff_sql))
+
+            ff_sql_ver = sorted(
+                    ff_sql_ver,
+                    key=lambda vs: (vs.major, vs.minor, vs.maintenance),
+            )
+
+            for ff_v in ff_sql_ver:
+                sql_file_path = f"{ff_root}/{repo_location}/{ff_v.sql_file}"
+                information_message(f"\t{ff_v.full_name}\t{get_file_size(sql_file_path)}")
+
+            ff_sql_ver = []
+
+        return has_ffs
+
+    @staticmethod
+    def display_repo_dd_list():
+        """
+        :return: list of repository version fast forwards
+        """
+        has_dd = False
+        conf = RepositoryConf()
+        root = conf.root()
+        dd_root = f"{root}/{DATABASE_BACKUP_DIR}"
+
+        ignored = {root, SNAPSHOTS_DIR, FAST_FORWARD_DIR}
+
+        if not dir_exists(dd_root):
+            return False
+
+        repo_dd_locations = get_valid_elements(dd_root, ignored)
+
+        for repo_location in repo_dd_locations:
+            has_dd = True
+            dd_locations = get_valid_elements(f"{dd_root}/{repo_location}")
+            information_message(repo_location)
+
+            dd_locations = sorted(dd_locations)
+
+            for dd_file in dd_locations:
+                dd_file_path = f"{dd_root}/{repo_location}/{dd_file}"
+                information_message(f"{Const.TAB}{dd_file:<30}{get_file_size(dd_file_path):>15}")
+
+        return has_dd
+
+    @staticmethod
     def valid_repository(repository: str):
         found = True
         conf = RepositoryConf()
@@ -192,6 +367,11 @@ class VersionedDbHelper:
         VersionDbShellUtil.display_db_instance_version(v_stg, db_conn)
 
     @staticmethod
+    def display_db_version_status_on_server(db_conn, repo_name):
+        v_stg = VersionedDbHelper._get_v_stg(repo_name)
+        VersionedDbHelper.display_db_version_status(v_stg, repo_name, db_conn)
+
+    @staticmethod
     def initialize_db_version_on_server(
         db_conn, repo_name, is_production, env=None
     ):
@@ -218,14 +398,7 @@ class VersionedDbHelper:
     def apply_repository_fast_forward_to_database(
         repo_name, db_conn, full_version
     ):
-        has_version_tbl = True
-        try:
-            v_stg = VersionedDbHelper._get_v_stg(repo_name)
-            VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
-        except VersionedDbExceptionMissingVersionTable:
-            has_version_tbl = False
-
-        if has_version_tbl:
+        if not VersionDbShellUtil.is_database_empty(db_conn):
             raise VersionedDbExceptionFastForwardNotAllowed()
 
         fast_forward_to = VersionedDbHelper.get_repository_fast_forward_version(
@@ -233,7 +406,7 @@ class VersionedDbHelper:
         )
         if fast_forward_to:
             VersionDbShellUtil.apply_fast_forward_sql(
-                db_conn, fast_forward_to[0], repo_name
+                db_conn, fast_forward_to[0]
             )
         else:
             error_message(f"Fast forward not found {full_version}")
@@ -274,9 +447,12 @@ class VersionedDbHelper:
         if post_sql:
             data_files.append(post_sql)
 
-        VersionedDbHelper.apply_data_sql_files_to_database(
+        total_time = VersionedDbHelper.apply_data_sql_files_to_database(
             db_conn, data_files, force
         )
+
+        if RepositoryConf.is_timer_on():
+            notice_message(f"Total time: {get_time_text(total_time)}\n")
 
     @staticmethod
     def _get_wrapper_push_sql(data_path: str, file_name: str):
@@ -303,10 +479,47 @@ class VersionedDbHelper:
             dump_options = DUMP_DATABASE_OPTIONS_DEFAULT
 
         dump_options_list = dump_options.split(" ")
+        exec_time = VersionDbShellUtil.dump_database_backup(db_conn, v_stg, dump_options_list)
 
-        VersionDbShellUtil.dump_database_backup(db_conn, v_stg, dump_options_list)
-        information_message(f"Repository {repo_name} database backup")
+        msg = f"Repository {repo_name} database backed up"
+        if RepositoryConf.is_timer_on():
+            information_message(f"{msg} (time: {get_time_text(exec_time)})\n")
+        else:
+            information_message(msg)
 
+    @staticmethod
+    def repo_database_restore(db_conn, repo_name: str, file_name: str):
+        VersionedDbHelper.valid_repository(repo_name)
+        conf = RepositoryConf()
+
+        repo_db_bak = os.path.join(conf.database_backup_dir(), repo_name)
+        file_path = os.path.join(repo_db_bak, file_name)
+
+        if not os.path.isfile(file_path):
+            raise VersionedDbExceptionFileMissing(file_path)
+
+        if not VersionDbShellUtil.is_database_empty(db_conn):
+            raise VersionedDbExceptionRestoreNotAllowed()
+
+        conf = RepositoryConf()
+        restore_options = conf.get_repo_restore_database_options(repo_name=repo_name)
+
+        if not restore_options:
+            restore_options = RESTORE_DATABASE_OPTIONS_DEFAULT
+
+        restore_options_list = restore_options.split(" ")
+
+        exec_time = VersionDbShellUtil.restore_database_backup(
+                db_conn=db_conn,
+                restore_options=restore_options_list,
+                file_path=file_path
+        )
+
+        msg = f"Database {file_name} from repository {repo_name} restored {db_conn}."
+        if RepositoryConf.is_timer_on():
+            information_message(f"{msg} (time: {get_time_text(exec_time)})\n")
+        else:
+            information_message(msg)
 
     @staticmethod
     def pull_table_for_repo_data(repo_name, db_conn, table_list=None):
@@ -357,7 +570,7 @@ class VersionedDbHelper:
                 dbver.version, version
             )
 
-        VersionedDbHelper.apply_sql_files_to_database(
+        total_time = VersionedDbHelper.apply_sql_files_to_database(
             db_conn, apply_repo.sql_files
         )
 
@@ -386,27 +599,40 @@ class VersionedDbHelper:
         information_message(
             f"Applied: {new_dbver.repo_name} v {new_dbver.version}.{new_dbver.revision}"
         )
+        if RepositoryConf.is_timer_on():
+            notice_message(f"\tTotal time: {get_time_text(total_time)}\n")
         return True
 
     @staticmethod
     def set_repository_fast_forward(repo_name, db_conn):
         v_stg = VersionedDbHelper._get_v_stg(repo_name)
-
-        if VersionDbShellUtil.dump_version_fast_forward(
+        file_name = VersionDbShellUtil.dump_version_fast_forward(
             db_conn, v_stg, repo_name
-        ):
-            information_message(f"Fast forward set: {repo_name}")
+        )
+        if file_name:
+            information_message(f"Fast forward set: {repo_name} ({file_name})")
 
     @staticmethod
-    def apply_sql_files_to_database(db_conn, sql_files):
+    def apply_sql_files_to_database(db_conn, sql_files) -> Optional[float]:
+        total_time = 0.00
+
         for sql_file in sql_files:
             if not sql_file.is_rollback:
-                VersionDbShellUtil.apply_sql_file(db_conn, sql_file)
+                rtn = VersionDbShellUtil.apply_sql_file(db_conn, sql_file)
+                if rtn:
+                    total_time += rtn
+
+        return total_time
 
     @staticmethod
-    def apply_data_sql_files_to_database(db_conn, sql_files, force=None):
+    def apply_data_sql_files_to_database(db_conn, sql_files, force=None) -> Optional[float]:
+        total_time = 0.00
         for sql_file in sql_files:
-            VersionDbShellUtil.apply_data_sql_file(db_conn, sql_file, force)
+            rtn = VersionDbShellUtil.apply_data_sql_file(db_conn, sql_file, force)
+            if rtn:
+                total_time += rtn
+
+        return total_time
 
     @staticmethod
     def _version_standing(v_h, v_l):
@@ -494,6 +720,13 @@ class VersionedDbHelper:
             information_message(
                 f"Repository version storage owner set: {repo_name} {owner}"
             )
+
+    @staticmethod
+    def set_timer(state: bool):
+        state_str = "ON" if state else "OFF"
+
+        RepositoryConf.set_timer(state=state)
+        information_message(f"Execution Timer {state_str}")
 
     @staticmethod
     def set_repository_environment_version(repo_name, env, version):

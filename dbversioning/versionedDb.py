@@ -38,19 +38,18 @@ class FastForwardDb(object):
 class FastForwardVersion(object):
     def __init__(self, ff_version_path):
         self._version_path = ff_version_path
-        self.name = ""
         self.major = None
         self.minor = None
         self.maintenance = None
 
         _set_version_info(os.path.basename(self._version_path), self)
+        file_array = os.path.splitext(os.path.basename(ff_version_path))
+
+        self.name = file_array[0]
 
     @property
     def full_name(self):
-        if self.name == "":
-            return self.version_number
-
-        return f"{self.version_number}.{self.name}"
+        return self.name
 
     @property
     def version_number(self):
@@ -58,7 +57,7 @@ class FastForwardVersion(object):
 
     @property
     def sql_file(self):
-        return GeneratorExit(self._version_path)
+        return self._version_path
 
 
 class Version(object):
@@ -86,19 +85,10 @@ class Version(object):
         return f"{self.major}.{self.minor}.{self.maintenance}"
 
     def get_version_hash_set(self):
-        BUF_SIZE = 65536
         file_hashes = []
 
-        sha1 = hashlib.sha1()
-
         for sql in self.sql_files:
-            with open(sql.path, "rb") as f:
-                while True:
-                    data = f.read(BUF_SIZE)
-                    if not data:
-                        break
-                    sha1.update(data)
-            file_hashes.append({"file": sql.fullname, "hash": sha1.hexdigest()})
+            file_hashes.append({"file": sql.fullname, "hash": get_file_hash(file_path=sql.path)})
 
         return file_hashes
 
@@ -207,3 +197,17 @@ class GenericSql(object):
     @property
     def path(self):
         return self._path
+
+
+def get_file_hash(file_path) -> str:
+    buffer_size = 65536
+    sha1 = hashlib.sha1()
+
+    with open(file_path, "rb") as f:
+        while True:
+            data = f.read(buffer_size)
+            if not data:
+                break
+            sha1.update(data)
+
+    return sha1.hexdigest()

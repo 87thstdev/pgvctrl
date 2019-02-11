@@ -58,11 +58,22 @@ class TestUtil(object):
     pgvctrl_test_db_snapshots_path = (
         f"databases/_snapshots/{pgvctrl_test_repo}"
     )
-    pgvctrl_std_qa_reply = "Do you want to dump the database? [YES/NO]\n"
-    pgvctrl_std_dump_reply = f"{pgvctrl_std_qa_reply}"
-    pgvctrl_std_dump_cancelled_reply = f"{pgvctrl_std_qa_reply}Dump database cancelled.\n"
+    pgvctrl_std_dump_qa_reply = "Do you want to dump the database? [YES/NO]\n"
+    pgvctrl_std_dump_reply = f"{pgvctrl_std_dump_qa_reply}"
+    pgvctrl_std_dump_cancelled_reply = f"{pgvctrl_std_dump_qa_reply}Dump database cancelled.\n"
+    db_backups_path = (
+        f"databases/_databaseBackup/"
+    )
     pgvctrl_test_db_backups_path = (
-        f"databases/_databaseBackup/{pgvctrl_test_repo}"
+        f"{db_backups_path}{pgvctrl_test_repo}"
+    )
+    pgvctrl_std_restore_qa_reply = "Do you want to restore the database? [YES/NO]\n"
+    pgvctrl_std_restore_reply = f"{pgvctrl_std_restore_qa_reply}"
+    pgvctrl_std_restore_cancelled_reply = (
+        f"{pgvctrl_std_restore_qa_reply}Restore database cancelled.\n"
+    )
+    pgvctrl_std_restore_none_empty_db_reply = (
+        f"{pgvctrl_std_restore_qa_reply}Database restores only allowed on empty databases.\n"
     )
     test_bad_version_number = "one.0.0.first"
     test_first_version = "0.0.0.first"
@@ -71,6 +82,9 @@ class TestUtil(object):
     )
     test_second_version_no_name = "1.0.0"
     test_version = "2.0.0.NewVersion"
+    pgvctrl_databases_ff_path = (
+        f"databases/_fastForward"
+    )
     pgvctrl_test_db_ff_path = (
         f"databases/_fastForward/{pgvctrl_test_repo}"
     )
@@ -130,6 +144,22 @@ class TestUtil(object):
                  'Running: 300.UserStateTable\n\n' \
                  'Running: 400.ErrorSet\n\n' \
                  f'Applied: {pgvctrl_test_repo} v {test_version}.0\n'
+
+    sql_return_timer = (
+        'Running: 90.\n'
+        '\t6: NOTICE:  No name sql!\n\n'
+        'Running: 100.AddUsersTable\n\n'
+        'Running: 110.Notice\n'
+        '\t8: NOTICE:  WHO DAT? 87admin\n'
+        '\t8: NOTICE:  Just me, 87admin\n'
+        '\t8: NOTICE:  Guess we are talking to ourselves!  87admin\n\n'
+        'Running: 120.ItemTable\n\n'
+        'Running: 140.ItemsAddMore\n\n'
+        'Running: 200.AddEmailTable\n\n'
+        'Running: 300.UserStateTable\n\n'
+        'Running: 400.ErrorSet\n\n'
+        f'Applied: {pgvctrl_test_repo} v {test_version}.0\n'
+    )
 
     @staticmethod
     def local_psql():
@@ -269,6 +299,36 @@ class TestUtil(object):
     @staticmethod
     def get_static_bad_sql_name():
         copy2(TestUtil.bad_sql_name, TestUtil.test_sql_path)
+
+    @staticmethod
+    def create_simple_sql_file(repo_name: str, version: str, file_name: str):
+        full_file_name = f'databases/{repo_name}/{version}/{file_name}'
+        if not os.path.exists(full_file_name):
+            with open(full_file_name, 'w') as f:
+                f.write(f"SELECT '{file_name}' as file_name;\n")
+
+    @staticmethod
+    def append_simple_sql_file(repo_name: str, version: str, file_name: str, append: str):
+        full_file_name = f'databases/{repo_name}/{version}/{file_name}'
+        if os.path.exists(full_file_name):
+            with open(full_file_name, "a") as f:
+                f.write(f"{append}\n")
+
+    @staticmethod
+    def create_repo_ff_sql_file(repo_name: str, file_name: str):
+        ensure_dir_exists(f"databases/_fastForward/{repo_name}")
+        full_file_name = f'databases/_fastForward/{repo_name}/{file_name}'
+        if not os.path.exists(full_file_name):
+            with open(full_file_name, 'w'):
+                pass
+
+    @staticmethod
+    def create_repo_dd_file(repo_name: str, file_name: str):
+        ensure_dir_exists(f"databases/_databaseBackup/{repo_name}")
+        full_file_name = f'databases/_databaseBackup/{repo_name}/{file_name}'
+        if not os.path.exists(full_file_name):
+            with open(full_file_name, 'w'):
+                pass
 
     @staticmethod
     def get_static_error_set_data():

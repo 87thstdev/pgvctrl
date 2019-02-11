@@ -8,10 +8,10 @@ order of execution set by the programmer.
 Prerequisites:
 --------------
 
-1. `postgres <https://www.postgresql.org/>`__ ;)
-2. A general knowledge of postgres sql.
+#. `postgres <https://www.postgresql.org/>`__ ;)
+#. A general knowledge of postgres sql.
    `tutorial <http://www.postgresqltutorial.com/>`__
-3. Python3
+#. Python3
 
 Getting started:
 ----------------
@@ -61,9 +61,9 @@ In the test directory:
 Getting Started
 ---------------
 
-1. If you don’t already have a database, create one on your postgres
+#. If you don’t already have a database, create one on your postgres
    server.
-2. Create pgvctrl dbRepoConfig:
+#. Create pgvctrl dbRepoConfig:
 
    1. Make a directory where you want you database repositories to live.
 
@@ -73,7 +73,7 @@ Getting Started
 
       This will create a dbRepoConfig.json file.
 
-3. Create database repository:
+#. Create database repository:
 
    1. In the same directory as the dbRepoConfig.json file, run:
 
@@ -100,7 +100,7 @@ Getting Started
    -  The dbRepoConfig.json file will be updated to reflect the new
       repository.
 
-4. Initialize database repository:
+#. Initialize database repository:
 
    1. In the same directory as the dbRepoConfig.json file, run:
 
@@ -161,7 +161,7 @@ Getting Started
       environment name, revision (number of times the same version has
       been applied with different sql hash) and production flag.
 
-5. Make repository version for repository: -mkv: Make version number:
+#. Make repository version for repository: -mkv: Make version number:
 
    .. code-block::
 
@@ -179,7 +179,7 @@ Getting Started
 
       Version mydb/1.0.0.my_new_version created.
 
-6. Create sql change files in the versioned directory! These files will
+#. Create sql change files in the versioned directory! These files will
    be used to update your database and should have the naming convention
    of: [order number].[change name].sql e.g.: 100.AddedUserTable.sql
 
@@ -193,7 +193,7 @@ Getting Started
            [Your sql changes] 
        COMMIT;
 
-7. List repositories and changes:
+#. List repositories and changes:
 
    .. code-block::
 
@@ -220,7 +220,35 @@ Getting Started
            v 0.0.0.my_new_version
                100 AddUsersTable
 
-8. When you are ready to apply your changes to your database:
+
+#. List repository Fast Forwards:
+
+   .. code-block::
+
+      pgvctrl -rff
+
+   Output:
+
+   .. code-block::
+
+      mydb
+           1.0.0.my_new_version      5.21 KB
+
+#. List repository database dumps:
+
+   .. code-block::
+
+      pgvctrl -rdd
+
+   Output:
+
+   .. code-block::
+
+      mydb
+           mydb.test.20190101           132.22 MB
+
+
+#. When you are ready to apply your changes to your database:
 
    .. code-block::
 
@@ -378,6 +406,63 @@ Output:
 .. code-block::
 
    mydb: 0.0.0.first.0
+
+-status: Check database repository version status:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block::
+
+   pgvctrl -status -repo [repository name] [db connection information]
+
+e.g:
+
+.. code-block::
+
+    pgvctrl -status -repo mydb -d mylocaldb
+
+Output:
+
+.. code-block::
+
+    mydb
+        v 0.0.0.first ['test']
+            Applied        100.some_sql
+            Not Applied    200.some_sql
+            Different      300.some_sql
+            Missing        400.some_sql
+
+- Applied (whitish) - The sql file has been applied to the database.
+- Not Applied (green)- The sql file has not yet been applied to the database.
+- Different (orange) - The sql file has been applied to the database, but the file has been altered/updated.
+- Missing (red) - The file had been applied to the database, but was removed from the version.
+
+-timer-on/-timer-off: Turn executions timer on/off for -apply, -applyff, -pulldata, -pushdata, -dump-database and -restore:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block::
+
+    pgvctrl -timer-on
+
+Output:
+
+.. code-block::
+
+    Execution Timer ON
+
+.. code-block::
+
+    pgvctrl -timer-off
+
+Output:
+
+.. code-block::
+
+    Execution Timer OFF
+
+
+**What happens?**\
+
+-  The "timeExecutions" value in dbRepoConfig.json is toggled
 
 -rmenv: Remove environment type:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -597,7 +682,60 @@ backup.
 
 .. code-block::
 
-   -dump-database -repo [repository name] [db connection information]
+    -dump-database -repo [repository name] [db connection information]
+
+e.g. For dumping the database.
+
+.. code-block::
+
+    -dump-database -repo mydb -d mylocaldb
+
+Output:
+
+.. code-block::
+
+    Do you want to dump the database? [YES/NO]
+    :[Type YES]
+    Repository mydb database backed up
+
+
+**What happens?**\
+
+-  The _databaseBackup/[repository name] folder is created if it doesn't exist.
+-  The backup [repository name][.environment].[string date] file is created.
+
+-restore-database: Restore a repositories database from -dump-database
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can restore a repositories database based on a previous repository database dump.
+
+.. code-block::
+
+    -restore-database [repository name][.environment].[string date] -repo [repository name] [db connection information]
+
+e.g. For dumping the database.
+
+.. code-block::
+
+    -restore-database mylocaldb.test.20190101 -repo mydb -d mylocaldb
+
+Output:
+
+.. code-block::
+
+    Do you want to restore the database? [YES/NO]
+    :[Type YES]
+    Database mylocaldb.20190101 from repository mydb restored ['-d', 'mylocaldb'].
+
+
+**What happens?**\
+
+-  The _databaseBackup/[repository name]/[dump file] file is used to fill the empty database at [db connection information].
+
+**Notes:**
+
+#. Database for restore should an empty databases.
+
 
 dbRepoConfig.json
 ~~~~~~~~~~~~~~~~~
@@ -614,8 +752,7 @@ look for the repositories.
 .. code-block::
 
     {
-        "autoSnapshots": true,
-        "dumpDatabaseOptionsDefault": "-Fc -Z 9",
+        "autoSnapshots": false,
         "defaultVersionStorage": {
             "env": "env",
             "isProduction": "is_production",
@@ -625,16 +762,18 @@ look for the repositories.
             "tableOwner": null,
             "version": "version",
             "versionHash": "version_hash"
-    },
+        },
+        "dumpDatabaseOptionsDefault": "-Fc -Z4",
         "repositories": [
             {
-            "dumpDatabaseOptions": "-Fc -Z 9",
-            "envs": {
-                "your_test": "1.0.1",
-                "your_qa": "1.0.0",
-                "your_prod": "0.9.0"
-            },
-            "name": "YouRepoName",
+                "dumpDatabaseOptions": "-Fc -Z4",
+                "envs": {
+                    "your_test": "1.0.1",
+                    "your_qa": "1.0.0",
+                    "your_prod": "0.9.0"
+                },
+                "name": "YouRepoName",
+                "restoreDatabaseOptions": "-Fc -j 8",
                 "versionStorage": {
                     "env": "env",
                     "isProduction": "is_production",
@@ -647,7 +786,9 @@ look for the repositories.
                 }
             }
         ],
-        "root": "databases"
+        "restoreDatabaseOptionsDefault": "-Fc -j 8",
+        "root": "databases",
+        "timeExecutions": false
     }
 
 data.json

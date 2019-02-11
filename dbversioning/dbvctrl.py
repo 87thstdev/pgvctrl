@@ -10,7 +10,7 @@ from dbversioning.errorUtil import (
     VersionedDbExceptionProductionChangeNoProductionFlag,
 )
 from dbversioning.versionedDbConnection import connection_list
-from dbversioning.versionedDbShellUtil import information_message, error_message
+from dbversioning.versionedDbShellUtil import information_message, error_message, error_message_non_terminating
 from dbversioning.versionedDbUtil import VersionedDbHelper
 
 
@@ -31,12 +31,21 @@ def parse_args(args):
         Const.LIST_REPOS_ARG, help="List repositories", action="store_true"
     )
     group.add_argument(
-        Const.LIST_REPOS_VERBOSE_ARG,
-        help="List repositories verbose",
-        action="store_true",
+            Const.LIST_REPOS_VERBOSE_ARG,
+            help="List repositories verbose",
+            action="store_true",
+    )
+    group.add_argument(
+            Const.LIST_REPOS_FF_ARG, help="List repository fast forwards", action="store_true"
+    )
+    group.add_argument(
+            Const.LIST_REPOS_DD_ARG, help="List repository data dumps", action="store_true"
     )
     group.add_argument(
         Const.CHECK_VER_ARG, help="Check database version", action="store_true"
+    )
+    group.add_argument(
+            Const.STATUS, help="Check database repository version status", action="store_true"
     )
     group.add_argument(
         Const.MKCONF_ARG, help="Create dbRepoConfig.json", action="store_true"
@@ -58,27 +67,38 @@ def parse_args(args):
         help="Push data from repository to database",
         action="store_true",
     )
+    parser.add_argument(
+            Const.TBL_ARG, metavar="", help="Pull/Push table for data", action="append"
+    )
+    parser.add_argument(
+            Const.FORCE_ARG,
+            help="Force push data from repository to database",
+            action="store_true",
+    )
     group.add_argument(
         Const.SET_VERSION_STORAGE_TABLE_OWNER_ARG,
         help="Set postgres owner for the version storage table",
     )
-
-    parser.add_argument(
-        Const.FORCE_ARG,
-        help="Force push data from repository to database",
-        action="store_true",
+    group.add_argument(
+            Const.TIMER_ON_ARG,
+            help="Turn executions timer on (-apply, -applyff, -pulldata, -pushdata, -dump-database, -restore)",
+            action="store_true",
     )
-
+    group.add_argument(
+            Const.TIMER_OFF_ARG,
+            help="Turn executions timer on (-apply, -applyff, -pulldata, -pushdata, -dump-database, -restore)",
+            action="store_true",
+    )
     group.add_argument(
             Const.DUMP_DATABASE_ARG,
             help="Dump database from server to local file (requires confirmation)",
             action="store_true",
     )
-
-    parser.add_argument(
-        Const.TBL_ARG, metavar="", help="Pull table for data", action="append"
+    group.add_argument(
+            Const.RESTORE_DATABASE_ARG,
+            help="Restore database dump from file to server (requires confirmation)",
+            metavar="",
     )
-
     parser.add_argument(Const.V_ARG, metavar="", help="Version number")
     parser.add_argument(Const.MAKE_REPO_ARG, metavar="", help="Make Repository")
     parser.add_argument(
@@ -173,6 +193,25 @@ def display_repo_list(verbose=False):
     c.display_repo_list(verbose)
 
 
+def display_repo_ff_list():
+    c = VersionedDbHelper()
+    if not c.display_repo_ff_list():
+        error_message_non_terminating("No fast forwards available.")
+
+
+def display_repo_dd_list():
+    c = VersionedDbHelper()
+    if not c.display_repo_dd_list():
+        error_message_non_terminating("No database dumps available.")
+
+
+def display_repo_status(arg_set):
+    c = VersionedDbHelper()
+    db_conn = connection_list(arg_set)
+
+    c.display_db_version_status_on_server(db_conn, arg_set.repo)
+
+
 def check_db_version_on_server(arg_set):
     c = VersionedDbHelper()
     db_conn = connection_list(arg_set)
@@ -252,6 +291,17 @@ def repo_database_dump(arg_set):
     )
 
 
+def repo_database_restore(arg_set):
+    vdb = VersionedDbHelper()
+    db_conn = connection_list(arg_set)
+
+    vdb.repo_database_restore(
+        db_conn=db_conn,
+        repo_name=arg_set.repo,
+        file_name=arg_set.restore_database
+    )
+
+
 def pull_table_for_repo_data(arg_set):
     vdb = VersionedDbHelper()
     db_conn = connection_list(arg_set)
@@ -294,6 +344,11 @@ def remove_repository_env_type(repo_name: str, env: str):
 def set_repository_version_storage_owner(repo_name: str, owner: str):
     vdb = VersionedDbHelper()
     vdb.set_repository_version_storage_owner(repo_name=repo_name, owner=owner)
+
+
+def set_timer(state: bool):
+    vdb = VersionedDbHelper()
+    vdb.set_timer(state=state)
 
 
 def set_repository_env_version(arg_set):
@@ -370,6 +425,15 @@ class DbVctrl(object):
             elif arg_set.rlv:
                 # -rlv
                 display_repo_list(verbose=True)
+            elif arg_set.rff:
+                # -rff
+                display_repo_ff_list()
+            elif arg_set.rdd:
+                # -rdd
+                display_repo_dd_list()
+            elif arg_set.status:
+                # -status -repo test_db -d postgresPlay
+                display_repo_status(arg_set)
             elif arg_set.chkver:
                 # -chkver -repo test_db -d postgresPlay
                 check_db_version_on_server(arg_set)
@@ -397,6 +461,12 @@ class DbVctrl(object):
             elif arg_set.set_version_storage_owner:
                 # --set-version-storage-owner dbowner -repo test_db
                 set_repository_version_storage_owner(repo_name=arg_set.repo, owner=arg_set.set_version_storage_owner)
+            elif arg_set.timer_on:
+                # -timer-on
+                set_timer(True)
+            elif arg_set.timer_off:
+                # -timer-off
+                set_timer(False)
             elif arg_set.setenv:
                 # -setenv test -repo test_db -v 1.0.0
                 set_repository_env_version(arg_set)
@@ -448,6 +518,12 @@ class DbVctrl(object):
                     repo_database_dump(arg_set)
                 else:
                     error_message("Dump database cancelled.")
+            elif arg_set.restore_database:
+                # -restore-database dump_file -repo test_db -d postgresPlay
+                if user_yes_no_query("Do you want to restore the database?"):
+                    repo_database_restore(arg_set)
+                else:
+                    error_message("Restore database cancelled.")
             else:
                 prj_name = pkg_resources.require(Const.PGVCTRL)[0].project_name
                 error_message(

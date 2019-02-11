@@ -47,7 +47,7 @@ class TestDatabaseFastForward:
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo}\n"
+                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_first_version}.sql)\n"
         )
 
     def test_set_fast_forward_include_schema(self):
@@ -76,7 +76,7 @@ class TestDatabaseFastForward:
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo}\n"
+                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
         )
         has_member_sch = TestUtil.file_contains(
             TestUtil.test_version_ff_path,
@@ -145,7 +145,7 @@ class TestDatabaseFastForward:
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo}\n"
+                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
         )
 
         has_member = TestUtil.file_contains(
@@ -183,7 +183,7 @@ class TestDatabaseFastForward:
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo}\n"
+                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
         )
 
     def test_set_fast_forward_include_exclude_schema(self):
@@ -249,7 +249,7 @@ class TestDatabaseFastForward:
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo}\n"
+                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
         )
         has_member_tbl = TestUtil.file_contains(
             TestUtil.test_version_ff_path,
@@ -318,7 +318,7 @@ class TestDatabaseFastForward:
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo}\n"
+                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
         )
 
         has_member = TestUtil.file_contains(
@@ -357,7 +357,7 @@ class TestDatabaseFastForward:
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo}\n"
+                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
         )
 
     def test_set_fast_forward_include_schema_exclude_table(self):
@@ -393,7 +393,7 @@ class TestDatabaseFastForward:
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo}\n"
+                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
         )
         has_member_sch = TestUtil.file_contains(
             TestUtil.test_version_ff_path,
@@ -439,7 +439,7 @@ class TestDatabaseFastForward:
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo}\n"
+                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
         )
         has_member_sch = TestUtil.file_contains(
             TestUtil.test_version_ff_path,
@@ -461,7 +461,7 @@ class TestDatabaseFastForward:
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo}\n"
+                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_first_version}.sql)\n"
         )
 
         dbvctrl_assert_simple_msg(
@@ -486,7 +486,7 @@ class TestDatabaseFastForward:
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo}\n"
+                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_first_version}.sql)\n"
         )
 
         TestUtil.drop_database()
@@ -513,6 +513,61 @@ class TestDatabaseFastForward:
                     TestUtil.pgvctrl_test_db,
                 ],
                 msg=f"{TestUtil.test_first_version}.0: {TestUtil.pgvctrl_test_repo} environment (None)\n"
+        )
+
+
+class TestDatabaseFastForwardEnv:
+    def setup_method(self):
+        TestUtil.drop_database()
+        TestUtil.create_database()
+        TestUtil.get_static_config()
+        TestUtil.mkrepo_ver(
+                TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
+        )
+        capture_dbvctrl_out(arg_list=[
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.V_ARG,
+            TestUtil.test_first_version,
+            Const.SET_ENV_ARG,
+            TestUtil.env_test,
+        ])
+        capture_dbvctrl_out(arg_list=[
+            Const.INIT_ARG,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+            Const.SET_ENV_ARG,
+            TestUtil.env_test,
+        ])
+        capture_dbvctrl_out(arg_list=[
+            Const.APPLY_ARG,
+            Const.ENV_ARG,
+            TestUtil.env_test,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+
+    def teardown_method(self):
+        TestUtil.delete_folder(TestUtil.test_first_version_path)
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ff_path)
+        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.drop_database()
+
+    def test_set_fast_forward_env(self):
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.SETFF_ARG,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ],
+                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} (0.0.0.first.test.sql)\n"
         )
 
 

@@ -2,7 +2,7 @@ import os
 
 import datetime
 import sys
-from typing import List, Union
+from typing import List, Union, Optional
 
 import simplejson as json
 
@@ -108,7 +108,7 @@ class VersionDbShellUtil:
         return True
 
     @staticmethod
-    def apply_fast_forward_sql(db_conn, sql_file, repo_name):
+    def apply_fast_forward_sql(db_conn, sql_file):
         psql = _local_psql()
         psql_parm_list = copy.copy(db_conn)
 
@@ -123,10 +123,6 @@ class VersionDbShellUtil:
             msg_formatted = msg.replace(f"psql:{sql_file.full_name}:", "\t")
             information_message(f"{msg_formatted}")
 
-            # TODO: Make this happen, could be an -init call?
-            # v_stg = VersionedDbHelper._get_v_stg(repo_name)
-            # DbVersionShellHelper.set_db_instance_version(db_conn, v_stg, sql_file.full_name)
-
         except ProcessExecutionError as e:
             raise VersionedDbExceptionSqlExecutionError(e.stderr)
 
@@ -136,12 +132,12 @@ class VersionDbShellUtil:
         conf = RepositoryConf()
 
         ensure_dir_exists(conf.get_data_dump_dir(repo_name))
-
+        total_time = 0.0
         for tbl in table_list:
             sql_loc = conf.get_data_dump_sql_dir(repo_name, f"{tbl}.sql")
 
             pg_dump_parm_list = copy.copy(db_conn)
-            if VersionDbShellUtil.get_col_inserts_setting(repo_name, tbl):
+            if VersionDbShellUtil.get_col_inserts_setting(repo_name=repo_name, tbl_name=tbl):
                 pg_dump_parm_list.append("--column-inserts")
             pg_dump_parm_list.append("--disable-triggers")
             pg_dump_parm_list.append("--if-exists")
@@ -153,9 +149,23 @@ class VersionDbShellUtil:
 
             try:
                 information_message(f"Pulling: {tbl}")
+                start = datetime.datetime.now()
                 pg_dump(pg_dump_parm_list, retcode=0)
+
+                end = datetime.datetime.now()
+                delta = end - start
+                exec_time = delta.total_seconds()
+
+                if RepositoryConf.is_timer_on():
+                    total_time += exec_time
+                    notice_message(f"Time: {get_time_text(exec_time)}\n")
+
+                VersionDbShellUtil.add_col_inserts_setting(repo_name=repo_name, tbl_name=tbl, value=True)
             except ProcessExecutionError as e:
                 raise VersionedDbExceptionSqlExecutionError(e.stderr)
+
+        if RepositoryConf.is_timer_on():
+            notice_message(f"Total time: {get_time_text(total_time)}\n")
 
     @staticmethod
     def pull_repo_tables_from_database(repo_name, db_conn):
@@ -186,10 +196,17 @@ class VersionDbShellUtil:
 
             size_num, size_txt = get_table_size(tbl, db_conn)
             information_message(f"Pulling: {tbl['table']}, {size_txt}")
+            start = datetime.datetime.now()
             pg_dump(pg_dump_parm_list, retcode=0)
+            end = datetime.datetime.now()
+            delta = end - start
+            exec_time = delta.total_seconds()
+
+            if RepositoryConf.is_timer_on():
+                notice_message(f"Time: {get_time_text(exec_time)}\n")
 
     @staticmethod
-    def apply_sql_file(db_conn, sql_file, break_on_error=False):
+    def apply_sql_file(db_conn, sql_file, break_on_error=False) -> Optional[float]:
         psql = _local_psql()
         psql_parm_list = copy.copy(db_conn)
 
@@ -200,13 +217,12 @@ class VersionDbShellUtil:
         psql_parm_list.append("ON_ERROR_STOP=1")
 
         if break_on_error:
-            VersionDbShellUtil._execute_sql_on_db(
+            return VersionDbShellUtil._execute_sql_on_db(
                 psql, psql_parm_list, sql_file
             )
-            return False
 
         try:
-            VersionDbShellUtil._execute_sql_on_db(
+            return VersionDbShellUtil._execute_sql_on_db(
                 psql, psql_parm_list, sql_file
             )
         except VersionedDbExceptionSqlExecutionError as e:
@@ -223,7 +239,7 @@ class VersionDbShellUtil:
         )
 
     @staticmethod
-    def apply_data_sql_file(db_conn, sql_file, force=None,):
+    def apply_data_sql_file(db_conn, sql_file, force=None) -> Optional[float]:
         psql = _local_psql()
         psql_parm_list = copy.copy(db_conn)
 
@@ -235,19 +251,28 @@ class VersionDbShellUtil:
             psql_parm_list.append("ON_ERROR_STOP=1")
 
         information_message(Const.PUSHING_DATA)
-        VersionDbShellUtil._execute_sql_on_db(psql, psql_parm_list, sql_file)
+        return VersionDbShellUtil._execute_sql_on_db(psql, psql_parm_list, sql_file)
 
     @staticmethod
-    def _execute_sql_on_db(psql, psql_parm_list, sql_file):
+    def _execute_sql_on_db(psql, psql_parm_list, sql_file) -> Optional[float]:
+        start = datetime.datetime.now()
         try:
             information_message(f"Running: {sql_file.fullname}")
             rtn = psql.run(psql_parm_list, retcode=0)
             msg = rtn[2]
+            end = datetime.datetime.now()
+            delta = end - start
             msg_formatted = msg.replace(f"psql:{sql_file.path}:", "\t")
             information_message(f"{msg_formatted}")
+            exec_time = delta.total_seconds()
+
+            if RepositoryConf.is_timer_on():
+                notice_message(f"\tTime: {get_time_text(exec_time)}\n")
 
         except ProcessExecutionError as e:
             raise VersionedDbExceptionSqlExecutionError(e.stderr)
+
+        return exec_time
 
     @staticmethod
     def set_db_instance_version(
@@ -272,7 +297,7 @@ class VersionDbShellUtil:
         psql(db_conn, "-c", update_version_sql, retcode=0)
 
     @staticmethod
-    def dump_version_fast_forward(db_conn, v_stg, repo_name):
+    def dump_version_fast_forward(db_conn, v_stg, repo_name) -> str:
         pg_dump = _local_pg_dump()
         conf = RepositoryConf()
         conf.check_include_exclude_violation(repo_name)
@@ -285,7 +310,9 @@ class VersionDbShellUtil:
 
         ensure_dir_exists(repo_ff)
 
-        ff = os.path.join(repo_ff, f"{dbver.version}.sql")
+        file_name = f"{dbver.version}.{dbver.env}.sql" if dbver.env else f"{dbver.version}.sql"
+
+        ff = os.path.join(repo_ff, file_name)
 
         schema_args, tbl_args = _get_schema_table_args(conf, repo_name)
 
@@ -293,12 +320,10 @@ class VersionDbShellUtil:
 
         rtn = pg_dump(db_conn, "--column-inserts", "-a", "-t", v_stg.tbl)
 
-        insert_str = _get_insert_from_table_dump(rtn)
+        with open(ff, "a") as file:
+            file.write(rtn)
 
-        with open(ff, "a") as file:  # Use file to refer to the file object
-            file.write(insert_str)
-
-        return True
+        return file_name
 
     @staticmethod
     def dump_version_snapshot(db_conn, v_stg):
@@ -321,13 +346,12 @@ class VersionDbShellUtil:
 
         rtn = pg_dump(db_conn, "--column-inserts", "-a", "-t", v_stg.tbl)
 
-        insert_str = _get_insert_from_table_dump(rtn)
-
-        with open(ss, "a") as file:  # Use file to refer to the file object
-            file.write(insert_str)
+        with open(ss, "a") as file:
+            file.write(rtn)
 
     @staticmethod
-    def dump_database_backup(db_conn, v_stg, dump_options: List[str]):
+    def dump_database_backup(db_conn, v_stg, dump_options: List[str]) -> Optional[float]:
+        start = datetime.datetime.now()
         pg_dump = _local_pg_dump()
         conf = RepositoryConf()
 
@@ -341,18 +365,38 @@ class VersionDbShellUtil:
 
         d = datetime.datetime.now().strftime(SNAPSHOT_DATE_FORMAT)
 
-        db_bak = os.path.join(repo_db_bak, f"{dbver.repo_name}.{d}.sql")
+        if dbver.env:
+            file_name = f"{dbver.repo_name}.{dbver.env}.{d}"
+        else:
+            file_name = f"{dbver.repo_name}.{d}"
+
+        db_bak = os.path.join(repo_db_bak, file_name)
 
         schema_args, tbl_args = _get_schema_table_args(conf, dbver.repo_name)
 
         pg_dump(db_conn, dump_options, schema_args, tbl_args, "-f", db_bak, retcode=0)
+
+        end = datetime.datetime.now()
+        delta = end - start
+        return delta.total_seconds()
+
+    @staticmethod
+    def restore_database_backup(db_conn, file_path: str, restore_options: List[str]) -> Optional[float]:
+        start = datetime.datetime.now()
+        pg_restore = _local_pg_restore()
+
+        pg_restore(db_conn, restore_options, file_path, retcode=0)
+
+        end = datetime.datetime.now()
+        delta = end - start
+        return delta.total_seconds()
 
     @staticmethod
     def display_db_instance_version(v_tbl, db_conn):
         dbv = VersionDbShellUtil.get_db_instance_version(v_tbl, db_conn)
 
         if dbv and dbv.version is None:
-            error_message("No version found!")
+            raise VersionedDbExceptionNoVersionFound()
         else:
             prod_display = " PRODUCTION" if dbv.is_production else ""
             env_display = (
@@ -389,7 +433,7 @@ class VersionDbShellUtil:
             return None
 
     @staticmethod
-    def get_col_inserts_setting(repo_name, tbl_name):
+    def get_col_inserts_setting(repo_name: str, tbl_name: str):
         conf = VersionDbShellUtil.get_data_dump_dict(repo_name)
         x = [tbl for tbl in conf if tbl[Const.DATA_TABLE] == tbl_name]
         if len(x) == 1:
@@ -397,11 +441,10 @@ class VersionDbShellUtil:
         elif len(x) > 1:
             raise VersionedDbExceptionBadDataConfigFile()
 
-        VersionDbShellUtil.add_col_inserts_setting(repo_name, tbl_name, True)
         return True
 
     @staticmethod
-    def add_col_inserts_setting(repo_name, tbl_name, value):
+    def add_col_inserts_setting(repo_name: str, tbl_name: str, value: bool):
         conf = VersionDbShellUtil.get_data_dump_dict(repo_name)
         conf_file = VersionDbShellUtil._get_data_dump_config_file(repo_name)
 
@@ -445,6 +488,29 @@ class VersionDbShellUtil:
         return d
 
     @staticmethod
+    def is_database_empty(db_conn):
+        psql = _local_psql()
+
+        user_tbl_count_sql = f"SELECT COUNT(*) cnt, 'notused' throwaway FROM pg_stat_user_tables;"
+
+        psql_parm_list = copy.copy(db_conn)
+
+        psql_parm_list.append(Const.TBL_ARG)
+        psql_parm_list.append("-A")
+        psql_parm_list.append("-c")
+        psql_parm_list.append(user_tbl_count_sql)
+
+        try:
+            rtn = psql.run(psql_parm_list, retcode=0)
+        except ProcessExecutionError as e:
+            raise VersionedDbExceptionBadDateSource(db_conn)
+
+        rtn_array = rtn[STDOUT].split("|")
+        count = int(rtn_array[0])
+
+        return count == 0
+
+    @staticmethod
     def _get_data_dump_config_file(repo_name):
         conf = RepositoryConf()
 
@@ -484,7 +550,7 @@ def _good_version_table(v_tbl, db_conn):
             raise VersionedDbExceptionMissingVersionTable(v_tbl.tbl)
         elif e.retcode == 2:
             raise VersionedDbExceptionBadDateSource(db_conn)
-        elif e.retcode > 2:
+        else:
             raise VersionedDbException(e.stderr)
 
     rtn_array = rtn[STDOUT].split("|")
@@ -498,17 +564,6 @@ def _good_version_table(v_tbl, db_conn):
         raise VersionedDbExceptionTooManyVersionRecordsFound()
 
     return good_table
-
-
-def _get_insert_from_table_dump(dump_str: str):
-    dump_array = dump_str.split("\n")
-    insert_str = ""
-
-    for l in dump_array:
-        if l.startswith("INSERT INTO "):
-            insert_str = l
-
-    return insert_str
 
 
 def _get_schema_table_args(conf, repo_name: str) -> (List[str], List[str]):
@@ -552,6 +607,35 @@ def get_table_size(tbl, db_conn):
     size_num = int(rtn_array[1])
 
     return size_num, size_txt
+
+
+def get_file_size(filepath):
+    file_size = float(os.path.getsize(filepath))
+    return get_size_text(file_size)
+
+
+def get_size_text(file_size):
+    if file_size < Const.KB:
+        return f'{file_size} B'
+    elif Const.KB <= file_size < Const.MB:
+        return f'{file_size / Const.KB:.2f} KB'
+    elif Const.MB <= file_size < Const.GB:
+        return f'{file_size / Const.MB:.2f} MB'
+    elif Const.GB <= file_size < Const.TB:
+        return f'{file_size / Const.GB:.2f} GB'
+    elif Const.TB <= file_size:
+        return f'{file_size / Const.TB:.2f} TB'
+
+
+def get_time_text(seconds):
+    if seconds < Const.MINIMUM_SECONDS:
+        return f'< 0.00 sec'
+    elif Const.MINIMUM_SECONDS <= seconds < Const.SECONDS_IN_MINUTE:
+        return f'{seconds:.2f} sec'
+    elif Const.SECONDS_IN_MINUTE <= seconds < Const.SECONDS_IN_HOUR:
+        return f'{seconds / Const.SECONDS_IN_MINUTE:.2f} min'
+
+    return f'{seconds / Const.SECONDS_IN_HOUR:.2f} hrs'
 
 
 def convert_str_to_bool(value):
@@ -605,6 +689,22 @@ def repo_unregistered_message(repo_name):
         colors.blue & colors.bold | repo_name,
         colors.red & colors.bold | "UNREGISTERED",
     )
+
+
+def sql_applied_message(sql_name):
+    print(colors.lightgray & colors.bold | f"\t\tApplied\t\t{sql_name}")
+
+
+def sql_not_applied_message(sql_name):
+    print(colors.Green & colors.bold | f"\t\tNot Applied\t{sql_name}")
+
+
+def sql_different_message(sql_name):
+    print(colors.DarkOrange & colors.bold | f"\t\tDifferent\t{sql_name}")
+
+
+def sql_missing_applied_message(sql_name):
+    print(colors.red & colors.bold | f"\t\tMissing\t\t{sql_name}")
 
 
 def _local_psql():
