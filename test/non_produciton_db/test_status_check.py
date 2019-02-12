@@ -167,17 +167,17 @@ class TestStatusCheckComplex:
         TestUtil.create_simple_sql_file(
                 repo_name=TestUtil.pgvctrl_test_repo,
                 version=TestUtil.test_first_version,
+                file_name="40.test.sql"
+        )
+        TestUtil.create_simple_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                version=TestUtil.test_first_version,
                 file_name="100.test.sql"
         )
         TestUtil.create_simple_sql_file(
                 repo_name=TestUtil.pgvctrl_test_repo,
                 version=TestUtil.test_first_version,
                 file_name="300.test.sql"
-        )
-        TestUtil.create_simple_sql_file(
-                repo_name=TestUtil.pgvctrl_test_repo,
-                version=TestUtil.test_first_version,
-                file_name="400.test.sql"
         )
         capture_dbvctrl_out(arg_list=[
             Const.APPLY_ARG,
@@ -200,15 +200,15 @@ class TestStatusCheckComplex:
                 file_name="300.test.sql",
                 append="SELECT 1 as one;"
         )
-        TestUtil.delete_file(f'databases/{TestUtil.pgvctrl_test_repo}/{TestUtil.test_first_version}/400.test.sql')
+        TestUtil.delete_file(f'databases/{TestUtil.pgvctrl_test_repo}/{TestUtil.test_first_version}/40.test.sql')
 
         msg = (
             f"{TestUtil.pgvctrl_test_repo}\n"
             f"\tv {TestUtil.test_first_version} ['test']\n"
+            f"\t\tMissing\t\t40.test\n"
             f"\t\tApplied\t\t100.test\n"
             f"\t\tNot Applied\t200.test\n"
             f"\t\tDifferent\t300.test\n"
-            f"\t\tMissing\t\t400.test\n"
         )
         dbvctrl_assert_simple_msg(
                 arg_list=[

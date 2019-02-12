@@ -196,6 +196,10 @@ class VersionedDbHelper:
             repo_version_information_message(f"\tv {version.full_name}", "")
 
         file_hashes = json.loads(dbv.version_hash)
+        for fh in file_hashes:
+            name_array = fh["file"].split(".")
+            fh["number"] = int(name_array[0])
+            fh["name"] = ".".join(name_array[1:(len(name_array) - 1)])
 
         for s in version.sql_files:
             if s.is_rollback:
@@ -208,13 +212,15 @@ class VersionedDbHelper:
                 fh[0]["db_has_sql"] = True
             else:
                 file_hashes.append({
+                    "number": s.number,
+                    "name": s.name,
                     "file": s.fullname,
                     "hash_match": False,
                     "db_has_sql": False,
                 })
         sorted_h = sorted(
                 file_hashes,
-                key=lambda file: file["file"],
+                key=lambda file: (file["number"], file["name"]),
         )
         for h in sorted_h:
             if "hash_match" not in h:
