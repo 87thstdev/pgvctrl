@@ -40,7 +40,7 @@ class TestInitDb:
                 msg="Database initialized\n"
         )
 
-    def test_init_env(self):
+    def test_init_setenv(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[
                     Const.INIT_ARG,
@@ -52,6 +52,21 @@ class TestInitDb:
                     TestUtil.env_test,
                 ],
                 msg=f"Database initialized environment ({TestUtil.env_test})\n"
+        )
+
+    def test_init_env(self):
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.INIT_ARG,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_temp_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                    Const.ENV_ARG,
+                    TestUtil.env_test,
+                ],
+                msg=f"Error setting env: Used {Const.ENV_ARG}, did you mean {Const.SET_ENV_ARG}?\n",
+                error_code=1
         )
 
     def test_init_twice(self):
@@ -143,7 +158,7 @@ class TestInitDb:
                 msg="Database initialized (PRODUCTION)\n"
         )
 
-    def test_init_production_with_env(self):
+    def test_init_production_with_setenv(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[
                     Const.INIT_ARG,

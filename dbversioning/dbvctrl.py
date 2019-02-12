@@ -223,6 +223,9 @@ def initialize_versioned_db(arg_set):
     init = VersionedDbHelper()
     db_conn = connection_list(arg_set)
 
+    if arg_set.env:
+        error_message(f"Error setting env: Used {Const.ENV_ARG}, did you mean {Const.SET_ENV_ARG}?")
+
     init.initialize_db_version_on_server(
         db_conn=db_conn,
         repo_name=arg_set.repo,
