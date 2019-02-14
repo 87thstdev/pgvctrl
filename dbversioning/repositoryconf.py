@@ -39,12 +39,12 @@ VERSION_HASH_PROP = "versionHash"
 TABLE_OWNER_PROP = "tableOwner"
 IS_PRODUCTION_PROP = "isProduction"
 ENV_PROP = "env"
-DUMP_DATABASE_OPTIONS_DEFAULT = "-Fc -Z4"
-DUMP_DATABASE_OPTIONS_PROP = "dumpDatabaseOptions"
-DUMP_DATABASE_OPTIONS_PROP_DEFAULT = "dumpDatabaseOptionsDefault"
-RESTORE_DATABASE_OPTIONS_DEFAULT = "-Fc -j 8"
-RESTORE_DATABASE_OPTIONS_PROP = "restoreDatabaseOptions"
-RESTORE_DATABASE_OPTIONS_PROP_DEFAULT = "restoreDatabaseOptionsDefault"
+DUMP_OPTIONS_DEFAULT = "-Fc -Z4"
+DUMP_OPTIONS_PROP = "dumpDatabaseOptions"
+DUMP_OPTIONS_PROP_DEFAULT = "dumpDatabaseOptionsDefault"
+RESTORE_OPTIONS_DEFAULT = "-Fc -j 8"
+RESTORE_OPTIONS_PROP = "restoreDatabaseOptions"
+RESTORE_OPTIONS_PROP_DEFAULT = "restoreDatabaseOptionsDefault"
 NAME_PROP = "name"
 ENVS_PROP = "envs"
 INCLUDE_TABLES_PROP = "includeTables"
@@ -61,14 +61,14 @@ class RepositoryConf(object):
     @staticmethod
     def repo_conf(repo_name: str):
         repo_name_val = repo_name
-        dump_default = RepositoryConf.dump_database_options_default()
-        restore_default = RepositoryConf.restore_database_options_default()
+        dump_default = RepositoryConf.dump_options_default()
+        restore_default = RepositoryConf.restore_options_default()
 
         return {
             ENVS_PROP: {},
             NAME_PROP: repo_name_val,
-            DUMP_DATABASE_OPTIONS_PROP: dump_default,
-            RESTORE_DATABASE_OPTIONS_PROP: restore_default,
+            DUMP_OPTIONS_PROP: dump_default,
+            RESTORE_OPTIONS_PROP: restore_default,
             VERSION_STORAGE_PROP: RepositoryConf.default_version_storage(),
         }
 
@@ -82,8 +82,8 @@ class RepositoryConf(object):
             ROOT: "databases",
             AUTO_SNAPSHOTS_PROP: False,
             TIME_PROP: False,
-            DUMP_DATABASE_OPTIONS_PROP_DEFAULT: DUMP_DATABASE_OPTIONS_DEFAULT,
-            RESTORE_DATABASE_OPTIONS_PROP_DEFAULT: RESTORE_DATABASE_OPTIONS_DEFAULT,
+            DUMP_OPTIONS_PROP_DEFAULT: DUMP_OPTIONS_DEFAULT,
+            RESTORE_OPTIONS_PROP_DEFAULT: RESTORE_OPTIONS_DEFAULT,
             DEFAULT_VERSION_STORAGE_PROP: {
                 TABLE_PROP: REPOSITORY_VERSION,
                 VERSION_PROP: VERSION_PROP,
@@ -128,14 +128,14 @@ class RepositoryConf(object):
         return conf[TIME_PROP]
 
     @staticmethod
-    def dump_database_options_default():
+    def dump_options_default():
         conf = RepositoryConf._get_repo_dict()
-        return conf[DUMP_DATABASE_OPTIONS_PROP_DEFAULT]
+        return conf[DUMP_OPTIONS_PROP_DEFAULT]
 
     @staticmethod
-    def restore_database_options_default():
+    def restore_options_default():
         conf = RepositoryConf._get_repo_dict()
-        return conf[RESTORE_DATABASE_OPTIONS_PROP_DEFAULT]
+        return conf[RESTORE_OPTIONS_PROP_DEFAULT]
 
     @staticmethod
     def fast_forward_dir():
@@ -418,18 +418,18 @@ class RepositoryConf(object):
             outfile.write(out_str)
 
     @staticmethod
-    def get_repo_dump_database_options(repo_name: str) -> Union[None, str]:
+    def get_repo_dump_options(repo_name: str) -> Union[None, str]:
         repo_dict = RepositoryConf.get_repo(repo_name)
-        default = RepositoryConf.dump_database_options_default()
+        default = RepositoryConf.dump_options_default()
 
-        return repo_dict.get(DUMP_DATABASE_OPTIONS_PROP, default)
+        return repo_dict.get(DUMP_OPTIONS_PROP, default)
 
     @staticmethod
-    def get_repo_restore_database_options(repo_name: str) -> Union[None, str]:
+    def get_repo_restore_options(repo_name: str) -> Union[None, str]:
         repo_dict = RepositoryConf.get_repo(repo_name)
-        default = RepositoryConf.restore_database_options_default()
+        default = RepositoryConf.restore_options_default()
 
-        return repo_dict.get(RESTORE_DATABASE_OPTIONS_PROP, default)
+        return repo_dict.get(RESTORE_OPTIONS_PROP, default)
 
     @staticmethod
     def get_repo_include_schemas(repo_name: str) -> Union[None, List[str]]:

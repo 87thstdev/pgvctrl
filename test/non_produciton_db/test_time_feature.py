@@ -123,7 +123,7 @@ class TestDatabaseDumpWithTimer:
     def test_database_dump_with_timer(self):
         with mock.patch('builtins.input', return_value="YES"):
             out_rtn, errors = capture_dbvctrl_out(arg_list=[
-                Const.DUMP_DATABASE_ARG,
+                Const.DUMP_ARG,
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,
                 Const.DATABASE_ARG,
@@ -165,7 +165,7 @@ class TestDatabaseRestoreWithTimer:
         ])
         with mock.patch('builtins.input', return_value="YES"):
             capture_dbvctrl_out(arg_list=[
-                Const.DUMP_DATABASE_ARG,
+                Const.DUMP_ARG,
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,
                 Const.DATABASE_ARG,
@@ -186,7 +186,7 @@ class TestDatabaseRestoreWithTimer:
 
         with mock.patch('builtins.input', return_value="YES"):
             out, errors = capture_dbvctrl_out(arg_list=[
-                Const.RESTORE_DATABASE_ARG,
+                Const.RESTORE_ARG,
                 self.backup_file,
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,

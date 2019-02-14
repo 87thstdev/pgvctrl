@@ -350,7 +350,7 @@ class VersionDbShellUtil:
             file.write(rtn)
 
     @staticmethod
-    def dump_database_backup(db_conn, v_stg, dump_options: List[str]) -> Optional[float]:
+    def dump_backup(db_conn, v_stg, dump_options: List[str]) -> Optional[float]:
         start = datetime.datetime.now()
         pg_dump = _local_pg_dump()
         conf = RepositoryConf()
@@ -381,7 +381,7 @@ class VersionDbShellUtil:
         return delta.total_seconds()
 
     @staticmethod
-    def restore_database_backup(db_conn, file_path: str, restore_options: List[str]) -> Optional[float]:
+    def restore_backup(db_conn, file_path: str, restore_options: List[str]) -> Optional[float]:
         start = datetime.datetime.now()
         pg_restore = _local_pg_restore()
 

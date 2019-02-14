@@ -436,7 +436,7 @@ Output:
 - Different (orange) - The sql file has been applied to the database, but the file has been altered/updated.
 - Missing (red) - The file had been applied to the database, but was removed from the version.
 
--timer-on/-timer-off: Turn executions timer on/off for -apply, -applyff, -pulldata, -pushdata, -dump-database and -restore:
+-timer-on/-timer-off: Turn executions timer on/off for -apply, -applyff, -pulldata, -pushdata, -dump and -restore:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block::
@@ -673,7 +673,7 @@ e.g.
         membership.user_state.sql
         _post_push.sql
 
--dump-database: Dump the repositories database
+-dump: Dump the repositories database
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can dump the database based on the repository backing it. This means
@@ -682,13 +682,13 @@ backup.
 
 .. code-block::
 
-    -dump-database -repo [repository name] [db connection information]
+    -dump -repo [repository name] [db connection information]
 
 e.g. For dumping the database.
 
 .. code-block::
 
-    -dump-database -repo mydb -d mylocaldb
+    -dump -repo mydb -d mylocaldb
 
 Output:
 
@@ -704,20 +704,20 @@ Output:
 -  The _databaseBackup/[repository name] folder is created if it doesn't exist.
 -  The backup [repository name][.environment].[string date] file is created.
 
--restore-database: Restore a repositories database from -dump-database
+-restore: Restore a repositories database from -dump
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can restore a repositories database based on a previous repository database dump.
 
 .. code-block::
 
-    -restore-database [repository name][.environment].[string date] -repo [repository name] [db connection information]
+    -restore [repository name][.environment].[string date] -repo [repository name] [db connection information]
 
 e.g. For dumping the database.
 
 .. code-block::
 
-    -restore-database mylocaldb.test.20190101 -repo mydb -d mylocaldb
+    -restore mylocaldb.test.20190101 -repo mydb -d mylocaldb
 
 Output:
 

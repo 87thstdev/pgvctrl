@@ -38,7 +38,7 @@ class TestDataDump:
     def test_data_dump_all(self):
         with mock.patch('builtins.input', return_value="YES"):
             out, errors = capture_dbvctrl_out(arg_list=[
-                Const.DUMP_DATABASE_ARG,
+                Const.DUMP_ARG,
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,
                 Const.DATABASE_ARG,
@@ -61,7 +61,7 @@ class TestDataDump:
     def test_data_dump_cancel(self):
         with mock.patch('builtins.input', return_value="NO"):
             out, errors = capture_dbvctrl_out(arg_list=[
-                Const.DUMP_DATABASE_ARG,
+                Const.DUMP_ARG,
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,
                 Const.DATABASE_ARG,
@@ -73,7 +73,7 @@ class TestDataDump:
     def test_data_dump_cancel_any(self):
         with mock.patch('builtins.input', return_value="asdfsdfasdf"):
             out, errors = capture_dbvctrl_out(arg_list=[
-                Const.DUMP_DATABASE_ARG,
+                Const.DUMP_ARG,
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,
                 Const.DATABASE_ARG,
@@ -92,7 +92,7 @@ class TestDataDump:
 
         with mock.patch('builtins.input', return_value="YES"):
             out, errors = capture_dbvctrl_out(arg_list=[
-                Const.DUMP_DATABASE_ARG,
+                Const.DUMP_ARG,
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,
                 Const.DATABASE_ARG,
@@ -136,7 +136,7 @@ class TestDataDump:
 
         with mock.patch('builtins.input', return_value="YES"):
             out, errors = capture_dbvctrl_out(arg_list=[
-                Const.DUMP_DATABASE_ARG,
+                Const.DUMP_ARG,
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,
                 Const.DATABASE_ARG,
@@ -165,7 +165,7 @@ class TestDataDump:
 
         with mock.patch('builtins.input', return_value="YES"):
             out, errors = capture_dbvctrl_out(arg_list=[
-                Const.DUMP_DATABASE_ARG,
+                Const.DUMP_ARG,
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,
                 Const.DATABASE_ARG,
@@ -230,7 +230,7 @@ class TestDataDumpENv:
     def test_data_dump_env(self):
         with mock.patch('builtins.input', return_value="YES"):
             out, errors = capture_dbvctrl_out(arg_list=[
-                Const.DUMP_DATABASE_ARG,
+                Const.DUMP_ARG,
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,
                 Const.DATABASE_ARG,

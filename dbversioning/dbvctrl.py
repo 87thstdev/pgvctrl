@@ -81,21 +81,21 @@ def parse_args(args):
     )
     group.add_argument(
             Const.TIMER_ON_ARG,
-            help="Turn executions timer on (-apply, -applyff, -pulldata, -pushdata, -dump-database, -restore)",
+            help="Turn executions timer on (-apply, -applyff, -pulldata, -pushdata, -dump, -restore)",
             action="store_true",
     )
     group.add_argument(
             Const.TIMER_OFF_ARG,
-            help="Turn executions timer on (-apply, -applyff, -pulldata, -pushdata, -dump-database, -restore)",
+            help="Turn executions timer on (-apply, -applyff, -pulldata, -pushdata, -dump, -restore)",
             action="store_true",
     )
     group.add_argument(
-            Const.DUMP_DATABASE_ARG,
+            Const.DUMP_ARG,
             help="Dump database from server to local file (requires confirmation)",
             action="store_true",
     )
     group.add_argument(
-            Const.RESTORE_DATABASE_ARG,
+            Const.RESTORE_ARG,
             help="Restore database dump from file to server (requires confirmation)",
             metavar="",
     )
@@ -301,7 +301,7 @@ def repo_database_restore(arg_set):
     vdb.repo_database_restore(
         db_conn=db_conn,
         repo_name=arg_set.repo,
-        file_name=arg_set.restore_database
+        file_name=arg_set.restore
     )
 
 
@@ -515,14 +515,14 @@ class DbVctrl(object):
             elif arg_set.version:
                 # -version
                 show_version()
-            elif arg_set.dump_database:
-                # -dump-database -repo test_db -d postgresPlay [-production]
+            elif arg_set.dump:
+                # -dump -repo test_db -d postgresPlay [-production]
                 if user_yes_no_query("Do you want to dump the database?"):
                     repo_database_dump(arg_set)
                 else:
                     error_message("Dump database cancelled.")
-            elif arg_set.restore_database:
-                # -restore-database dump_file -repo test_db -d postgresPlay
+            elif arg_set.restore:
+                # -restore dump_file -repo test_db -d postgresPlay
                 if user_yes_no_query("Do you want to restore the database?"):
                     repo_database_restore(arg_set)
                 else:

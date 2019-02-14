@@ -57,8 +57,8 @@ from dbversioning.repositoryconf import (
     EXCLUDE_SCHEMAS_PROP,
     INCLUDE_TABLES_PROP,
     EXCLUDE_TABLES_PROP,
-    DUMP_DATABASE_OPTIONS_DEFAULT,
-    RESTORE_DATABASE_OPTIONS_DEFAULT)
+    DUMP_OPTIONS_DEFAULT,
+    RESTORE_OPTIONS_DEFAULT)
 
 to_unicode = str
 
@@ -475,17 +475,17 @@ class VersionedDbHelper:
 
         if is_production != dbver.is_production:
             raise VersionedDbExceptionProductionChangeNoProductionFlag(
-                Const.DUMP_DATABASE_ARG
+                Const.DUMP_ARG
             )
         # dump_database_backup
         conf = RepositoryConf()
-        dump_options = conf.get_repo_dump_database_options(repo_name=repo_name)
+        dump_options = conf.get_repo_dump_options(repo_name=repo_name)
 
         if not dump_options:
-            dump_options = DUMP_DATABASE_OPTIONS_DEFAULT
+            dump_options = DUMP_OPTIONS_DEFAULT
 
         dump_options_list = dump_options.split(" ")
-        exec_time = VersionDbShellUtil.dump_database_backup(db_conn, v_stg, dump_options_list)
+        exec_time = VersionDbShellUtil.dump_backup(db_conn, v_stg, dump_options_list)
 
         msg = f"Repository {repo_name} database backed up"
         if RepositoryConf.is_timer_on():
@@ -508,14 +508,14 @@ class VersionedDbHelper:
             raise VersionedDbExceptionRestoreNotAllowed()
 
         conf = RepositoryConf()
-        restore_options = conf.get_repo_restore_database_options(repo_name=repo_name)
+        restore_options = conf.get_repo_restore_options(repo_name=repo_name)
 
         if not restore_options:
-            restore_options = RESTORE_DATABASE_OPTIONS_DEFAULT
+            restore_options = RESTORE_OPTIONS_DEFAULT
 
         restore_options_list = restore_options.split(" ")
 
-        exec_time = VersionDbShellUtil.restore_database_backup(
+        exec_time = VersionDbShellUtil.restore_backup(
                 db_conn=db_conn,
                 restore_options=restore_options_list,
                 file_path=file_path
