@@ -109,6 +109,7 @@ class VersionDbShellUtil:
 
     @staticmethod
     def apply_fast_forward_sql(db_conn, sql_file):
+        start = datetime.datetime.now()
         psql = _local_psql()
         psql_parm_list = copy.copy(db_conn)
 
@@ -120,8 +121,15 @@ class VersionDbShellUtil:
             information_message(f"Applying: {sql_file.full_name}")
             rtn = psql.run(psql_parm_list, retcode=0)
             msg = rtn[2]
-            msg_formatted = msg.replace(f"psql:{sql_file.full_name}:", "\t")
-            information_message(f"{msg_formatted}")
+
+            end = datetime.datetime.now()
+            delta = end - start
+
+            msg_formatted = msg.replace(f"psql:{sql_file.full_name}:", "")
+            if RepositoryConf.is_timer_on():
+                information_message(f"{msg_formatted}{Const.TAB}Time: {get_time_text(delta.total_seconds())}\n")
+            else:
+                information_message(msg_formatted)
 
         except ProcessExecutionError as e:
             raise VersionedDbExceptionSqlExecutionError(e.stderr)
@@ -297,7 +305,8 @@ class VersionDbShellUtil:
         psql(db_conn, "-c", update_version_sql, retcode=0)
 
     @staticmethod
-    def dump_version_fast_forward(db_conn, v_stg, repo_name) -> str:
+    def dump_version_fast_forward(db_conn, v_stg, repo_name) -> (str, Optional[float]):
+        start = datetime.datetime.now()
         pg_dump = _local_pg_dump()
         conf = RepositoryConf()
         conf.check_include_exclude_violation(repo_name)
@@ -323,7 +332,9 @@ class VersionDbShellUtil:
         with open(ff, "a") as file:
             file.write(rtn)
 
-        return file_name
+        end = datetime.datetime.now()
+        delta = end - start
+        return file_name, delta.total_seconds()
 
     @staticmethod
     def dump_version_snapshot(db_conn, v_stg):

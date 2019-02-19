@@ -612,11 +612,16 @@ class VersionedDbHelper:
     @staticmethod
     def set_repository_fast_forward(repo_name, db_conn):
         v_stg = VersionedDbHelper._get_v_stg(repo_name)
-        file_name = VersionDbShellUtil.dump_version_fast_forward(
+        file_name, exec_time = VersionDbShellUtil.dump_version_fast_forward(
             db_conn, v_stg, repo_name
         )
+
         if file_name:
-            information_message(f"Fast forward set: {repo_name} ({file_name})")
+            msg = f"Fast forward set: {repo_name} ({file_name})"
+            if RepositoryConf.is_timer_on():
+                information_message(f"{msg} (time: {get_time_text(exec_time)})\n")
+            else:
+                information_message(msg)
 
     @staticmethod
     def apply_sql_files_to_database(db_conn, sql_files) -> Optional[float]:

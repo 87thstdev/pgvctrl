@@ -210,6 +210,122 @@ class TestDatabaseRestoreWithTimer:
             assert time > 0
 
 
+class TestDatabaseSetFastForwardWithTimer:
+    def setup_method(self):
+        TestUtil.drop_database()
+        TestUtil.create_database()
+        TestUtil.get_static_config()
+        capture_dbvctrl_out(arg_list=[Const.TIMER_ON_ARG])
+        capture_dbvctrl_out(arg_list=[
+            Const.INIT_ARG,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+        capture_dbvctrl_out(arg_list=[
+            Const.APPLY_ARG,
+            Const.V_ARG,
+            TestUtil.test_version,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+
+    def teardown_method(self):
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_backups_path)
+        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.drop_database()
+
+    def test_set_fast_forward_with_timer(self):
+        out_rtn, errors = capture_dbvctrl_out(arg_list=[
+            Const.SETFF_ARG,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+
+        output_array = out_rtn.split("\n")
+        time = 0.00
+        for ln in output_array:
+            if "(time: " in ln:
+                time = float(ln[61:65])
+
+        assert errors is None
+        assert "(time: " in out_rtn
+        assert time > 0
+
+
+class TestDatabaseApplyFastForwardWithTimer:
+    def setup_method(self):
+        TestUtil.drop_database()
+        TestUtil.create_database()
+        TestUtil.get_static_config()
+        capture_dbvctrl_out(arg_list=[Const.TIMER_ON_ARG])
+        capture_dbvctrl_out(arg_list=[
+            Const.INIT_ARG,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+        TestUtil.mkrepo_ver(
+                TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
+        )
+        capture_dbvctrl_out(arg_list=[
+            Const.APPLY_ARG,
+            Const.V_ARG,
+            TestUtil.test_first_version,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+
+    def teardown_method(self):
+        TestUtil.delete_folder(TestUtil.test_first_version_path)
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ff_path)
+        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.drop_database()
+
+    def test_apply_fast_forward_with_timer(self):
+        capture_dbvctrl_out(
+                arg_list=[
+                    Const.SETFF_ARG,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ]
+        )
+
+        TestUtil.drop_database()
+        TestUtil.create_database()
+
+        out_rtn, errors = capture_dbvctrl_out(
+                arg_list=[
+                    Const.APPLY_FF_ARG,
+                    TestUtil.test_first_version,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ]
+        )
+        output_array = out_rtn.split("\n")
+        time = 0.00
+        for ln in output_array:
+            if f"{Const.TAB}Time: " in ln:
+                time = float(ln[10:14])
+
+        assert errors is None
+        assert "Time: " in out_rtn
+        assert time > 0
+
+
 class TestPushApplyingWithTimerDb:
     def setup_method(self):
         TestUtil.drop_database()
