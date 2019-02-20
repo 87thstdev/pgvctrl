@@ -4,7 +4,7 @@ from test.test_util import (
     dbvctrl_assert_simple_msg)
 
 
-class TestDatabaseFastForwardList:
+class TestDatabaseSchemaSnapshotList:
     def setup_method(self):
         TestUtil.get_static_config()
 

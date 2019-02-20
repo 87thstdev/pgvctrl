@@ -549,7 +549,7 @@ class TestDatabaseSchemaSnapshot:
         )
 
 
-class TestDatabaseFastForwardEnv:
+class TestDatabaseSchemaSnapshotEnv:
     def setup_method(self):
         TestUtil.drop_database()
         TestUtil.create_database()
@@ -608,7 +608,7 @@ class TestDatabaseFastForwardEnv:
         assert errors is None
 
 
-class TestFastForwardOnCleanDb:
+class TestSchemaSnapshotOnCleanDb:
     def setup_method(self):
         TestUtil.create_database()
         ensure_dir_exists(TestUtil.pgvctrl_test_db_ss_path)

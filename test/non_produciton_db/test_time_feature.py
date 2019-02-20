@@ -210,7 +210,7 @@ class TestDatabaseRestoreWithTimer:
             assert time > 0
 
 
-class TestDatabaseSetFastForwardWithTimer:
+class TestDatabaseSetSchemaSnapshotWithTimer:
     def setup_method(self):
         TestUtil.drop_database()
         TestUtil.create_database()
@@ -258,7 +258,7 @@ class TestDatabaseSetFastForwardWithTimer:
         assert time > 0
 
 
-class TestDatabaseApplyFastForwardWithTimer:
+class TestDatabaseApplySchemaSnapshotWithTimer:
     def setup_method(self):
         TestUtil.drop_database()
         TestUtil.create_database()
