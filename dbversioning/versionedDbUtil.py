@@ -1,6 +1,5 @@
 import os
 from collections import namedtuple
-from datetime import datetime
 from typing import List, Optional
 
 import simplejson as json
@@ -49,8 +48,7 @@ from dbversioning.versionedDb import (
 from dbversioning.repositoryconf import (
     RepositoryConf,
     VERSION_STORAGE_PROP,
-    SNAPSHOTS_DIR,
-    schema_snapshot_DIR,
+    SCHEMA_SNAPSHOT_DIR,
     DATABASE_BACKUP_DIR,
     ENVS_PROP,
     INCLUDE_SCHEMAS_PROP,
@@ -85,7 +83,7 @@ class VersionedDbHelper:
         conf = RepositoryConf()
         root = conf.root()
 
-        ignored = {schema_snapshot_DIR, SNAPSHOTS_DIR, DATABASE_BACKUP_DIR}
+        ignored = {SCHEMA_SNAPSHOT_DIR, DATABASE_BACKUP_DIR}
         repo_locations = get_valid_elements(root, ignored)
 
         for repo_location in repo_locations:
@@ -146,7 +144,7 @@ class VersionedDbHelper:
         conf = RepositoryConf()
         root = conf.root()
 
-        ignored = {schema_snapshot_DIR, SNAPSHOTS_DIR, DATABASE_BACKUP_DIR}
+        ignored = {SCHEMA_SNAPSHOT_DIR, DATABASE_BACKUP_DIR}
         repo_locations = get_valid_elements(root, ignored)
 
         if repo_name not in repo_locations:
@@ -246,12 +244,12 @@ class VersionedDbHelper:
         has_sss = False
         conf = RepositoryConf()
         root = conf.root()
-        ss_root = f"{root}/{schema_snapshot_DIR}"
+        ss_root = f"{root}/{SCHEMA_SNAPSHOT_DIR}"
 
         if not dir_exists(ss_root):
             return False
 
-        ignored = {root, SNAPSHOTS_DIR, DATABASE_BACKUP_DIR}
+        ignored = {root, SCHEMA_SNAPSHOT_DIR, DATABASE_BACKUP_DIR}
         repo_ss_locations = get_valid_elements(ss_root, ignored)
         ss_sql_ver = []
         for repo_location in repo_ss_locations:
@@ -284,7 +282,7 @@ class VersionedDbHelper:
         root = conf.root()
         dd_root = f"{root}/{DATABASE_BACKUP_DIR}"
 
-        ignored = {root, SNAPSHOTS_DIR, schema_snapshot_DIR}
+        ignored = {root, SCHEMA_SNAPSHOT_DIR}
 
         if not dir_exists(dd_root):
             return False
@@ -579,10 +577,6 @@ class VersionedDbHelper:
         total_time = VersionedDbHelper.apply_sql_files_to_database(
             db_conn, apply_repo.sql_files
         )
-
-        # Add snapshot
-        if RepositoryConf.auto_snapshots():
-            VersionDbShellUtil.dump_version_snapshot(db_conn, v_stg)
 
         ver_hash = apply_repo.get_version_hash_set()
 

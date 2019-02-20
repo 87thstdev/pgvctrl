@@ -277,8 +277,6 @@ Getting Started
 
    -  All of the sql files with [number].[change name].sql were ran
       against your database.
-   -  If you have “autoSnapshots” set to true, a snapshot was created in
-      the \_snapshots/[repository] directory
    -  The repository_version table was update with the new version hash.
 
 SQL Error handling
@@ -741,9 +739,7 @@ dbRepoConfig.json
 ~~~~~~~~~~~~~~~~~
 
 The dbRepoConfig.json files is the configuration file for your
-repositories. The autoSnapshots setting, if set to true, creates
-snapshots of your repository each time a change is applied to your
-database. The defaultVersionStorage object is used to build the table
+repositories. The defaultVersionStorage object is used to build the table
 that stores your repository information in the database on
 initialization. Each repository can be set up with different repository
 table structures as you see fit. The root setting tells pgvctrl where to
@@ -752,7 +748,6 @@ look for the repositories.
 .. code-block::
 
     {
-        "autoSnapshots": false,
         "defaultVersionStorage": {
             "env": "env",
             "isProduction": "is_production",

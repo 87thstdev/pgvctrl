@@ -56,7 +56,7 @@ class TestUtil(object):
     pgvctrl_no_files_repo_path = "databases/pgvctrl_no_files"
     pgvctrl_test_db = "pgvctrl_test_db"
     pgvctrl_test_db_snapshots_path = (
-        f"databases/_snapshots/{pgvctrl_test_repo}"
+        f"databases/_schemaSnapshot/{pgvctrl_test_repo}"
     )
     pgvctrl_std_dump_qa_reply = "Do you want to dump the database? [YES/NO]\n"
     pgvctrl_std_dump_reply = f"{pgvctrl_std_dump_qa_reply}"
@@ -276,10 +276,6 @@ class TestUtil(object):
     @staticmethod
     def get_static_config():
         copy2(f"{TestUtil.config_file}.default", TestUtil.config_file)
-
-    @staticmethod
-    def get_static_snapshot_config():
-        copy2(f"{TestUtil.config_file}.snapshot.default", TestUtil.config_file)
 
     @staticmethod
     def get_static_data_config():

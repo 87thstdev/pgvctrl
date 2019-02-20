@@ -251,7 +251,7 @@ class TestDatabaseSetFastForwardWithTimer:
         time = 0.00
         for ln in output_array:
             if "(time: " in ln:
-                time = float(ln[61:65])
+                time = float(ln[64:68])
 
         assert errors is None
         assert "(time: " in out_rtn

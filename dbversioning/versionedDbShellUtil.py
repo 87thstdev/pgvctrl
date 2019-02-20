@@ -337,30 +337,6 @@ class VersionDbShellUtil:
         return file_name, delta.total_seconds()
 
     @staticmethod
-    def dump_version_snapshot(db_conn, v_stg):
-        pg_dump = _local_pg_dump()
-        conf = RepositoryConf()
-
-        dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
-
-        ensure_dir_exists(conf.snapshot_dir())
-
-        repo_sh = os.path.join(conf.snapshot_dir(), dbver.repo_name)
-
-        ensure_dir_exists(repo_sh)
-
-        d = datetime.datetime.now().strftime(SNAPSHOT_DATE_FORMAT)
-
-        ss = os.path.join(repo_sh, f"{dbver.version}.{d}.sql")
-
-        pg_dump(db_conn, "-s", "-f", ss, retcode=0)
-
-        rtn = pg_dump(db_conn, "--column-inserts", "-a", "-t", v_stg.tbl)
-
-        with open(ss, "a") as file:
-            file.write(rtn)
-
-    @staticmethod
     def dump_backup(db_conn, v_stg, dump_options: List[str]) -> Optional[float]:
         start = datetime.datetime.now()
         pg_dump = _local_pg_dump()

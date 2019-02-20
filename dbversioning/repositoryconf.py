@@ -19,10 +19,8 @@ Version_Table = namedtuple(
 
 ROOT = "root"
 HIDDEN = "."
-AUTO_SNAPSHOTS_PROP = "autoSnapshots"
 TIME_PROP = "timeExecutions"
-schema_snapshot_DIR = "_schemaSnapshot"
-SNAPSHOTS_DIR = "_snapshots"
+SCHEMA_SNAPSHOT_DIR = "_schemaSnapshot"
 DATABASE_BACKUP_DIR = "_databaseBackup"
 DATA_DUMP_DIR = "data"
 ROLLBACK_FILE_ENDING = "_rollback.sql"
@@ -80,7 +78,6 @@ class RepositoryConf(object):
     def config_json():
         config_json = {
             ROOT: "databases",
-            AUTO_SNAPSHOTS_PROP: False,
             TIME_PROP: False,
             DUMP_OPTIONS_PROP_DEFAULT: DUMP_OPTIONS_DEFAULT,
             RESTORE_OPTIONS_PROP_DEFAULT: RESTORE_OPTIONS_DEFAULT,
@@ -118,11 +115,6 @@ class RepositoryConf(object):
         return conf[ROOT]
 
     @staticmethod
-    def auto_snapshots():
-        conf = RepositoryConf._get_repo_dict()
-        return conf[AUTO_SNAPSHOTS_PROP]
-
-    @staticmethod
     def is_timer_on():
         conf = RepositoryConf._get_repo_dict()
         return conf[TIME_PROP]
@@ -139,7 +131,7 @@ class RepositoryConf(object):
 
     @staticmethod
     def schema_snapshot_dir():
-        return os.path.join(RepositoryConf.root(), schema_snapshot_DIR)
+        return os.path.join(RepositoryConf.root(), SCHEMA_SNAPSHOT_DIR)
 
     @staticmethod
     def get_data_dump_dir(repo_name: str):
@@ -153,7 +145,7 @@ class RepositoryConf(object):
 
     @staticmethod
     def snapshot_dir():
-        return os.path.join(RepositoryConf.root(), SNAPSHOTS_DIR)
+        return os.path.join(RepositoryConf.root(), SCHEMA_SNAPSHOT_DIR)
 
     @staticmethod
     def database_backup_dir():
