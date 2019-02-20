@@ -36,7 +36,7 @@ def parse_args(args):
             action="store_true",
     )
     group.add_argument(
-            Const.LIST_REPOS_FF_ARG, help="List repository fast forwards", action="store_true"
+            Const.LIST_REPOS_SS_ARG, help="List repository Schema Snapshots", action="store_true"
     )
     group.add_argument(
             Const.LIST_REPOS_DD_ARG, help="List repository data dumps", action="store_true"
@@ -54,9 +54,13 @@ def parse_args(args):
         Const.APPLY_ARG, help="Apply sql version", action="store_true"
     )
     group.add_argument(
-        Const.SETFF_ARG, help="Set version fast forward", action="store_true"
+        Const.SETSS_ARG, help="Set version schema snapshot", action="store_true",
     )
-    group.add_argument(Const.APPLY_FF_ARG, help="Apply version fast forward")
+    group.add_argument(
+        Const.APPLY_SS_ARG,
+        metavar="",
+        help="Apply version schema snapshot",
+    )
     group.add_argument(
         Const.PULL_DATA_ARG,
         help="Pull data from repository by table",
@@ -81,12 +85,12 @@ def parse_args(args):
     )
     group.add_argument(
             Const.TIMER_ON_ARG,
-            help="Turn executions timer on (-apply, -applyff, -pulldata, -pushdata, -dump, -restore)",
+            help="Turn executions timer on (-apply, -applyss, -pulldata, -pushdata, -dump, -restore)",
             action="store_true",
     )
     group.add_argument(
             Const.TIMER_OFF_ARG,
-            help="Turn executions timer on (-apply, -applyff, -pulldata, -pushdata, -dump, -restore)",
+            help="Turn executions timer on (-apply, -applyss, -pulldata, -pushdata, -dump, -restore)",
             action="store_true",
     )
     group.add_argument(
@@ -193,10 +197,10 @@ def display_repo_list(verbose=False):
     c.display_repo_list(verbose)
 
 
-def display_repo_ff_list():
+def display_repo_ss_list():
     c = VersionedDbHelper()
-    if not c.display_repo_ff_list():
-        error_message_non_terminating("No fast forwards available.")
+    if not c.display_repo_ss_list():
+        error_message_non_terminating("No Schema Snapshots available.")
 
 
 def display_repo_dd_list():
@@ -263,11 +267,15 @@ def _get_repo_version(arg_set):
     )
 
 
-def apply_fast_forward_to_db(arg_set):
+def apply_schema_snapshot_to_db(arg_set):
     vdb = VersionedDbHelper()
     db_conn = connection_list(arg_set)
 
-    vdb.apply_repository_fast_forward_to_database(db_conn=db_conn, repo_name=arg_set.repo, full_version=arg_set.applyff)
+    vdb.apply_repository_schema_snapshot_to_database(
+            db_conn=db_conn,
+            repo_name=arg_set.repo,
+            full_version=arg_set.applyss
+    )
 
 
 def push_repo_data_to_db(arg_set):
@@ -312,11 +320,11 @@ def pull_table_for_repo_data(arg_set):
     vdb.pull_table_for_repo_data(db_conn=db_conn, repo_name=arg_set.repo, table_list=arg_set.t)
 
 
-def set_fast_forward_pull_from_db(arg_set):
+def set_schema_snapshot_pull_from_db(arg_set):
     vdb = VersionedDbHelper()
     db_conn = connection_list(arg_set)
 
-    vdb.set_repository_fast_forward(db_conn=db_conn, repo_name=arg_set.repo)
+    vdb.set_repository_schema_snapshot(db_conn=db_conn, repo_name=arg_set.repo)
 
 
 def create_repository(repo_name):
@@ -428,9 +436,9 @@ class DbVctrl(object):
             elif arg_set.rlv:
                 # -rlv
                 display_repo_list(verbose=True)
-            elif arg_set.rff:
-                # -rff
-                display_repo_ff_list()
+            elif arg_set.rss:
+                # -rss
+                display_repo_ss_list()
             elif arg_set.rdd:
                 # -rdd
                 display_repo_dd_list()
@@ -500,12 +508,12 @@ class DbVctrl(object):
             elif arg_set.apply:
                 # -apply <-v 0.1.0 | -env test> -repo test_db -d postgresPlay
                 apply_repository_to_db(arg_set)
-            elif arg_set.setff:
-                # -setff -repo test_db -d postgresPlay
-                set_fast_forward_pull_from_db(arg_set)
-            elif arg_set.applyff:
-                # -applyff 0.1.0.BaseDeploy -repo test_db -d postgresPlay
-                apply_fast_forward_to_db(arg_set)
+            elif arg_set.setss:
+                # -setss -repo test_db -d postgresPlay
+                set_schema_snapshot_pull_from_db(arg_set)
+            elif arg_set.applyss:
+                # -applyss 0.1.0.BaseDeploy -repo test_db -d postgresPlay
+                apply_schema_snapshot_to_db(arg_set)
             elif arg_set.pulldata:
                 # -pulldata -t error_set -t membership.user_state -repo test_db -d postgresPlay
                 pull_table_for_repo_data(arg_set)

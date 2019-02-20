@@ -21,7 +21,7 @@ ROOT = "root"
 HIDDEN = "."
 AUTO_SNAPSHOTS_PROP = "autoSnapshots"
 TIME_PROP = "timeExecutions"
-FAST_FORWARD_DIR = "_fastForward"
+schema_snapshot_DIR = "_schemaSnapshot"
 SNAPSHOTS_DIR = "_snapshots"
 DATABASE_BACKUP_DIR = "_databaseBackup"
 DATA_DUMP_DIR = "data"
@@ -138,8 +138,8 @@ class RepositoryConf(object):
         return conf[RESTORE_OPTIONS_PROP_DEFAULT]
 
     @staticmethod
-    def fast_forward_dir():
-        return os.path.join(RepositoryConf.root(), FAST_FORWARD_DIR)
+    def schema_snapshot_dir():
+        return os.path.join(RepositoryConf.root(), schema_snapshot_DIR)
 
     @staticmethod
     def get_data_dump_dir(repo_name: str):

@@ -82,14 +82,14 @@ class TestUtil(object):
     )
     test_second_version_no_name = "1.0.0"
     test_version = "2.0.0.NewVersion"
-    pgvctrl_databases_ff_path = (
-        f"databases/_fastForward"
+    pgvctrl_databases_ss_path = (
+        f"databases/_schemaSnapshot"
     )
-    pgvctrl_test_db_ff_path = (
-        f"databases/_fastForward/{pgvctrl_test_repo}"
+    pgvctrl_test_db_ss_path = (
+        f"databases/_schemaSnapshot/{pgvctrl_test_repo}"
     )
-    test_version_ff_path = (
-        f"{pgvctrl_test_db_ff_path}/{test_version}.sql"
+    test_version_ss_path = (
+        f"{pgvctrl_test_db_ss_path}/{test_version}.sql"
     )
     test_version_data_path = f"databases/{pgvctrl_test_repo}/data/data.json"
     test_make_version = "3.0.0.MakeNewVersion"
@@ -315,9 +315,9 @@ class TestUtil(object):
                 f.write(f"{append}\n")
 
     @staticmethod
-    def create_repo_ff_sql_file(repo_name: str, file_name: str):
-        ensure_dir_exists(f"databases/_fastForward/{repo_name}")
-        full_file_name = f'databases/_fastForward/{repo_name}/{file_name}'
+    def create_repo_ss_sql_file(repo_name: str, file_name: str):
+        ensure_dir_exists(f"databases/_schemaSnapshot/{repo_name}")
+        full_file_name = f'databases/_schemaSnapshot/{repo_name}/{file_name}'
         if not os.path.exists(full_file_name):
             with open(full_file_name, 'w'):
                 pass

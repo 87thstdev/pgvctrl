@@ -16,34 +16,34 @@ from dbversioning.versionedDbHelper import (
     get_valid_sql_elements)
 
 
-class FastForwardDb(object):
+class SchemaSnapshot(object):
     def __init__(self, repo_path):
         """
         init_db: Initialize a database to use dbvctrl
         """
         self._repo_path = repo_path
         self.db_name = os.path.basename(repo_path)
-        self.fast_forward_versions = self._populate_fast_forward_versions()
+        self.schema_snapshot_versions = self._populate_schema_snapshot_versions()
 
-    def _populate_fast_forward_versions(self):
+    def _populate_schema_snapshot_versions(self):
         ver_list = []
 
         for v in get_valid_elements(self._repo_path):
             v_path = os.path.join(self._repo_path, v)
-            ver_list.append(FastForwardVersion(v_path))
+            ver_list.append(SchemaSnapshotVersion(v_path))
 
         return ver_list
 
 
-class FastForwardVersion(object):
-    def __init__(self, ff_version_path):
-        self._version_path = ff_version_path
+class SchemaSnapshotVersion(object):
+    def __init__(self, ss_version_path):
+        self._version_path = ss_version_path
         self.major = None
         self.minor = None
         self.maintenance = None
 
         _set_version_info(os.path.basename(self._version_path), self)
-        file_array = os.path.splitext(os.path.basename(ff_version_path))
+        file_array = os.path.splitext(os.path.basename(ss_version_path))
 
         self.name = file_array[0]
 

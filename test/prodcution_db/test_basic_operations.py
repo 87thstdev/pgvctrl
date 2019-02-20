@@ -5,7 +5,7 @@ from test.test_util import (
     dbvctrl_assert_simple_msg)
 
 NO_PROD_FLG_APPLY = f"Production changes need the -production flag: {Const.APPLY_ARG}\n"
-NO_USE_APPLYFF = "Fast forwards only allowed on empty databases.\n"
+NO_USE_APPLYSS = "Schema Snapshots only allowed on empty databases.\n"
 BAD_VER = "0.1.0"
 
 
@@ -40,7 +40,7 @@ class TestBasicProductionDatabaseOperation:
         TestUtil.drop_database()
         TestUtil.delete_folder(TestUtil.test_first_version_path)
         TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ff_path)
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ss_path)
         TestUtil.delete_file(TestUtil.config_file)
 
     def test_chkver_no_env(self):
@@ -117,22 +117,22 @@ class TestBasicProductionDatabaseOperation:
                 msg=TestUtil.sql_return
         )
 
-    def test_set_fast_forward(self):
+    def test_set_schema_snapshot(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.SETFF_ARG,
+                    Const.SETSS_ARG,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_first_version}.sql)\n"
+                msg=f"Schema snapshot set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_first_version}.sql)\n"
         )
 
-    def test_apply_fast_forward(self):
+    def test_apply_schema_snapshot(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.APPLY_FF_ARG,
+                    Const.APPLY_SS_ARG,
                     TestUtil.test_first_version,
                     Const.PRODUCTION_ARG,
                     Const.REPO_ARG,
@@ -140,6 +140,6 @@ class TestBasicProductionDatabaseOperation:
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=NO_USE_APPLYFF,
+                msg=NO_USE_APPLYSS,
                 error_code=1
         )

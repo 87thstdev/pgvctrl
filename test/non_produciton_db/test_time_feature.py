@@ -238,9 +238,9 @@ class TestDatabaseSetFastForwardWithTimer:
         TestUtil.delete_file(TestUtil.config_file)
         TestUtil.drop_database()
 
-    def test_set_fast_forward_with_timer(self):
+    def test_set_schema_snapshot_with_timer(self):
         out_rtn, errors = capture_dbvctrl_out(arg_list=[
-            Const.SETFF_ARG,
+            Const.SETSS_ARG,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
             Const.DATABASE_ARG,
@@ -287,14 +287,14 @@ class TestDatabaseApplyFastForwardWithTimer:
     def teardown_method(self):
         TestUtil.delete_folder(TestUtil.test_first_version_path)
         TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ff_path)
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ss_path)
         TestUtil.delete_file(TestUtil.config_file)
         TestUtil.drop_database()
 
-    def test_apply_fast_forward_with_timer(self):
+    def test_apply_schema_snapshot_with_timer(self):
         capture_dbvctrl_out(
                 arg_list=[
-                    Const.SETFF_ARG,
+                    Const.SETSS_ARG,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
@@ -307,7 +307,7 @@ class TestDatabaseApplyFastForwardWithTimer:
 
         out_rtn, errors = capture_dbvctrl_out(
                 arg_list=[
-                    Const.APPLY_FF_ARG,
+                    Const.APPLY_SS_ARG,
                     TestUtil.test_first_version,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,

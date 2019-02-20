@@ -108,7 +108,7 @@ class VersionDbShellUtil:
         return True
 
     @staticmethod
-    def apply_fast_forward_sql(db_conn, sql_file):
+    def apply_schema_snapshot_sql(db_conn, sql_file):
         start = datetime.datetime.now()
         psql = _local_psql()
         psql_parm_list = copy.copy(db_conn)
@@ -305,7 +305,7 @@ class VersionDbShellUtil:
         psql(db_conn, "-c", update_version_sql, retcode=0)
 
     @staticmethod
-    def dump_version_fast_forward(db_conn, v_stg, repo_name) -> (str, Optional[float]):
+    def dump_version_schema_snapshot(db_conn, v_stg, repo_name) -> (str, Optional[float]):
         start = datetime.datetime.now()
         pg_dump = _local_pg_dump()
         conf = RepositoryConf()
@@ -313,23 +313,23 @@ class VersionDbShellUtil:
 
         dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
 
-        ensure_dir_exists(conf.fast_forward_dir())
+        ensure_dir_exists(conf.schema_snapshot_dir())
 
-        repo_ff = os.path.join(conf.fast_forward_dir(), dbver.repo_name)
+        repo_ss = os.path.join(conf.schema_snapshot_dir(), dbver.repo_name)
 
-        ensure_dir_exists(repo_ff)
+        ensure_dir_exists(repo_ss)
 
         file_name = f"{dbver.version}.{dbver.env}.sql" if dbver.env else f"{dbver.version}.sql"
 
-        ff = os.path.join(repo_ff, file_name)
+        ss = os.path.join(repo_ss, file_name)
 
         schema_args, tbl_args = _get_schema_table_args(conf, repo_name)
 
-        pg_dump(db_conn, "-s", "-f", ff, schema_args, tbl_args, retcode=0)
+        pg_dump(db_conn, "-s", "-f", ss, schema_args, tbl_args, retcode=0)
 
         rtn = pg_dump(db_conn, "--column-inserts", "-a", "-t", v_stg.tbl)
 
-        with open(ff, "a") as file:
+        with open(ss, "a") as file:
             file.write(rtn)
 
         end = datetime.datetime.now()

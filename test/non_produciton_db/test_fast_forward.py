@@ -34,23 +34,23 @@ class TestDatabaseFastForward:
     def teardown_method(self):
         TestUtil.delete_folder(TestUtil.test_first_version_path)
         TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ff_path)
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ss_path)
         TestUtil.delete_file(TestUtil.config_file)
         TestUtil.drop_database()
 
-    def test_set_fast_forward(self):
+    def test_set_schema_snapshot(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.SETFF_ARG,
+                    Const.SETSS_ARG,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_first_version}.sql)\n"
+                msg=f"Schema snapshot set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_first_version}.sql)\n"
         )
 
-    def test_set_fast_forward_include_schema(self):
+    def test_set_schema_snapshot_include_schema(self):
         capture_dbvctrl_out(arg_list=[
             Const.INCLUDE_SCHEMA_ARG,
             TestUtil.schema_membership,
@@ -70,26 +70,26 @@ class TestDatabaseFastForward:
 
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.SETFF_ARG,
+                    Const.SETSS_ARG,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
+                msg=f"Schema snapshot set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
         )
         has_member_sch = TestUtil.file_contains(
-            TestUtil.test_version_ff_path,
+            TestUtil.test_version_ss_path,
             f"CREATE SCHEMA {TestUtil.schema_membership}",
         )
         has_public_sch = TestUtil.file_contains(
-            TestUtil.test_version_ff_path,
+            TestUtil.test_version_ss_path,
             f"CREATE SCHEMA {TestUtil.schema_public}",
         )
         assert has_member_sch is True
         assert has_public_sch is False
 
-    def test_set_fast_forward_include_schema_bad(self):
+    def test_set_schema_snapshot_include_schema_bad(self):
         capture_dbvctrl_out(arg_list=[
             Const.INCLUDE_SCHEMA_ARG,
             TestUtil.schema_bad,
@@ -109,7 +109,7 @@ class TestDatabaseFastForward:
 
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.SETFF_ARG,
+                    Const.SETSS_ARG,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
@@ -119,7 +119,7 @@ class TestDatabaseFastForward:
                 error_code=1
         )
 
-    def test_set_fast_forward_exclude_schema(self):
+    def test_set_schema_snapshot_exclude_schema(self):
         capture_dbvctrl_out(arg_list=[
             Const.EXCLUDE_SCHEMA_ARG,
             TestUtil.schema_membership,
@@ -139,25 +139,25 @@ class TestDatabaseFastForward:
 
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.SETFF_ARG,
+                    Const.SETSS_ARG,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
+                msg=f"Schema snapshot set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
         )
 
         has_member = TestUtil.file_contains(
-            TestUtil.test_version_ff_path, TestUtil.schema_membership
+            TestUtil.test_version_ss_path, TestUtil.schema_membership
         )
         has_public = TestUtil.file_contains(
-            TestUtil.test_version_ff_path, TestUtil.schema_public
+            TestUtil.test_version_ss_path, TestUtil.schema_public
         )
         assert has_member is False
         assert has_public is True
 
-    def test_set_fast_forward_exclude_schema_bad(self):
+    def test_set_schema_snapshot_exclude_schema_bad(self):
         capture_dbvctrl_out(arg_list=[
             Const.EXCLUDE_SCHEMA_ARG,
             TestUtil.schema_bad,
@@ -177,16 +177,16 @@ class TestDatabaseFastForward:
 
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.SETFF_ARG,
+                    Const.SETSS_ARG,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
+                msg=f"Schema snapshot set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
         )
 
-    def test_set_fast_forward_include_exclude_schema(self):
+    def test_set_schema_snapshot_include_exclude_schema(self):
         capture_dbvctrl_out(arg_list=[
             Const.INCLUDE_SCHEMA_ARG,
             TestUtil.schema_public,
@@ -213,7 +213,7 @@ class TestDatabaseFastForward:
 
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.SETFF_ARG,
+                    Const.SETSS_ARG,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
@@ -223,7 +223,7 @@ class TestDatabaseFastForward:
                 error_code=1
         )
 
-    def test_set_fast_forward_include_table(self):
+    def test_set_schema_snapshot_include_table(self):
         capture_dbvctrl_out(arg_list=[
             Const.INCLUDE_TABLE_ARG,
             TestUtil.table_membership_user_state,
@@ -243,26 +243,26 @@ class TestDatabaseFastForward:
 
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.SETFF_ARG,
+                    Const.SETSS_ARG,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
+                msg=f"Schema snapshot set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
         )
         has_member_tbl = TestUtil.file_contains(
-            TestUtil.test_version_ff_path,
+            TestUtil.test_version_ss_path,
             f"CREATE TABLE {TestUtil.table_membership_user_state}",
         )
         has_public_tbl = TestUtil.file_contains(
-            TestUtil.test_version_ff_path,
+            TestUtil.test_version_ss_path,
             f"CREATE TABLE {TestUtil.table_public_item}",
         )
         assert has_member_tbl is True
         assert has_public_tbl is False
 
-    def test_set_fast_forward_include_table_bad(self):
+    def test_set_schema_snapshot_include_table_bad(self):
         capture_dbvctrl_out(arg_list=[
             Const.INCLUDE_TABLE_ARG,
             TestUtil.table_bad,
@@ -282,7 +282,7 @@ class TestDatabaseFastForward:
 
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.SETFF_ARG,
+                    Const.SETSS_ARG,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
@@ -292,7 +292,7 @@ class TestDatabaseFastForward:
                 error_code=1
         )
 
-    def test_set_fast_forward_exclude_table(self):
+    def test_set_schema_snapshot_exclude_table(self):
         capture_dbvctrl_out(arg_list=[
             Const.EXCLUDE_TABLE_ARG,
             TestUtil.table_membership_user_state,
@@ -312,26 +312,26 @@ class TestDatabaseFastForward:
 
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.SETFF_ARG,
+                    Const.SETSS_ARG,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
+                msg=f"Schema snapshot set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
         )
 
         has_member = TestUtil.file_contains(
-            TestUtil.test_version_ff_path,
+            TestUtil.test_version_ss_path,
             f"CREATE TABLE {TestUtil.table_membership_user_state}",
         )
         has_public = TestUtil.file_contains(
-            TestUtil.test_version_ff_path, TestUtil.table_public_item
+            TestUtil.test_version_ss_path, TestUtil.table_public_item
         )
         assert has_member is False
         assert has_public is True
 
-    def test_set_fast_forward_exclude_table_bad(self):
+    def test_set_schema_snapshot_exclude_table_bad(self):
         capture_dbvctrl_out(arg_list=[
             Const.EXCLUDE_TABLE_ARG,
             TestUtil.table_bad,
@@ -351,16 +351,16 @@ class TestDatabaseFastForward:
 
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.SETFF_ARG,
+                    Const.SETSS_ARG,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
+                msg=f"Schema snapshot set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
         )
 
-    def test_set_fast_forward_include_schema_exclude_table(self):
+    def test_set_schema_snapshot_include_schema_exclude_table(self):
         capture_dbvctrl_out(arg_list=[
             Const.INCLUDE_SCHEMA_ARG,
             TestUtil.schema_membership,
@@ -387,26 +387,26 @@ class TestDatabaseFastForward:
 
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.SETFF_ARG,
+                    Const.SETSS_ARG,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
+                msg=f"Schema snapshot set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
         )
         has_member_sch = TestUtil.file_contains(
-            TestUtil.test_version_ff_path,
+            TestUtil.test_version_ss_path,
             f"CREATE SCHEMA {TestUtil.schema_membership}",
         )
         has_member_tbl = TestUtil.file_contains(
-            TestUtil.test_version_ff_path,
+            TestUtil.test_version_ss_path,
             f"CREATE TABLE {TestUtil.table_membership_user_state}",
         )
         assert has_member_sch is True
         assert has_member_tbl is False
 
-    def test_set_fast_forward_exclude_schema_include_table(self):
+    def test_set_schema_snapshot_exclude_schema_include_table(self):
         capture_dbvctrl_out(arg_list=[
             Const.EXCLUDE_SCHEMA_ARG,
             TestUtil.schema_membership,
@@ -433,60 +433,60 @@ class TestDatabaseFastForward:
 
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.SETFF_ARG,
+                    Const.SETSS_ARG,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
+                msg=f"Schema snapshot set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_version}.sql)\n"
         )
         has_member_sch = TestUtil.file_contains(
-            TestUtil.test_version_ff_path,
+            TestUtil.test_version_ss_path,
             f"CREATE SCHEMA {TestUtil.schema_membership}",
         )
         has_member_tbl = TestUtil.file_contains(
-            TestUtil.test_version_ff_path,
+            TestUtil.test_version_ss_path,
             f"CREATE TABLE {TestUtil.table_membership_user_state}",
         )
         assert has_member_sch is False
         assert has_member_tbl is True
 
-    def test_apply_fast_forward_fail(self):
+    def test_apply_schema_snapshot_fail(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.SETFF_ARG,
+                    Const.SETSS_ARG,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_first_version}.sql)\n"
+                msg=f"Schema snapshot set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_first_version}.sql)\n"
         )
 
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.APPLY_FF_ARG,
+                    Const.APPLY_SS_ARG,
                     TestUtil.test_first_version,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg="Fast forwards only allowed on empty databases.\n",
+                msg="Schema Snapshots only allowed on empty databases.\n",
                 error_code=1
         )
 
-    def test_apply_fast_forward(self):
+    def test_apply_schema_snapshot(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.SETFF_ARG,
+                    Const.SETSS_ARG,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_first_version}.sql)\n"
+                msg=f"Schema snapshot set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_first_version}.sql)\n"
         )
 
         TestUtil.drop_database()
@@ -494,7 +494,7 @@ class TestDatabaseFastForward:
 
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.APPLY_FF_ARG,
+                    Const.APPLY_SS_ARG,
                     TestUtil.test_first_version,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
@@ -554,59 +554,59 @@ class TestDatabaseFastForwardEnv:
     def teardown_method(self):
         TestUtil.delete_folder(TestUtil.test_first_version_path)
         TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ff_path)
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ss_path)
         TestUtil.delete_file(TestUtil.config_file)
         TestUtil.drop_database()
 
-    def test_set_fast_forward_env(self):
+    def test_set_schema_snapshot_env(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.SETFF_ARG,
+                    Const.SETSS_ARG,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward set: {TestUtil.pgvctrl_test_repo} (0.0.0.first.test.sql)\n"
+                msg=f"Schema snapshot set: {TestUtil.pgvctrl_test_repo} (0.0.0.first.test.sql)\n"
         )
 
 
 class TestFastForwardOnCleanDb:
     def setup_method(self):
         TestUtil.create_database()
-        ensure_dir_exists(TestUtil.pgvctrl_test_db_ff_path)
+        ensure_dir_exists(TestUtil.pgvctrl_test_db_ss_path)
         TestUtil.get_static_config()
 
     def teardown_method(self):
         TestUtil.delete_file(TestUtil.config_file)
         TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ff_path)
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ss_path)
         TestUtil.drop_database()
 
-    def test_apply_bad_fast_forward(self):
-        bad_ff = "BAD"
+    def test_apply_bad_schema_snapshot(self):
+        bad_ss = "BAD"
 
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.APPLY_FF_ARG,
-                    bad_ff,
+                    Const.APPLY_SS_ARG,
+                    bad_ss,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"Fast forward not found {bad_ff}\n",
+                msg=f"Schema snapshot not found {bad_ss}\n",
                 error_code=1
         )
 
-    def test_apply_fast_forward_bad_db(self):
-        good_ff = "0.0.0.gettingStarted"
+    def test_apply_schema_snapshot_bad_db(self):
+        good_ss = "0.0.0.gettingStarted"
         bad_db = "asdfasdfasdfasdfa123123asdfa"
 
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.APPLY_FF_ARG,
-                    good_ff,
+                    Const.APPLY_SS_ARG,
+                    good_ss,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,

@@ -221,11 +221,11 @@ Getting Started
                100 AddUsersTable
 
 
-#. List repository Fast Forwards:
+#. List repository Schema Snapshots:
 
    .. code-block::
 
-      pgvctrl -rff
+      pgvctrl -rss
 
    Output:
 
@@ -436,7 +436,7 @@ Output:
 - Different (orange) - The sql file has been applied to the database, but the file has been altered/updated.
 - Missing (red) - The file had been applied to the database, but was removed from the version.
 
--timer-on/-timer-off: Turn executions timer on/off for -apply, -applyff, -pulldata, -pushdata, -dump and -restore:
+-timer-on/-timer-off: Turn executions timer on/off for -apply, -applyss, -pulldata, -pushdata, -dump and -restore:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block::
@@ -507,14 +507,14 @@ Output:
 * If this command does not remove the folder from database, you must remove it and its contents yourself. This is a safety measure.
 * Any repository folders left behind will be displayed as UNREGISTERED when the -rl option is used.
 
-Manage schemas and tables in Snapshots and Fast Forwards
+Manage schemas and tables in Schema Snapshots
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Manage schemas (–schema, –exclude-schema, –rm-schema, –rmexclude-schema):
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #. Allows the user to say what schemas structures to include/exclude
-   when snapshots and Fast Forwards are created.
+   when Schema Snapshots are created.
 #. The ‘rm’ arguments allow the user to remove schemas from the included
    and excluded lists.
 
@@ -540,7 +540,7 @@ Manage table (–table, –exclude-table, –rm-table, –rmexclude-table):
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #. Allows the user to say what tables structures to include/exclude when
-   snapshots and Fast Forwards are created.
+   Schema Snapshots are created.
 #. The ‘rm’ arguments allow the user to remove tables from the included
    and excluded lists.
 
@@ -562,33 +562,33 @@ Output:
 #. If a table/schema is included and then later excluded, the table/schema is moved from included to exclude and vice versa.
 #. Include table/schema works the same as with pg_dump.
 
-Fast Forward (-setff, -applyff)
+Schema Snapshot (-setss, -applyss)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**What are Fast Forwards?**\  Fast forwards are snapshots of the
-database structure at the time the snapshot was taken.
+**What are Schema Snapshots?**\  Schema Snapshots are snapshots of the
+database structure (tables, views, functions ect.) at the time the snapshot was taken.
 
 **Notes:**
 
 #. There can be only one per repository version!
-#. The table holding the repository information (repository_version) will be saved as an insert in the fast forward and snapshots.
-#. Currently, only the schema is saved with fast forwards.
-#. If there were database schema changes outside of pgvctrl, it will be captured in the fast forward.
-#. Fast forwards should only be applied to empty databases.
+#. The table holding the repository information (repository_version) will be saved as an insert in the Schema Snapshot.
+#. Currently, only the schema is saved with Schema Snapshots.
+#. If there were database schema changes outside of pgvctrl, it will be captured in the Schema Snapshot.
+#. Schema Snapshots should only be applied to empty databases.
 
--setff: Set version fast forward
+-setss: Set version Schema Snapshot
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block::
 
-   -setff -repo [repository name] [db connection information]
+   -setss -repo [repository name] [db connection information]
 
--applyff: Apply version fast forward
+-applyss: Apply version Schema Snapshot
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block::
 
-   -applyff [Fast Forward Name] -repo [repository name] [db connection information]
+   -applyss [Schema Snapshot Name] -repo [repository name] [db connection information]
 
 Manage data (-pulldata, -pushdata)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
