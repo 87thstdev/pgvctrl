@@ -118,16 +118,20 @@ class TestBasicProductionDatabaseOperation:
         )
 
     def test_set_schema_snapshot(self):
-        dbvctrl_assert_simple_msg(
+        msg, errors = capture_dbvctrl_out(
                 arg_list=[
-                    Const.SETSS_ARG,
+                    Const.GETSS_ARG,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
-                ],
-                msg=f"Schema snapshot set: {TestUtil.pgvctrl_test_repo} ({TestUtil.test_first_version}.sql)\n"
+                ]
         )
+        files = TestUtil.get_snapshot_file_names(TestUtil.pgvctrl_test_repo)
+        file_name = files[0]
+
+        assert msg == f"Schema snapshot set: {TestUtil.pgvctrl_test_repo} ({file_name})\n"
+        assert errors is None
 
     def test_apply_schema_snapshot(self):
         dbvctrl_assert_simple_msg(

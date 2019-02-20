@@ -240,7 +240,7 @@ class TestDatabaseSetFastForwardWithTimer:
 
     def test_set_schema_snapshot_with_timer(self):
         out_rtn, errors = capture_dbvctrl_out(arg_list=[
-            Const.SETSS_ARG,
+            Const.GETSS_ARG,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
             Const.DATABASE_ARG,
@@ -251,7 +251,7 @@ class TestDatabaseSetFastForwardWithTimer:
         time = 0.00
         for ln in output_array:
             if "(time: " in ln:
-                time = float(ln[64:68])
+                time = float(ln[79:83])
 
         assert errors is None
         assert "(time: " in out_rtn
@@ -294,7 +294,7 @@ class TestDatabaseApplyFastForwardWithTimer:
     def test_apply_schema_snapshot_with_timer(self):
         capture_dbvctrl_out(
                 arg_list=[
-                    Const.SETSS_ARG,
+                    Const.GETSS_ARG,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
@@ -305,10 +305,13 @@ class TestDatabaseApplyFastForwardWithTimer:
         TestUtil.drop_database()
         TestUtil.create_database()
 
+        files = TestUtil.get_snapshot_file_names(TestUtil.pgvctrl_test_repo)
+        file_name = files[0]
+        f_nm = file_name.rstrip('.sql')
         out_rtn, errors = capture_dbvctrl_out(
                 arg_list=[
                     Const.APPLY_SS_ARG,
-                    TestUtil.test_first_version,
+                    f_nm,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,

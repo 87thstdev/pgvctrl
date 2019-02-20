@@ -381,7 +381,7 @@ class TestUtil(object):
 
     @staticmethod
     def get_snapshot_file_names(repo: str):
-        return os.listdir(f"databases/_snapshots/{repo}")
+        return os.listdir(f"databases/_schemaSnapshot/{repo}")
 
     @staticmethod
     def get_repo_dict():

@@ -54,7 +54,7 @@ def parse_args(args):
         Const.APPLY_ARG, help="Apply sql version", action="store_true"
     )
     group.add_argument(
-        Const.SETSS_ARG, help="Set version schema snapshot", action="store_true",
+        Const.GETSS_ARG, help="Get version schema snapshot", action="store_true"
     )
     group.add_argument(
         Const.APPLY_SS_ARG,
@@ -470,7 +470,7 @@ class DbVctrl(object):
                 # -rmenv test -repo test_db
                 remove_repository_env_type(repo_name=arg_set.repo, env=arg_set.rmenv)
             elif arg_set.set_version_storage_owner:
-                # --set-version-storage-owner dbowner -repo test_db
+                # -set-version-storage-owner dbowner -repo test_db
                 set_repository_version_storage_owner(repo_name=arg_set.repo, owner=arg_set.set_version_storage_owner)
             elif arg_set.timer_on:
                 # -timer-on
@@ -508,8 +508,8 @@ class DbVctrl(object):
             elif arg_set.apply:
                 # -apply <-v 0.1.0 | -env test> -repo test_db -d postgresPlay
                 apply_repository_to_db(arg_set)
-            elif arg_set.setss:
-                # -setss -repo test_db -d postgresPlay
+            elif arg_set.getss:
+                # -getss -repo test_db -d postgresPlay
                 set_schema_snapshot_pull_from_db(arg_set)
             elif arg_set.applyss:
                 # -applyss 0.1.0.BaseDeploy -repo test_db -d postgresPlay

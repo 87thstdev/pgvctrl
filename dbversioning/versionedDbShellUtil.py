@@ -318,8 +318,8 @@ class VersionDbShellUtil:
         repo_ss = os.path.join(conf.schema_snapshot_dir(), dbver.repo_name)
 
         ensure_dir_exists(repo_ss)
-
-        file_name = f"{dbver.version}.{dbver.env}.sql" if dbver.env else f"{dbver.version}.sql"
+        d = datetime.datetime.now().strftime(SNAPSHOT_DATE_FORMAT)
+        file_name = f"{dbver.version}.{dbver.env}.{d}.sql" if dbver.env else f"{dbver.version}.{d}.sql"
 
         ss = os.path.join(repo_ss, file_name)
 
