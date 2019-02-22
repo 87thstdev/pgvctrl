@@ -78,10 +78,10 @@ class TestApplyWithTimerOn:
         total_time = 0.0
         for ln in output_array:
             if "Time:" in ln:
-                time += float(ln[7:11])
+                time += float(ln[10:14])
 
             if "Total time:" in ln:
-                total_time = float(ln[13:17])
+                total_time = float(ln[16:20])
 
         # Because float addition
         delta = round(abs(total_time - time), 2)
@@ -378,7 +378,7 @@ class TestPushApplyingWithTimerDb:
         total_time = 0.0
         for ln in output_array:
             if "Time:" in ln:
-                time += float(ln[7:11])
+                time += float(ln[10:14])
 
             if "Total time:" in ln:
                 total_time = float(ln[12:16])

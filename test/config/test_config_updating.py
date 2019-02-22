@@ -93,8 +93,8 @@ class TestConfigUpdating:
     def test_set_repo_two_on_ver_env(self):
         base_msg = (
             f"{TestUtil.pgvctrl_test_repo}\n"
-            f"\tv {TestUtil.test_second_version_no_name} \n"
-            f"\tv {TestUtil.test_version} ['{TestUtil.env_qa}', '{TestUtil.env_test}']\n"
+            f"{Const.TAB}v {TestUtil.test_second_version_no_name} \n"
+            f"{Const.TAB}v {TestUtil.test_version} ['{TestUtil.env_qa}', '{TestUtil.env_test}']\n"
         )
 
         capture_dbvctrl_out(arg_list=[

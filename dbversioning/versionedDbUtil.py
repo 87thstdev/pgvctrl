@@ -112,7 +112,7 @@ class VersionedDbHelper:
 
                 if inc_exc:
                     msg = ", ".join(inc_exc)
-                    notice_message(f"\t({msg})")
+                    notice_message(f"{Const.TAB}({msg})")
             else:
                 repo_unregistered_message(db_repo.db_name)
 
@@ -123,13 +123,13 @@ class VersionedDbHelper:
                         if repo_conf[ENVS_PROP][e] == v.version_number:
                             env.append(e)
                 if env:
-                    repo_version_information_message(f"\tv {v.full_name}", f"{env}")
+                    repo_version_information_message(f"{Const.TAB}v {v.full_name}", f"{env}")
                 else:
-                    repo_version_information_message(f"\tv {v.full_name}", "")
+                    repo_version_information_message(f"{Const.TAB}v {v.full_name}", "")
 
                 if verbose:
                     for s in v.sql_files:
-                        sql_msg = f"\t\t{s.number} {s.name}"
+                        sql_msg = f"{Const.TABS}{s.number} {s.name}"
                         if s.is_rollback:
                             sql_rollback_information_message(sql_message=sql_msg)
                         else:
@@ -179,7 +179,7 @@ class VersionedDbHelper:
 
             if inc_exc:
                 msg = ", ".join(inc_exc)
-                notice_message(f"\t({msg})")
+                notice_message(f"{Const.TAB}({msg})")
         else:
             repo_unregistered_message(db_repo.db_name)
 
@@ -189,9 +189,9 @@ class VersionedDbHelper:
                 if repo_conf[ENVS_PROP][e] == version.version_number:
                     env.append(e)
         if env:
-            repo_version_information_message(f"\tv {version.full_name}", f"{env}")
+            repo_version_information_message(f"{Const.TAB}v {version.full_name}", f"{env}")
         else:
-            repo_version_information_message(f"\tv {version.full_name}", "")
+            repo_version_information_message(f"{Const.TAB}v {version.full_name}", "")
 
         file_hashes = json.loads(dbv.version_hash)
         for fh in file_hashes:
@@ -266,7 +266,7 @@ class VersionedDbHelper:
 
             for ss_v in ss_sql_ver:
                 sql_file_path = f"{ss_root}/{repo_location}/{ss_v.sql_file}"
-                information_message(f"\t{ss_v.full_name}\t{get_file_size(sql_file_path)}")
+                information_message(f"{Const.TAB}{ss_v.full_name}{Const.TAB}{get_file_size(sql_file_path)}")
 
             ss_sql_ver = []
 
@@ -600,7 +600,7 @@ class VersionedDbHelper:
             f"Applied: {new_dbver.repo_name} v {new_dbver.version}.{new_dbver.revision}"
         )
         if RepositoryConf.is_timer_on():
-            notice_message(f"\tTotal time: {get_time_text(total_time)}\n")
+            notice_message(f"{Const.TAB}Total time: {get_time_text(total_time)}\n")
         return True
 
     @staticmethod

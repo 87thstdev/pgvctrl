@@ -131,33 +131,35 @@ class TestUtil(object):
     test_version_pre_push_path = f"databases/{pgvctrl_test_repo}/data/{Const.DATA_PRE_PUSH_FILE}"
     test_version_post_push_path = f"databases/{pgvctrl_test_repo}/data/{Const.DATA_POST_PUSH_FILE}"
 
-    sql_return = 'Running: 90.\n' \
-                 '\t6: NOTICE:  No name sql!\n\n' \
-                 'Running: 100.AddUsersTable\n\n' \
-                 'Running: 110.Notice\n' \
-                 '\t8: NOTICE:  WHO DAT? 87admin\n' \
-                 '\t8: NOTICE:  Just me, 87admin\n' \
-                 '\t8: NOTICE:  Guess we are talking to ourselves!  87admin\n\n' \
-                 'Running: 120.ItemTable\n\n' \
-                 'Running: 140.ItemsAddMore\n\n' \
-                 'Running: 200.AddEmailTable\n\n' \
-                 'Running: 300.UserStateTable\n\n' \
-                 'Running: 400.ErrorSet\n\n' \
-                 f'Applied: {pgvctrl_test_repo} v {test_version}.0\n'
-
-    sql_return_timer = (
+    sql_return = (
         'Running: 90.\n'
-        '\t6: NOTICE:  No name sql!\n\n'
-        'Running: 100.AddUsersTable\n\n'
+        f'\t6: NOTICE:  No name sql!\n\n'
+        'Running: 100.AddUsersTable\n'
         'Running: 110.Notice\n'
         '\t8: NOTICE:  WHO DAT? 87admin\n'
         '\t8: NOTICE:  Just me, 87admin\n'
         '\t8: NOTICE:  Guess we are talking to ourselves!  87admin\n\n'
-        'Running: 120.ItemTable\n\n'
-        'Running: 140.ItemsAddMore\n\n'
-        'Running: 200.AddEmailTable\n\n'
-        'Running: 300.UserStateTable\n\n'
-        'Running: 400.ErrorSet\n\n'
+        'Running: 120.ItemTable\n'
+        'Running: 140.ItemsAddMore\n'
+        'Running: 200.AddEmailTable\n'
+        'Running: 300.UserStateTable\n'
+        'Running: 400.ErrorSet\n'
+        f'Applied: {pgvctrl_test_repo} v {test_version}.0\n'
+    )
+
+    sql_return_timer = (
+        'Running: 90.\n'
+        '\t6: NOTICE:  No name sql!\n\n'
+        'Running: 100.AddUsersTable\n'
+        'Running: 110.Notice\n'
+        '\t8: NOTICE:  WHO DAT? 87admin\n'
+        '\t8: NOTICE:  Just me, 87admin\n'
+        '\t8: NOTICE:  Guess we are talking to ourselves!  87admin\n\n'
+        'Running: 120.ItemTable\n'
+        'Running: 140.ItemsAddMore\n'
+        'Running: 200.AddEmailTable\n'
+        'Running: 300.UserStateTable\n'
+        'Running: 400.ErrorSet\n'
         f'Applied: {pgvctrl_test_repo} v {test_version}.0\n'
     )
 

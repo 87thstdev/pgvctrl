@@ -67,7 +67,7 @@ class TestStatusCheck:
     def test_status_none_applied(self):
         msg = (
             f"{TestUtil.pgvctrl_test_repo}\n"
-            f"\tv {TestUtil.test_first_version} ['test']\n"
+            f"{Const.TAB}v {TestUtil.test_first_version} ['test']\n"
         )
         dbvctrl_assert_simple_msg(
                 arg_list=[
@@ -204,11 +204,11 @@ class TestStatusCheckComplex:
 
         msg = (
             f"{TestUtil.pgvctrl_test_repo}\n"
-            f"\tv {TestUtil.test_first_version} ['test']\n"
-            f"\t\tMissing\t\t40.test\n"
-            f"\t\tApplied\t\t100.test\n"
-            f"\t\tNot Applied\t200.test\n"
-            f"\t\tDifferent\t300.test\n"
+            f"{Const.TAB}v {TestUtil.test_first_version} ['test']\n"
+            f"{Const.TABS}Missing\t\t40.test\n"
+            f"{Const.TABS}Applied\t\t100.test\n"
+            f"{Const.TABS}Not Applied\t200.test\n"
+            f"{Const.TABS}Different\t300.test\n"
         )
         dbvctrl_assert_simple_msg(
                 arg_list=[

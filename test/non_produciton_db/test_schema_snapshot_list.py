@@ -34,8 +34,8 @@ class TestDatabaseSchemaSnapshotList:
                     Const.LIST_SS_ARG,
                 ],
                 msg=f"{TestUtil.pgvctrl_test_repo}\n"
-                    f"\t1.0.0\t0.0 B\n"
-                    f"\t2.0.0\t0.0 B\n"
+                    f"{Const.TAB}1.0.0{Const.TAB}0.0 B\n"
+                    f"{Const.TAB}2.0.0{Const.TAB}0.0 B\n"
         )
 
     def test_schema_snapshot_list_multi(self):
@@ -66,12 +66,12 @@ class TestDatabaseSchemaSnapshotList:
                     Const.LIST_SS_ARG,
                 ],
                 msg=f"{TestUtil.pgvctrl_test_temp_repo}\n"
-                    f"\t12.0.0\t0.0 B\n"
-                    f"\t13.0.0\t0.0 B\n"
-                    f"\t13.4.0\t0.0 B\n"
+                    f"{Const.TAB}12.0.0{Const.TAB}0.0 B\n"
+                    f"{Const.TAB}13.0.0{Const.TAB}0.0 B\n"
+                    f"{Const.TAB}13.4.0{Const.TAB}0.0 B\n"
                     f"{TestUtil.pgvctrl_test_repo}\n"
-                    f"\t1.0.0\t0.0 B\n"
-                    f"\t2.0.0.dev\t0.0 B\n"
+                    f"{Const.TAB}1.0.0{Const.TAB}0.0 B\n"
+                    f"{Const.TAB}2.0.0.dev{Const.TAB}0.0 B\n"
         )
 
     def test_schema_snapshot_list_fail(self):

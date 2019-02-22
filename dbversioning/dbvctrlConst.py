@@ -67,6 +67,7 @@ DATA_PRE_PUSH_FILE = "_pre_push.sql"
 DATA_POST_PUSH_FILE = "_post_push.sql"
 
 TAB = "    "
+TABS = f"{TAB}{TAB}"
 
 KB = float(1024)
 MB = float(KB ** 2)

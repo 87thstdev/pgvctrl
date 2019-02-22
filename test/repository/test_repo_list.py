@@ -38,45 +38,45 @@ class TestRepoList:
         dbvctrl_assert_simple_msg(
                 arg_list=[Const.LIST_REPOS_ARG],
                 msg=f"{TestUtil.pgvctrl_test_repo}\n"
-                    f"\tv {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
-                    f"\tv {TestUtil.test_second_version_no_name} \n"
-                    f"\tv {TestUtil.test_version} \n"
+                    f"{Const.TAB}v {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
+                    f"{Const.TAB}v {TestUtil.test_second_version_no_name} \n"
+                    f"{Const.TAB}v {TestUtil.test_version} \n"
         )
 
     def test_repo_list_verbose(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[Const.LIST_REPOS_VERBOSE_ARG],
                 msg=f"{TestUtil.pgvctrl_test_repo}\n"
-                    f"\tv {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
-                    f"\tv {TestUtil.test_second_version_no_name} \n"
-                    f"\tv {TestUtil.test_version} \n"
-                    f"\t\t90 \n"
-                    f"\t\t100 AddUsersTable\n"
-                    f"\t\t110 Notice\n"
-                    f"\t\t120 ItemTable\n"
-                    f"\t\t130 Error\n"
-                    f"\t\t130 Error_rollback ROLLBACK\n"
-                    f"\t\t140 ItemsAddMore\n"
-                    f"\t\t200 AddEmailTable\n"
-                    f"\t\t300 UserStateTable\n"
-                    f"\t\t400 ErrorSet\n"
+                    f"{Const.TAB}v {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
+                    f"{Const.TAB}v {TestUtil.test_second_version_no_name} \n"
+                    f"{Const.TAB}v {TestUtil.test_version} \n"
+                    f"{Const.TABS}90 \n"
+                    f"{Const.TABS}100 AddUsersTable\n"
+                    f"{Const.TABS}110 Notice\n"
+                    f"{Const.TABS}120 ItemTable\n"
+                    f"{Const.TABS}130 Error\n"
+                    f"{Const.TABS}130 Error_rollback ROLLBACK\n"
+                    f"{Const.TABS}140 ItemsAddMore\n"
+                    f"{Const.TABS}200 AddEmailTable\n"
+                    f"{Const.TABS}300 UserStateTable\n"
+                    f"{Const.TABS}400 ErrorSet\n"
         )
 
     def test_repo_list_verbose_includes_excludes(self):
         base_msg = (
-            f"\tv {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
-            f"\tv {TestUtil.test_second_version_no_name} \n"
-            f"\tv {TestUtil.test_version} \n"
-            f"\t\t90 \n"
-            f"\t\t100 AddUsersTable\n"
-            f"\t\t110 Notice\n"
-            f"\t\t120 ItemTable\n"
-            f"\t\t130 Error\n"
-            f"\t\t130 Error_rollback ROLLBACK\n"
-            f"\t\t140 ItemsAddMore\n"
-            f"\t\t200 AddEmailTable\n"
-            f"\t\t300 UserStateTable\n"
-            f"\t\t400 ErrorSet\n"
+            f"{Const.TAB}v {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
+            f"{Const.TAB}v {TestUtil.test_second_version_no_name} \n"
+            f"{Const.TAB}v {TestUtil.test_version} \n"
+            f"{Const.TABS}90 \n"
+            f"{Const.TABS}100 AddUsersTable\n"
+            f"{Const.TABS}110 Notice\n"
+            f"{Const.TABS}120 ItemTable\n"
+            f"{Const.TABS}130 Error\n"
+            f"{Const.TABS}130 Error_rollback ROLLBACK\n"
+            f"{Const.TABS}140 ItemsAddMore\n"
+            f"{Const.TABS}200 AddEmailTable\n"
+            f"{Const.TABS}300 UserStateTable\n"
+            f"{Const.TABS}400 ErrorSet\n"
         )
 
         capture_dbvctrl_out(
@@ -91,7 +91,7 @@ class TestRepoList:
         dbvctrl_assert_simple_msg(
                 arg_list=[Const.LIST_REPOS_VERBOSE_ARG],
                 msg=f"{TestUtil.pgvctrl_test_repo}\n"
-                    f"\t({INCLUDE_SCHEMAS_PROP}: ['{TestUtil.schema_membership}'])\n"
+                    f"{Const.TAB}({INCLUDE_SCHEMAS_PROP}: ['{TestUtil.schema_membership}'])\n"
                     f"{base_msg}"
         )
 
@@ -107,7 +107,7 @@ class TestRepoList:
         dbvctrl_assert_simple_msg(
                 arg_list=[Const.LIST_REPOS_VERBOSE_ARG],
                 msg=f"{TestUtil.pgvctrl_test_repo}\n"
-                    f"\t({INCLUDE_SCHEMAS_PROP}: ['{TestUtil.schema_membership}'], "
+                    f"{Const.TAB}({INCLUDE_SCHEMAS_PROP}: ['{TestUtil.schema_membership}'], "
                     f"{INCLUDE_TABLES_PROP}: ['{TestUtil.table_membership_user_state}'])\n"
                     f"{base_msg}"
         )
@@ -124,7 +124,7 @@ class TestRepoList:
         dbvctrl_assert_simple_msg(
                 arg_list=[Const.LIST_REPOS_VERBOSE_ARG],
                 msg=f"{TestUtil.pgvctrl_test_repo}\n"
-                    f"\t({INCLUDE_SCHEMAS_PROP}: ['{TestUtil.schema_membership}'], "
+                    f"{Const.TAB}({INCLUDE_SCHEMAS_PROP}: ['{TestUtil.schema_membership}'], "
                     f"{EXCLUDE_SCHEMAS_PROP}: ['{TestUtil.schema_public}'], "
                     f"{INCLUDE_TABLES_PROP}: ['{TestUtil.table_membership_user_state}'])\n"
                     f"{base_msg}"
@@ -142,7 +142,7 @@ class TestRepoList:
         dbvctrl_assert_simple_msg(
                 arg_list=[Const.LIST_REPOS_VERBOSE_ARG],
                 msg=f"{TestUtil.pgvctrl_test_repo}\n"
-                    f"\t({INCLUDE_SCHEMAS_PROP}: ['{TestUtil.schema_membership}'], "
+                    f"{Const.TAB}({INCLUDE_SCHEMAS_PROP}: ['{TestUtil.schema_membership}'], "
                     f"{EXCLUDE_SCHEMAS_PROP}: ['{TestUtil.schema_public}'], "
                     f"{INCLUDE_TABLES_PROP}: ['{TestUtil.table_membership_user_state}'], "
                     f"{EXCLUDE_TABLES_PROP}: ['{TestUtil.table_public_item}'])\n"
@@ -156,9 +156,9 @@ class TestRepoList:
                 arg_list=[Const.LIST_REPOS_ARG],
                 msg=f"{TestUtil.pgvctrl_test_temp_repo} UNREGISTERED\n"
                 f"{TestUtil.pgvctrl_test_repo}\n"
-                f"\tv {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
-                f"\tv {TestUtil.test_second_version_no_name} \n"
-                f"\tv {TestUtil.test_version} \n"
+                f"{Const.TAB}v {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
+                f"{Const.TAB}v {TestUtil.test_second_version_no_name} \n"
+                f"{Const.TAB}v {TestUtil.test_version} \n"
         )
 
     def test_repo_list_missing_repo(self):
@@ -169,9 +169,9 @@ class TestRepoList:
         dbvctrl_assert_simple_msg(
                 arg_list=[Const.LIST_REPOS_ARG],
                 msg=f"{TestUtil.pgvctrl_test_repo}\n"
-                f"\tv {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
-                f"\tv {TestUtil.test_second_version_no_name} \n"
-                f"\tv {TestUtil.test_version} \n"
+                f"{Const.TAB}v {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
+                f"{Const.TAB}v {TestUtil.test_second_version_no_name} \n"
+                f"{Const.TAB}v {TestUtil.test_version} \n"
         )
 
     def test_repo_list_bad_sql_name(self):

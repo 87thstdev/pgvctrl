@@ -46,7 +46,7 @@ class TestPushData:
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f'{Const.PUSHING_DATA}\nRunning: error_set.sql\n\n'
+                msg=f'{Const.PUSHING_DATA}\nRunning: error_set.sql\n'
         )
 
 
@@ -93,9 +93,9 @@ class TestPushDataPrePost:
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f'{Const.PUSHING_DATA}\nRunning: _pre_push.sql\n\n'
-                    f'{Const.PUSHING_DATA}\nRunning: error_set.sql\n\n'
-                    f'{Const.PUSHING_DATA}\nRunning: _post_push.sql\n\n'
+                msg=f'{Const.PUSHING_DATA}\nRunning: _pre_push.sql\n'
+                    f'{Const.PUSHING_DATA}\nRunning: error_set.sql\n'
+                    f'{Const.PUSHING_DATA}\nRunning: _post_push.sql\n'
         )
 
 
@@ -182,8 +182,8 @@ class TestPushApplyingDb:
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f'{Const.PUSHING_DATA}\nRunning: error_set.sql\n\n'
-                    f'{Const.PUSHING_DATA}\nRunning: app_error_set.sql\n\n'
+                msg=f'{Const.PUSHING_DATA}\nRunning: error_set.sql\n'
+                    f'{Const.PUSHING_DATA}\nRunning: app_error_set.sql\n'
         )
 
     def test_push_one_data_table(self):
@@ -197,5 +197,5 @@ class TestPushApplyingDb:
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f'{Const.PUSHING_DATA}\nRunning: app_error_set.sql\n\n'
+                msg=f'{Const.PUSHING_DATA}\nRunning: app_error_set.sql\n'
         )

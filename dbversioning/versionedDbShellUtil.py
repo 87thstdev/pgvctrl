@@ -271,11 +271,12 @@ class VersionDbShellUtil:
             end = datetime.datetime.now()
             delta = end - start
             msg_formatted = msg.replace(f"psql:{sql_file.path}:", "\t")
-            information_message(f"{msg_formatted}")
+            if msg_formatted:
+                information_message(f"{msg_formatted}")
             exec_time = delta.total_seconds()
 
             if RepositoryConf.is_timer_on():
-                notice_message(f"\tTime: {get_time_text(exec_time)}\n")
+                notice_message(f"{Const.TAB}Time: {get_time_text(exec_time)}\n")
 
         except ProcessExecutionError as e:
             raise VersionedDbExceptionSqlExecutionError(e.stderr)
@@ -679,19 +680,19 @@ def repo_unregistered_message(repo_name):
 
 
 def sql_applied_message(sql_name):
-    print(colors.lightgray & colors.bold | f"\t\tApplied\t\t{sql_name}")
+    print(colors.lightgray & colors.bold | f"{Const.TABS}Applied\t\t{sql_name}")
 
 
 def sql_not_applied_message(sql_name):
-    print(colors.Green & colors.bold | f"\t\tNot Applied\t{sql_name}")
+    print(colors.Green & colors.bold | f"{Const.TABS}Not Applied\t{sql_name}")
 
 
 def sql_different_message(sql_name):
-    print(colors.DarkOrange & colors.bold | f"\t\tDifferent\t{sql_name}")
+    print(colors.DarkOrange & colors.bold | f"{Const.TABS}Different\t{sql_name}")
 
 
 def sql_missing_applied_message(sql_name):
-    print(colors.red & colors.bold | f"\t\tMissing\t\t{sql_name}")
+    print(colors.red & colors.bold | f"{Const.TABS}Missing\t\t{sql_name}")
 
 
 def _local_psql():
