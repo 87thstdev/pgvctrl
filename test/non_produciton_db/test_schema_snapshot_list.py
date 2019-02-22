@@ -15,7 +15,7 @@ class TestDatabaseSchemaSnapshotList:
     def test_schema_snapshot_list_none(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.LIST_REPOS_SS_ARG,
+                    Const.LIST_SS_ARG,
                 ],
                 msg="No Schema Snapshots available.\n"
         )
@@ -31,7 +31,7 @@ class TestDatabaseSchemaSnapshotList:
         )
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.LIST_REPOS_SS_ARG,
+                    Const.LIST_SS_ARG,
                 ],
                 msg=f"{TestUtil.pgvctrl_test_repo}\n"
                     f"\t1.0.0\t0.0 B\n"
@@ -63,7 +63,7 @@ class TestDatabaseSchemaSnapshotList:
 
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.LIST_REPOS_SS_ARG,
+                    Const.LIST_SS_ARG,
                 ],
                 msg=f"{TestUtil.pgvctrl_test_temp_repo}\n"
                     f"\t12.0.0\t0.0 B\n"
@@ -85,7 +85,7 @@ class TestDatabaseSchemaSnapshotList:
         )
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.LIST_REPOS_SS_ARG,
+                    Const.LIST_SS_ARG,
                 ],
                 msg=f"pgvctrl_test\n"
                     f"Repository version number invalid, should be [Major].[Minor].[Maintenance] "

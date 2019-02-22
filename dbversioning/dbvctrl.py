@@ -18,17 +18,19 @@ def parse_args(args):
     parser = argparse.ArgumentParser(description="Postgres db version control.")
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
-        Const.VERSION_ARG,
-        help="Show dbvctrl version number",
-        action="store_true",
+            Const.VERSION_ARG,
+            help="Show pgvctrl version number",
+            action="store_true",
     )
     group.add_argument(
-        Const.INIT_ARG,
-        help="Initialize database on server for version control",
-        action="store_true",
+            Const.INIT_ARG,
+            help="Initialize database on server for version control",
+            action="store_true",
     )
     group.add_argument(
-        Const.LIST_REPOS_ARG, help="List repositories", action="store_true"
+            Const.LIST_REPOS_ARG,
+            help="List repositories",
+            action="store_true"
     )
     group.add_argument(
             Const.LIST_REPOS_VERBOSE_ARG,
@@ -36,43 +38,63 @@ def parse_args(args):
             action="store_true",
     )
     group.add_argument(
-            Const.LIST_REPOS_SS_ARG, help="List repository Schema Snapshots", action="store_true"
+            Const.LIST_SS_ARG,
+            Const.LIST_SS_LONG_ARG,
+            help="List repository Schema Snapshots",
+            action="store_true"
     )
     group.add_argument(
-            Const.LIST_REPOS_DD_ARG, help="List repository data dumps", action="store_true"
+            Const.LIST_DD_ARG,
+            Const.LIST_DD_LONG_ARG,
+            help="List repository data dumps",
+            action="store_true"
     )
     group.add_argument(
-        Const.CHECK_VER_ARG, help="Check database version", action="store_true"
+            Const.CHECK_VER_ARG,
+            help="Check database version",
+            action="store_true"
     )
     group.add_argument(
-            Const.STATUS, help="Check database repository version status", action="store_true"
+            Const.STATUS,
+            help="Check database repository version status",
+            action="store_true"
     )
     group.add_argument(
-        Const.MKCONF_ARG, help="Create dbRepoConfig.json", action="store_true"
+            Const.MKCONF_ARG,
+            help="Create dbRepoConfig.json",
+            action="store_true"
     )
     group.add_argument(
-        Const.APPLY_ARG, help="Apply sql version", action="store_true"
+            Const.APPLY_ARG,
+            help="Apply sql version",
+            action="store_true"
     )
     group.add_argument(
-        Const.GETSS_ARG, help="Get version schema snapshot", action="store_true"
+            Const.GETSS_ARG,
+            help="Get version schema snapshot",
+            action="store_true"
     )
     group.add_argument(
-        Const.APPLY_SS_ARG,
-        metavar="",
-        help="Apply version schema snapshot",
+            Const.APPLY_SS_ARG,
+            Const.APPLY_SS_LONG_ARG,
+            metavar="FILENAME",
+            help="Apply version schema snapshot",
     )
     group.add_argument(
-        Const.PULL_DATA_ARG,
-        help="Pull data from repository by table",
-        action="store_true",
+            Const.PULL_DATA_ARG,
+            help="Pull data from repository by table",
+            action="store_true",
     )
     group.add_argument(
-        Const.PUSH_DATA_ARG,
-        help="Push data from repository to database",
-        action="store_true",
+            Const.PUSH_DATA_ARG,
+            help="Push data from repository to database",
+            action="store_true",
     )
     parser.add_argument(
-            Const.TBL_ARG, metavar="", help="Pull/Push table for data", action="append"
+            Const.TBL_ARG,
+            metavar="TABLE_NAME",
+            help="Pull/Push table for data",
+            action="append"
     )
     parser.add_argument(
             Const.FORCE_ARG,
@@ -80,8 +102,8 @@ def parse_args(args):
             action="store_true",
     )
     group.add_argument(
-        Const.SET_VERSION_STORAGE_TABLE_OWNER_ARG,
-        help="Set postgres owner for the version storage table",
+            Const.SET_VERSION_STORAGE_TABLE_OWNER_ARG,
+            help="Set postgres owner for the version storage table",
     )
     group.add_argument(
             Const.TIMER_ON_ARG,
@@ -101,92 +123,133 @@ def parse_args(args):
     group.add_argument(
             Const.RESTORE_ARG,
             help="Restore database dump from file to server (requires confirmation)",
-            metavar="",
-    )
-    parser.add_argument(Const.V_ARG, metavar="", help="Version number")
-    parser.add_argument(Const.MAKE_REPO_ARG, metavar="", help="Make Repository")
-    parser.add_argument(
-        Const.REMOVE_REPO_ARG, metavar="", help="Remove Repository"
+            metavar="FILE_NAME",
     )
     parser.add_argument(
-        Const.MAKE_V_ARG, metavar="", help="Make version number"
+            Const.V_ARG,
+            metavar="VERSION_NUMBER",
+            help="Version number"
     )
     parser.add_argument(
-        Const.MAKE_ENV_ARG, metavar="", help="Make environment type"
+            Const.MAKE_REPO_ARG,
+            metavar="REPO_NAME",
+            help="Make Repository"
     )
     parser.add_argument(
-        Const.REMOVE_ENV_ARG, metavar="", help="Remove environment type"
+            Const.REMOVE_REPO_ARG,
+            metavar="REPO_NAME",
+            help="Remove Repository"
     )
     parser.add_argument(
-        Const.SET_ENV_ARG, metavar="", help="Set environment type to a version"
+            Const.MAKE_V_ARG,
+            metavar="VERSION_NUMBER",
+            help="Make version number"
     )
     parser.add_argument(
-        Const.ENV_ARG, metavar="", help="Repository environment name"
+            Const.MAKE_ENV_ARG,
+            metavar="ENVIRONMENT_NAME",
+            help="Make environment type"
     )
-    parser.add_argument(Const.REPO_ARG, metavar="", help="Repository name")
     parser.add_argument(
-        Const.PRODUCTION_ARG,
-        help="Database production flag",
-        action="store_true",
+            Const.REMOVE_ENV_ARG,
+            metavar="ENVIRONMENT_NAME",
+            help="Remove environment type"
+    )
+    parser.add_argument(
+            Const.SET_ENV_ARG,
+            metavar="ENVIRONMENT_NAME",
+            help="Set environment type to a version"
+    )
+    parser.add_argument(
+            Const.ENV_ARG,
+            metavar="ENVIRONMENT_NAME",
+            help="Repository environment name"
+    )
+    parser.add_argument(
+            Const.REPO_ARG,
+            metavar="REPO_NAME",
+            help="Repository name"
+    )
+    parser.add_argument(
+            Const.PRODUCTION_ARG,
+            help="Database production flag",
+            action="store_true"
     )
 
-    parser.add_argument(Const.SERVICE_ARG, metavar="", help="pg service")
+    parser.add_argument(
+            Const.SERVICE_ARG,
+            metavar="PG_SERVICE_NAME",
+            help="pg service"
+    )
 
     parser.add_argument(
-        Const.DATABASE_ARG, metavar="", help="database name on server"
+            Const.DATABASE_ARG,
+            metavar="DB_NAME",
+            help="database name on server"
     )
-    parser.add_argument(Const.HOST_ARG, metavar="", help="postgres server host")
-    parser.add_argument(Const.PORT_ARG, metavar="", help="port")
-    parser.add_argument(Const.USER_ARG, metavar="", help="database username")
-    parser.add_argument(Const.PWD_ARG, metavar="", help="password")
+    parser.add_argument(
+            Const.HOST_ARG,
+            metavar="HOSTNAME",
+            help="postgres server host"
+    )
+    parser.add_argument(
+            Const.PORT_ARG,
+            metavar="PORT",
+            help="port"
+    )
+    parser.add_argument(
+            Const.USER_ARG,
+            metavar="USERNAME",
+            help="database username"
+    )
 
     parser.add_argument(
-        Const.INCLUDE_SCHEMA_ARG,
-        metavar="",
-        help="Add schema to include schema list",
-        action="append",
+            Const.INCLUDE_SCHEMA_ARG,
+            metavar="SCHEMA",
+            help="Add schema(s) to include schema list",
+            action="append",
     )
     parser.add_argument(
-        Const.INCLUDE_TABLE_ARG,
-        metavar="",
-        help="Add table to include table list",
-        action="append",
+            Const.INCLUDE_TABLE_ARG,
+            metavar="TABLE",
+            help="Add table(s) to include table list",
+            action="append",
     )
     parser.add_argument(
-        Const.EXCLUDE_SCHEMA_ARG,
-        metavar="",
-        help="Add schema to exclude schema list",
-        action="append",
+            Const.EXCLUDE_SCHEMA_ARG,
+            metavar="SCHEMA",
+            help="Add schema(s) to exclude schema list",
+            action="append",
+        )
+    parser.add_argument(
+            Const.EXCLUDE_TABLE_ARG,
+            metavar="TABLE",
+            help="Add table(s) to exclude table list",
+            action="append",
     )
     parser.add_argument(
-        Const.EXCLUDE_TABLE_ARG,
-        metavar="",
-        help="Add table to exclude table list",
-        action="append",
+            Const.RMINCLUDE_SCHEMA_ARG,
+            metavar="SCHEMA",
+            help="Remove schema(s) from include schema list",
+            action="append",
     )
     parser.add_argument(
-        Const.RMINCLUDE_SCHEMA_ARG,
-        metavar="",
-        help="Remove schema from include schema list",
-        action="append",
+            Const.RMINCLUDE_TABLE_ARG,
+            metavar="TABLE",
+            help="Remove table(s) from include table list",
+            action="append",
     )
     parser.add_argument(
-        Const.RMINCLUDE_TABLE_ARG,
-        metavar="",
-        help="Remove table from include table list",
-        action="append",
+            Const.RMEXCLUDE_TABLE_ARG,
+            metavar="TABLE",
+            help="Remove table(s) from exclude table list",
+            action="append",
     )
     parser.add_argument(
-        Const.RMEXCLUDE_TABLE_ARG,
-        metavar="",
-        help="Remove table from exclude table list",
-        action="append",
-    )
-    parser.add_argument(
-        Const.RMEXCLUDE_SCHEMA_ARG,
-        metavar="",
-        help="Remove schema from exclude schema list",
-        action="append",
+            Const.RMEXCLUDE_SCHEMA_ARG,
+            metavar="SCHEMA",
+            help="Remove schema(s) from exclude schema list",
+            action="append",
     )
 
     return parser.parse_args(args)
@@ -430,17 +493,17 @@ class DbVctrl(object):
     def run(arg_set):
 
         try:
-            if arg_set.rl:
-                # -rl
+            if arg_set.lr:
+                # -lr
                 display_repo_list()
-            elif arg_set.rlv:
-                # -rlv
+            elif arg_set.lrv:
+                # -lrv
                 display_repo_list(verbose=True)
-            elif arg_set.rss:
-                # -rss
+            elif arg_set.lss:
+                # -lss
                 display_repo_ss_list()
-            elif arg_set.rdd:
-                # -rdd
+            elif arg_set.ldd:
+                # -ldd
                 display_repo_dd_list()
             elif arg_set.status:
                 # -status -repo test_db -d postgresPlay

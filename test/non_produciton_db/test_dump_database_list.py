@@ -15,7 +15,7 @@ class TestDatabaseDumpList:
     def test_dump_database_list_none(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.LIST_REPOS_DD_ARG,
+                    Const.LIST_DD_ARG,
                 ],
                 msg="No database dumps available.\n"
         )
@@ -31,7 +31,7 @@ class TestDatabaseDumpList:
         )
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.LIST_REPOS_DD_ARG,
+                    Const.LIST_DD_ARG,
                 ],
                 msg=f"{TestUtil.pgvctrl_test_repo}\n"
                     f"{Const.TAB}1.0.0                                   0.0 B\n"
@@ -63,7 +63,7 @@ class TestDatabaseDumpList:
 
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.LIST_REPOS_DD_ARG,
+                    Const.LIST_DD_ARG,
                 ],
                 msg=f"{TestUtil.pgvctrl_test_temp_repo}\n"
                     f"{Const.TAB}12.0.0                                  0.0 B\n"
