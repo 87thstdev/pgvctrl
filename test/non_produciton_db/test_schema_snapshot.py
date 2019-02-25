@@ -58,7 +58,7 @@ class TestDatabaseSchemaSnapshot:
 
     def test_set_schema_snapshot_include_schema(self):
         capture_dbvctrl_out(arg_list=[
-            Const.INCLUDE_SCHEMA_ARG,
+            Const.INCLUDE_SCHEMA_LONG_ARG,
             TestUtil.schema_membership,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
@@ -101,7 +101,7 @@ class TestDatabaseSchemaSnapshot:
 
     def test_set_schema_snapshot_include_schema_bad(self):
         capture_dbvctrl_out(arg_list=[
-            Const.INCLUDE_SCHEMA_ARG,
+            Const.INCLUDE_SCHEMA_LONG_ARG,
             TestUtil.schema_bad,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
@@ -131,7 +131,7 @@ class TestDatabaseSchemaSnapshot:
 
     def test_set_schema_snapshot_exclude_schema(self):
         capture_dbvctrl_out(arg_list=[
-            Const.EXCLUDE_SCHEMA_ARG,
+            Const.EXCLUDE_SCHEMA_LONG_ARG,
             TestUtil.schema_membership,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
@@ -175,7 +175,7 @@ class TestDatabaseSchemaSnapshot:
 
     def test_set_schema_snapshot_exclude_schema_bad(self):
         capture_dbvctrl_out(arg_list=[
-            Const.EXCLUDE_SCHEMA_ARG,
+            Const.EXCLUDE_SCHEMA_LONG_ARG,
             TestUtil.schema_bad,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
@@ -207,14 +207,14 @@ class TestDatabaseSchemaSnapshot:
 
     def test_set_schema_snapshot_include_exclude_schema(self):
         capture_dbvctrl_out(arg_list=[
-            Const.INCLUDE_SCHEMA_ARG,
+            Const.INCLUDE_SCHEMA_LONG_ARG,
             TestUtil.schema_public,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
         ])
 
         capture_dbvctrl_out(arg_list=[
-            Const.EXCLUDE_SCHEMA_ARG,
+            Const.EXCLUDE_SCHEMA_LONG_ARG,
             TestUtil.schema_membership,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
@@ -244,7 +244,7 @@ class TestDatabaseSchemaSnapshot:
 
     def test_set_schema_snapshot_include_table(self):
         capture_dbvctrl_out(arg_list=[
-            Const.INCLUDE_TABLE_ARG,
+            Const.INCLUDE_TABLE_LONG_ARG,
             TestUtil.table_membership_user_state,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
@@ -288,7 +288,7 @@ class TestDatabaseSchemaSnapshot:
 
     def test_set_schema_snapshot_include_table_bad(self):
         capture_dbvctrl_out(arg_list=[
-            Const.INCLUDE_TABLE_ARG,
+            Const.INCLUDE_TABLE_LONG_ARG,
             TestUtil.table_bad,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
@@ -318,7 +318,7 @@ class TestDatabaseSchemaSnapshot:
 
     def test_set_schema_snapshot_exclude_table(self):
         capture_dbvctrl_out(arg_list=[
-            Const.EXCLUDE_TABLE_ARG,
+            Const.EXCLUDE_TABLE_LONG_ARG,
             TestUtil.table_membership_user_state,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
@@ -357,7 +357,7 @@ class TestDatabaseSchemaSnapshot:
 
     def test_set_schema_snapshot_exclude_table_bad(self):
         capture_dbvctrl_out(arg_list=[
-            Const.EXCLUDE_TABLE_ARG,
+            Const.EXCLUDE_TABLE_LONG_ARG,
             TestUtil.table_bad,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
@@ -389,7 +389,7 @@ class TestDatabaseSchemaSnapshot:
 
     def test_set_schema_snapshot_include_schema_exclude_table(self):
         capture_dbvctrl_out(arg_list=[
-            Const.INCLUDE_SCHEMA_ARG,
+            Const.INCLUDE_SCHEMA_LONG_ARG,
             TestUtil.schema_membership,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
@@ -406,7 +406,7 @@ class TestDatabaseSchemaSnapshot:
         ])
 
         capture_dbvctrl_out(arg_list=[
-            Const.EXCLUDE_TABLE_ARG,
+            Const.EXCLUDE_TABLE_LONG_ARG,
             TestUtil.table_membership_user_state,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
@@ -438,7 +438,7 @@ class TestDatabaseSchemaSnapshot:
 
     def test_set_schema_snapshot_exclude_schema_include_table(self):
         capture_dbvctrl_out(arg_list=[
-            Const.EXCLUDE_SCHEMA_ARG,
+            Const.EXCLUDE_SCHEMA_LONG_ARG,
             TestUtil.schema_membership,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
@@ -455,7 +455,7 @@ class TestDatabaseSchemaSnapshot:
         ])
 
         capture_dbvctrl_out(arg_list=[
-            Const.INCLUDE_TABLE_ARG,
+            Const.INCLUDE_TABLE_LONG_ARG,
             TestUtil.table_membership_user_state,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,

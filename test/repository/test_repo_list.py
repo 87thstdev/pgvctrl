@@ -81,7 +81,7 @@ class TestRepoList:
 
         capture_dbvctrl_out(
                 arg_list=[
-                    Const.INCLUDE_SCHEMA_ARG,
+                    Const.INCLUDE_SCHEMA_LONG_ARG,
                     TestUtil.schema_membership,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
@@ -97,7 +97,7 @@ class TestRepoList:
 
         capture_dbvctrl_out(
                 arg_list=[
-                    Const.INCLUDE_TABLE_ARG,
+                    Const.INCLUDE_TABLE_LONG_ARG,
                     TestUtil.table_membership_user_state,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
@@ -114,7 +114,7 @@ class TestRepoList:
 
         capture_dbvctrl_out(
                 arg_list=[
-                    Const.EXCLUDE_SCHEMA_ARG,
+                    Const.EXCLUDE_SCHEMA_LONG_ARG,
                     TestUtil.schema_public,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
@@ -132,7 +132,7 @@ class TestRepoList:
 
         capture_dbvctrl_out(
                 arg_list=[
-                    Const.EXCLUDE_TABLE_ARG,
+                    Const.EXCLUDE_TABLE_LONG_ARG,
                     TestUtil.table_public_item,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,

@@ -150,7 +150,7 @@ class VersionDbShellUtil:
             pg_dump_parm_list.append("--disable-triggers")
             pg_dump_parm_list.append("--if-exists")
             pg_dump_parm_list.append("-c")
-            pg_dump_parm_list.append(Const.TBL_ARG)
+            pg_dump_parm_list.append(Const.DB_TABLE_ARG)
             pg_dump_parm_list.append(tbl)
             pg_dump_parm_list.append("-f")
             pg_dump_parm_list.append(sql_loc)
@@ -197,7 +197,7 @@ class VersionDbShellUtil:
             pg_dump_parm_list.append("--disable-triggers")
             pg_dump_parm_list.append("--if-exists")
             pg_dump_parm_list.append("-c")
-            pg_dump_parm_list.append(Const.TBL_ARG)
+            pg_dump_parm_list.append(Const.DB_TABLE_ARG)
             pg_dump_parm_list.append(tbl["table"])
             pg_dump_parm_list.append("-f")
             pg_dump_parm_list.append(sql_loc)
@@ -405,7 +405,7 @@ class VersionDbShellUtil:
 
         version_sql = f"SELECT {v_tbl.v}, {v_tbl.rev}, {v_tbl.repo}, {v_tbl.is_prod}, {v_tbl.env}, {v_tbl.hash}, " f"'notused' " f"throwaway FROM {v_tbl.tbl};"
 
-        rtn = psql(db_conn, Const.TBL_ARG, "-A", "-c", version_sql, retcode=0)
+        rtn = psql(db_conn, Const.DB_TABLE_ARG, "-A", "-c", version_sql, retcode=0)
         rtn_array = rtn.split("|")
 
         if len(rtn_array) > 1:
@@ -483,7 +483,7 @@ class VersionDbShellUtil:
 
         psql_parm_list = copy.copy(db_conn)
 
-        psql_parm_list.append(Const.TBL_ARG)
+        psql_parm_list.append(Const.DB_TABLE_ARG)
         psql_parm_list.append("-A")
         psql_parm_list.append("-c")
         psql_parm_list.append(user_tbl_count_sql)
@@ -526,7 +526,7 @@ def _good_version_table(v_tbl, db_conn):
 
     psql_parm_list = copy.copy(db_conn)
 
-    psql_parm_list.append(Const.TBL_ARG)
+    psql_parm_list.append(Const.DB_TABLE_ARG)
     psql_parm_list.append("-A")
     psql_parm_list.append("-c")
     psql_parm_list.append(version_sql)
@@ -588,7 +588,7 @@ def get_table_size(tbl, db_conn):
 
     tbl_sql = f"SELECT pg_size_pretty(pg_total_relation_size('{tbl['table']}')) " f"As tbl_size, pg_total_relation_size('{tbl['table']}') num_size;"
 
-    rtn = psql[db_conn, Const.TBL_ARG, "-A", "-c", tbl_sql].run()
+    rtn = psql[db_conn, Const.DB_TABLE_ARG, "-A", "-c", tbl_sql].run()
 
     rtn_array = rtn[STDOUT].split("|")
     size_txt = rtn_array[0]

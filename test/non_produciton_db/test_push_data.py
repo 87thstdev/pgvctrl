@@ -190,7 +190,7 @@ class TestPushApplyingDb:
         dbvctrl_assert_simple_msg(
                 arg_list=[
                     Const.PUSH_DATA_ARG,
-                    Const.TBL_ARG,
+                    Const.DATA_TBL_ARG,
                     "app_error_set",
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,

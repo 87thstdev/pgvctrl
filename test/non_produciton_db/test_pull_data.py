@@ -55,7 +55,7 @@ class TestPullData:
         dbvctrl_assert_simple_msg(
                 arg_list=[
                     Const.PULL_DATA_ARG,
-                    Const.TBL_ARG,
+                    Const.DATA_TBL_ARG,
                     TestUtil.bad_table_name,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
@@ -72,7 +72,7 @@ class TestPullData:
     def test_pull_data_from_repos_table_list(self):
         arg_list = [
             Const.PULL_DATA_ARG,
-            Const.TBL_ARG,
+            Const.DATA_TBL_ARG,
             TestUtil.error_set_table_name,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
