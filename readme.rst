@@ -221,11 +221,13 @@ Getting Started
                100 AddUsersTable
 
 
-#. List repository Fast Forwards:
+#. List repository Schema Snapshots:
 
    .. code-block::
 
-      pgvctrl -rff
+      pgvctrl -lss
+        or
+      pgvctrl -list-schema-snapshots
 
    Output:
 
@@ -238,7 +240,9 @@ Getting Started
 
    .. code-block::
 
-      pgvctrl -rdd
+      pgvctrl -ldd
+        or
+      pgvctrl -list-database-dumps
 
    Output:
 
@@ -277,8 +281,6 @@ Getting Started
 
    -  All of the sql files with [number].[change name].sql were ran
       against your database.
-   -  If you have “autoSnapshots” set to true, a snapshot was created in
-      the \_snapshots/[repository] directory
    -  The repository_version table was update with the new version hash.
 
 SQL Error handling
@@ -436,7 +438,7 @@ Output:
 - Different (orange) - The sql file has been applied to the database, but the file has been altered/updated.
 - Missing (red) - The file had been applied to the database, but was removed from the version.
 
--timer-on/-timer-off: Turn executions timer on/off for -apply, -applyff, -pulldata, -pushdata, -dump-database and -restore:
+-timer-on/-timer-off: Turn executions timer on/off for -apply, -applyss, -pulldata, -pushdata, -dump and -restore:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block::
@@ -507,14 +509,14 @@ Output:
 * If this command does not remove the folder from database, you must remove it and its contents yourself. This is a safety measure.
 * Any repository folders left behind will be displayed as UNREGISTERED when the -rl option is used.
 
-Manage schemas and tables in Snapshots and Fast Forwards
+Manage schemas and tables in Schema Snapshots
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Manage schemas (–schema, –exclude-schema, –rm-schema, –rmexclude-schema):
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Manage schemas (–schema, –exclude-schema, –rm-schema, –rm-exclude-schema):
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #. Allows the user to say what schemas structures to include/exclude
-   when snapshots and Fast Forwards are created.
+   when Schema Snapshots are created.
 #. The ‘rm’ arguments allow the user to remove schemas from the included
    and excluded lists.
 
@@ -522,7 +524,9 @@ To include a schema:
 
 .. code-block::
 
-   pgvctrl --schema membership -repo pgvctrl_test
+   pgvctrl -n membership -repo pgvctrl_test
+     or
+   pgvctrl -schema membership -repo pgvctrl_test
 
 Output:
 
@@ -540,7 +544,7 @@ Manage table (–table, –exclude-table, –rm-table, –rmexclude-table):
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #. Allows the user to say what tables structures to include/exclude when
-   snapshots and Fast Forwards are created.
+   Schema Snapshots are created.
 #. The ‘rm’ arguments allow the user to remove tables from the included
    and excluded lists.
 
@@ -548,7 +552,9 @@ To include a table:
 
 .. code-block::
 
-   pgvctrl --table membership.user -repo pgvctrl_test
+   pgvctrl -t membership.user -repo pgvctrl_test
+     or
+   pgvctrl -table membership.user -repo pgvctrl_test
 
 Output:
 
@@ -562,33 +568,33 @@ Output:
 #. If a table/schema is included and then later excluded, the table/schema is moved from included to exclude and vice versa.
 #. Include table/schema works the same as with pg_dump.
 
-Fast Forward (-setff, -applyff)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Schema Snapshot (-getss, -applyss)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**What are Fast Forwards?**\  Fast forwards are snapshots of the
-database structure at the time the snapshot was taken.
+**What are Schema Snapshots?**\  Schema Snapshots are snapshots of the
+database structure (tables, views, functions ect.) at the time the snapshot was taken.
 
 **Notes:**
 
 #. There can be only one per repository version!
-#. The table holding the repository information (repository_version) will be saved as an insert in the fast forward and snapshots.
-#. Currently, only the schema is saved with fast forwards.
-#. If there were database schema changes outside of pgvctrl, it will be captured in the fast forward.
-#. Fast forwards should only be applied to empty databases.
+#. The table holding the repository information (repository_version) will be saved as an insert in the Schema Snapshot.
+#. Currently, only the schema is saved with Schema Snapshots.
+#. If there were database schema changes outside of pgvctrl, it will be captured in the Schema Snapshot.
+#. Schema Snapshots should only be applied to empty databases.
 
--setff: Set version fast forward
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. code-block::
-
-   -setff -repo [repository name] [db connection information]
-
--applyff: Apply version fast forward
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-getss: Set version Schema Snapshot
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block::
 
-   -applyff [Fast Forward Name] -repo [repository name] [db connection information]
+   -getss -repo [repository name] [db connection information]
+
+-applyss or -apply-schema-snapshot: Apply version Schema Snapshot
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block::
+
+   -applyss [Schema Snapshot Name] -repo [repository name] [db connection information]
 
 Manage data (-pulldata, -pushdata)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -604,13 +610,13 @@ There could be many reason why one would want to manage data:
 
 .. code-block::
 
-   -pulldata [-t [table name]] -repo [repository name] [db connection information]
+   -pulldata [-dt [table name]] -repo [repository name] [db connection information]
 
 e.g.
 
 .. code-block::
 
-   -pulldata -t error_set -t membership.user_state -repo mydb -d mylocaldb
+   -pulldata -dt error_set -dt membership.user_state -repo mydb -d mylocaldb
 
 Output:
 
@@ -644,7 +650,7 @@ e.g. For pushing by table(s).
 
 .. code-block::
 
-   -pushdata -t error_set -t process_state -repo mydb -d mylocaldb
+   -pushdata -dt error_set -dt process_state -repo mydb -d mylocaldb
 
 e.g. For pushing all tables.
 
@@ -673,7 +679,7 @@ e.g.
         membership.user_state.sql
         _post_push.sql
 
--dump-database: Dump the repositories database
+-dump: Dump the repositories database
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can dump the database based on the repository backing it. This means
@@ -682,13 +688,13 @@ backup.
 
 .. code-block::
 
-    -dump-database -repo [repository name] [db connection information]
+    -dump -repo [repository name] [db connection information]
 
 e.g. For dumping the database.
 
 .. code-block::
 
-    -dump-database -repo mydb -d mylocaldb
+    -dump -repo mydb -d mylocaldb
 
 Output:
 
@@ -704,20 +710,20 @@ Output:
 -  The _databaseBackup/[repository name] folder is created if it doesn't exist.
 -  The backup [repository name][.environment].[string date] file is created.
 
--restore-database: Restore a repositories database from -dump-database
+-restore: Restore a repositories database from -dump
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can restore a repositories database based on a previous repository database dump.
 
 .. code-block::
 
-    -restore-database [repository name][.environment].[string date] -repo [repository name] [db connection information]
+    -restore [repository name][.environment].[string date] -repo [repository name] [db connection information]
 
 e.g. For dumping the database.
 
 .. code-block::
 
-    -restore-database mylocaldb.test.20190101 -repo mydb -d mylocaldb
+    -restore mylocaldb.test.20190101 -repo mydb -d mylocaldb
 
 Output:
 
@@ -741,9 +747,7 @@ dbRepoConfig.json
 ~~~~~~~~~~~~~~~~~
 
 The dbRepoConfig.json files is the configuration file for your
-repositories. The autoSnapshots setting, if set to true, creates
-snapshots of your repository each time a change is applied to your
-database. The defaultVersionStorage object is used to build the table
+repositories. The defaultVersionStorage object is used to build the table
 that stores your repository information in the database on
 initialization. Each repository can be set up with different repository
 table structures as you see fit. The root setting tells pgvctrl where to
@@ -752,7 +756,6 @@ look for the repositories.
 .. code-block::
 
     {
-        "autoSnapshots": false,
         "defaultVersionStorage": {
             "env": "env",
             "isProduction": "is_production",

@@ -56,7 +56,7 @@ class TestUtil(object):
     pgvctrl_no_files_repo_path = "databases/pgvctrl_no_files"
     pgvctrl_test_db = "pgvctrl_test_db"
     pgvctrl_test_db_snapshots_path = (
-        f"databases/_snapshots/{pgvctrl_test_repo}"
+        f"databases/_schemaSnapshot/{pgvctrl_test_repo}"
     )
     pgvctrl_std_dump_qa_reply = "Do you want to dump the database? [YES/NO]\n"
     pgvctrl_std_dump_reply = f"{pgvctrl_std_dump_qa_reply}"
@@ -82,14 +82,14 @@ class TestUtil(object):
     )
     test_second_version_no_name = "1.0.0"
     test_version = "2.0.0.NewVersion"
-    pgvctrl_databases_ff_path = (
-        f"databases/_fastForward"
+    pgvctrl_databases_ss_path = (
+        f"databases/_schemaSnapshot"
     )
-    pgvctrl_test_db_ff_path = (
-        f"databases/_fastForward/{pgvctrl_test_repo}"
+    pgvctrl_test_db_ss_path = (
+        f"databases/_schemaSnapshot/{pgvctrl_test_repo}"
     )
-    test_version_ff_path = (
-        f"{pgvctrl_test_db_ff_path}/{test_version}.sql"
+    test_version_ss_path = (
+        f"{pgvctrl_test_db_ss_path}/{test_version}.sql"
     )
     test_version_data_path = f"databases/{pgvctrl_test_repo}/data/data.json"
     test_make_version = "3.0.0.MakeNewVersion"
@@ -131,33 +131,35 @@ class TestUtil(object):
     test_version_pre_push_path = f"databases/{pgvctrl_test_repo}/data/{Const.DATA_PRE_PUSH_FILE}"
     test_version_post_push_path = f"databases/{pgvctrl_test_repo}/data/{Const.DATA_POST_PUSH_FILE}"
 
-    sql_return = 'Running: 90.\n' \
-                 '\t6: NOTICE:  No name sql!\n\n' \
-                 'Running: 100.AddUsersTable\n\n' \
-                 'Running: 110.Notice\n' \
-                 '\t8: NOTICE:  WHO DAT? 87admin\n' \
-                 '\t8: NOTICE:  Just me, 87admin\n' \
-                 '\t8: NOTICE:  Guess we are talking to ourselves!  87admin\n\n' \
-                 'Running: 120.ItemTable\n\n' \
-                 'Running: 140.ItemsAddMore\n\n' \
-                 'Running: 200.AddEmailTable\n\n' \
-                 'Running: 300.UserStateTable\n\n' \
-                 'Running: 400.ErrorSet\n\n' \
-                 f'Applied: {pgvctrl_test_repo} v {test_version}.0\n'
-
-    sql_return_timer = (
+    sql_return = (
         'Running: 90.\n'
-        '\t6: NOTICE:  No name sql!\n\n'
-        'Running: 100.AddUsersTable\n\n'
+        f'\t6: NOTICE:  No name sql!\n\n'
+        'Running: 100.AddUsersTable\n'
         'Running: 110.Notice\n'
         '\t8: NOTICE:  WHO DAT? 87admin\n'
         '\t8: NOTICE:  Just me, 87admin\n'
         '\t8: NOTICE:  Guess we are talking to ourselves!  87admin\n\n'
-        'Running: 120.ItemTable\n\n'
-        'Running: 140.ItemsAddMore\n\n'
-        'Running: 200.AddEmailTable\n\n'
-        'Running: 300.UserStateTable\n\n'
-        'Running: 400.ErrorSet\n\n'
+        'Running: 120.ItemTable\n'
+        'Running: 140.ItemsAddMore\n'
+        'Running: 200.AddEmailTable\n'
+        'Running: 300.UserStateTable\n'
+        'Running: 400.ErrorSet\n'
+        f'Applied: {pgvctrl_test_repo} v {test_version}.0\n'
+    )
+
+    sql_return_timer = (
+        'Running: 90.\n'
+        '\t6: NOTICE:  No name sql!\n\n'
+        'Running: 100.AddUsersTable\n'
+        'Running: 110.Notice\n'
+        '\t8: NOTICE:  WHO DAT? 87admin\n'
+        '\t8: NOTICE:  Just me, 87admin\n'
+        '\t8: NOTICE:  Guess we are talking to ourselves!  87admin\n\n'
+        'Running: 120.ItemTable\n'
+        'Running: 140.ItemsAddMore\n'
+        'Running: 200.AddEmailTable\n'
+        'Running: 300.UserStateTable\n'
+        'Running: 400.ErrorSet\n'
         f'Applied: {pgvctrl_test_repo} v {test_version}.0\n'
     )
 
@@ -278,10 +280,6 @@ class TestUtil(object):
         copy2(f"{TestUtil.config_file}.default", TestUtil.config_file)
 
     @staticmethod
-    def get_static_snapshot_config():
-        copy2(f"{TestUtil.config_file}.snapshot.default", TestUtil.config_file)
-
-    @staticmethod
     def get_static_data_config():
         ensure_dir_exists(TestUtil.error_set_data_folder_path)
         copy2(TestUtil.data_file_default, TestUtil.test_version_data_path)
@@ -315,9 +313,9 @@ class TestUtil(object):
                 f.write(f"{append}\n")
 
     @staticmethod
-    def create_repo_ff_sql_file(repo_name: str, file_name: str):
-        ensure_dir_exists(f"databases/_fastForward/{repo_name}")
-        full_file_name = f'databases/_fastForward/{repo_name}/{file_name}'
+    def create_repo_ss_sql_file(repo_name: str, file_name: str):
+        ensure_dir_exists(f"databases/_schemaSnapshot/{repo_name}")
+        full_file_name = f'databases/_schemaSnapshot/{repo_name}/{file_name}'
         if not os.path.exists(full_file_name):
             with open(full_file_name, 'w'):
                 pass
@@ -385,7 +383,7 @@ class TestUtil(object):
 
     @staticmethod
     def get_snapshot_file_names(repo: str):
-        return os.listdir(f"databases/_snapshots/{repo}")
+        return os.listdir(f"databases/_schemaSnapshot/{repo}")
 
     @staticmethod
     def get_repo_dict():

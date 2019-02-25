@@ -14,21 +14,31 @@ from dbversioning.versionedDbShellUtil import information_message, error_message
 from dbversioning.versionedDbUtil import VersionedDbHelper
 
 
+def formatter(prog):
+    return argparse.HelpFormatter(prog, max_help_position=50, width=120)
+
+
 def parse_args(args):
-    parser = argparse.ArgumentParser(description="Postgres db version control.")
+
+    parser = argparse.ArgumentParser(
+            description="Postgres db version control.",
+            formatter_class=formatter
+    )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
-        Const.VERSION_ARG,
-        help="Show dbvctrl version number",
-        action="store_true",
+            Const.VERSION_ARG,
+            help="Show pgvctrl version number",
+            action="store_true",
     )
     group.add_argument(
-        Const.INIT_ARG,
-        help="Initialize database on server for version control",
-        action="store_true",
+            Const.INIT_ARG,
+            help="Initialize database on server for version control",
+            action="store_true"
     )
     group.add_argument(
-        Const.LIST_REPOS_ARG, help="List repositories", action="store_true"
+            Const.LIST_REPOS_ARG,
+            help="List repositories",
+            action="store_true"
     )
     group.add_argument(
             Const.LIST_REPOS_VERBOSE_ARG,
@@ -36,39 +46,64 @@ def parse_args(args):
             action="store_true",
     )
     group.add_argument(
-            Const.LIST_REPOS_FF_ARG, help="List repository fast forwards", action="store_true"
+            Const.LIST_SS_ARG,
+            Const.LIST_SS_LONG_ARG,
+            help="List repository Schema Snapshots",
+            action="store_true"
     )
     group.add_argument(
-            Const.LIST_REPOS_DD_ARG, help="List repository data dumps", action="store_true"
+            Const.LIST_DD_ARG,
+            Const.LIST_DD_LONG_ARG,
+            help="List repository data dumps",
+            action="store_true"
     )
     group.add_argument(
-        Const.CHECK_VER_ARG, help="Check database version", action="store_true"
+            Const.CHECK_VER_ARG,
+            help="Check database version",
+            action="store_true"
     )
     group.add_argument(
-            Const.STATUS, help="Check database repository version status", action="store_true"
+            Const.STATUS,
+            help="Check database repository version status",
+            action="store_true"
     )
     group.add_argument(
-        Const.MKCONF_ARG, help="Create dbRepoConfig.json", action="store_true"
+            Const.MKCONF_ARG,
+            help="Create dbRepoConfig.json",
+            action="store_true"
     )
     group.add_argument(
-        Const.APPLY_ARG, help="Apply sql version", action="store_true"
+            Const.APPLY_ARG,
+            help="Apply sql version",
+            action="store_true"
     )
     group.add_argument(
-        Const.SETFF_ARG, help="Set version fast forward", action="store_true"
-    )
-    group.add_argument(Const.APPLY_FF_ARG, help="Apply version fast forward")
-    group.add_argument(
-        Const.PULL_DATA_ARG,
-        help="Pull data from repository by table",
-        action="store_true",
+            Const.GETSS_ARG,
+            help="Get version schema snapshot",
+            action="store_true"
     )
     group.add_argument(
-        Const.PUSH_DATA_ARG,
-        help="Push data from repository to database",
-        action="store_true",
+            Const.APPLY_SS_ARG,
+            Const.APPLY_SS_LONG_ARG,
+            metavar="NAME",
+            help="Apply version schema snapshot",
+    )
+    group.add_argument(
+            Const.PULL_DATA_ARG,
+            help="Pull data from repository by table",
+            action="store_true",
+    )
+    group.add_argument(
+            Const.PUSH_DATA_ARG,
+            help="Push data from repository to database",
+            action="store_true",
     )
     parser.add_argument(
-            Const.TBL_ARG, metavar="", help="Pull/Push table for data", action="append"
+            Const.DATA_TBL_ARG,
+            Const.DATA_TBL_LONG_ARG,
+            metavar="TABLE_NAME",
+            help="Pull/Push table for data",
+            action="append"
     )
     parser.add_argument(
             Const.FORCE_ARG,
@@ -76,127 +111,178 @@ def parse_args(args):
             action="store_true",
     )
     group.add_argument(
-        Const.SET_VERSION_STORAGE_TABLE_OWNER_ARG,
-        help="Set postgres owner for the version storage table",
+            Const.SET_VERSION_STORAGE_TABLE_OWNER_ARG,
+            metavar="OWNER",
+            help="Set postgres owner for the version storage table",
     )
     group.add_argument(
             Const.TIMER_ON_ARG,
-            help="Turn executions timer on (-apply, -applyff, -pulldata, -pushdata, -dump-database, -restore)",
+            help="Turn executions timer on (-apply, -applyss, -pulldata, -pushdata, -dump, -restore)",
             action="store_true",
     )
     group.add_argument(
             Const.TIMER_OFF_ARG,
-            help="Turn executions timer on (-apply, -applyff, -pulldata, -pushdata, -dump-database, -restore)",
+            help="Turn executions timer on (-apply, -applyss, -pulldata, -pushdata, -dump, -restore)",
             action="store_true",
     )
     group.add_argument(
-            Const.DUMP_DATABASE_ARG,
+            Const.DUMP_ARG,
             help="Dump database from server to local file (requires confirmation)",
             action="store_true",
     )
     group.add_argument(
-            Const.RESTORE_DATABASE_ARG,
+            Const.RESTORE_ARG,
             help="Restore database dump from file to server (requires confirmation)",
-            metavar="",
-    )
-    parser.add_argument(Const.V_ARG, metavar="", help="Version number")
-    parser.add_argument(Const.MAKE_REPO_ARG, metavar="", help="Make Repository")
-    parser.add_argument(
-        Const.REMOVE_REPO_ARG, metavar="", help="Remove Repository"
+            metavar="FILE_NAME",
     )
     parser.add_argument(
-        Const.MAKE_V_ARG, metavar="", help="Make version number"
+            Const.V_ARG,
+            metavar="VERSION_NUMBER",
+            help="Version number"
+    )
+    group.add_argument(
+            Const.MAKE_REPO_ARG,
+            metavar="REPO_NAME",
+            help="Make Repository"
+    )
+    group.add_argument(
+            Const.REMOVE_REPO_ARG,
+            metavar="REPO_NAME",
+            help="Remove Repository"
+    )
+    group.add_argument(
+            Const.MAKE_V_ARG,
+            metavar="VERSION_NUMBER",
+            help="Make version number"
+    )
+    group.add_argument(
+            Const.MAKE_ENV_ARG,
+            metavar="ENV_NAME",
+            help="Make environment type"
+    )
+    group.add_argument(
+            Const.REMOVE_ENV_ARG,
+            metavar="ENV_NAME",
+            help="Remove environment type"
     )
     parser.add_argument(
-        Const.MAKE_ENV_ARG, metavar="", help="Make environment type"
+            Const.SET_ENV_ARG,
+            metavar="ENV_NAME",
+            help="Set environment type to a version"
     )
     parser.add_argument(
-        Const.REMOVE_ENV_ARG, metavar="", help="Remove environment type"
+            Const.ENV_ARG,
+            metavar="ENV_NAME",
+            help="Repository environment name"
     )
     parser.add_argument(
-        Const.SET_ENV_ARG, metavar="", help="Set environment type to a version"
+            Const.REPO_ARG,
+            metavar="REPO_NAME",
+            help="Repository name"
     )
     parser.add_argument(
-        Const.ENV_ARG, metavar="", help="Repository environment name"
-    )
-    parser.add_argument(Const.REPO_ARG, metavar="", help="Repository name")
-    parser.add_argument(
-        Const.PRODUCTION_ARG,
-        help="Database production flag",
-        action="store_true",
+            Const.PRODUCTION_ARG,
+            help="Database production flag",
+            action="store_true"
     )
 
-    parser.add_argument(Const.SERVICE_ARG, metavar="", help="pg service")
+    parser.add_argument(
+            Const.SERVICE_ARG,
+            metavar="PG_SERVICE_NAME",
+            help="pg service"
+    )
 
     parser.add_argument(
-        Const.DATABASE_ARG, metavar="", help="database name on server"
+            Const.DATABASE_ARG,
+            metavar="DB_NAME",
+            help="database name on server"
     )
-    parser.add_argument(Const.HOST_ARG, metavar="", help="postgres server host")
-    parser.add_argument(Const.PORT_ARG, metavar="", help="port")
-    parser.add_argument(Const.USER_ARG, metavar="", help="database username")
-    parser.add_argument(Const.PWD_ARG, metavar="", help="password")
+    parser.add_argument(
+            Const.HOST_ARG,
+            metavar="HOSTNAME",
+            help="postgres server host"
+    )
+    parser.add_argument(
+            Const.PORT_ARG,
+            metavar="PORT",
+            help="port"
+    )
+    parser.add_argument(
+            Const.USER_ARG,
+            metavar="USERNAME",
+            help="database username"
+    )
 
-    parser.add_argument(
-        Const.INCLUDE_SCHEMA_ARG,
-        metavar="",
-        help="Add schema to include schema list",
-        action="append",
+    group.add_argument(
+            Const.INCLUDE_SCHEMA_ARG,
+            Const.INCLUDE_SCHEMA_LONG_ARG,
+            metavar="SCHEMA",
+            help="Add schema(s) to include schema list",
+            action="append",
     )
-    parser.add_argument(
-        Const.INCLUDE_TABLE_ARG,
-        metavar="",
-        help="Add table to include table list",
-        action="append",
+    group.add_argument(
+            Const.INCLUDE_TABLE_ARG,
+            Const.INCLUDE_TABLE_LONG_ARG,
+            metavar="TABLE",
+            help="Add table(s) to include table list",
+            action="append",
     )
-    parser.add_argument(
-        Const.EXCLUDE_SCHEMA_ARG,
-        metavar="",
-        help="Add schema to exclude schema list",
-        action="append",
+    group.add_argument(
+            Const.EXCLUDE_SCHEMA_ARG,
+            Const.EXCLUDE_SCHEMA_LONG_ARG,
+            metavar="SCHEMA",
+            help="Add schema(s) to exclude schema list",
+            action="append",
     )
-    parser.add_argument(
-        Const.EXCLUDE_TABLE_ARG,
-        metavar="",
-        help="Add table to exclude table list",
-        action="append",
+    group.add_argument(
+            Const.EXCLUDE_TABLE_ARG,
+            Const.EXCLUDE_TABLE_LONG_ARG,
+            metavar="TABLE",
+            help="Add table(s) to exclude table list",
+            action="append",
     )
-    parser.add_argument(
-        Const.RMINCLUDE_SCHEMA_ARG,
-        metavar="",
-        help="Remove schema from include schema list",
-        action="append",
+    group.add_argument(
+            Const.RMINCLUDE_SCHEMA_ARG,
+            Const.RMINCLUDE_SCHEMA_LONG_ARG,
+            metavar="SCHEMA",
+            help="Remove schema(s) from include schema list",
+            action="append",
     )
-    parser.add_argument(
-        Const.RMINCLUDE_TABLE_ARG,
-        metavar="",
-        help="Remove table from include table list",
-        action="append",
+    group.add_argument(
+            Const.RMINCLUDE_TABLE_ARG,
+            Const.RMINCLUDE_TABLE_LONG_ARG,
+            metavar="TABLE",
+            help="Remove table(s) from include table list",
+            action="append",
     )
-    parser.add_argument(
-        Const.RMEXCLUDE_TABLE_ARG,
-        metavar="",
-        help="Remove table from exclude table list",
-        action="append",
+    group.add_argument(
+            Const.RMEXCLUDE_TABLE_ARG,
+            Const.RMEXCLUDE_TABLE_LONG_ARG,
+            metavar="TABLE",
+            help="Remove table(s) from exclude table list",
+            action="append",
     )
-    parser.add_argument(
-        Const.RMEXCLUDE_SCHEMA_ARG,
-        metavar="",
-        help="Remove schema from exclude schema list",
-        action="append",
+    group.add_argument(
+            Const.RMEXCLUDE_SCHEMA_ARG,
+            Const.RMEXCLUDE_SCHEMA_LONG_ARG,
+            metavar="SCHEMA",
+            help="Remove schema(s) from exclude schema list",
+            action="append",
     )
 
     return parser.parse_args(args)
 
 
+# <editor-fold desc="arg_calls">
 def display_repo_list(verbose=False):
     c = VersionedDbHelper()
     c.display_repo_list(verbose)
 
 
-def display_repo_ff_list():
+def display_repo_ss_list():
     c = VersionedDbHelper()
-    if not c.display_repo_ff_list():
-        error_message_non_terminating("No fast forwards available.")
+    if not c.display_repo_ss_list():
+        error_message_non_terminating("No Schema Snapshots available.")
 
 
 def display_repo_dd_list():
@@ -227,10 +313,10 @@ def initialize_versioned_db(arg_set):
         error_message(f"Error setting env: Used {Const.ENV_ARG}, did you mean {Const.SET_ENV_ARG}?")
 
     init.initialize_db_version_on_server(
-        db_conn=db_conn,
-        repo_name=arg_set.repo,
-        is_production=arg_set.production,
-        env=arg_set.setenv,
+            db_conn=db_conn,
+            repo_name=arg_set.repo,
+            is_production=arg_set.production,
+            env=arg_set.setenv,
     )
 
 
@@ -240,18 +326,18 @@ def apply_repository_to_db(arg_set):
     version = _get_repo_version(arg_set)
 
     vdb.apply_repository_to_database(
-        db_conn=db_conn,
-        repo_name=arg_set.repo,
-        version=version,
-        is_production=arg_set.production,
-        env=arg_set.env,
+            db_conn=db_conn,
+            repo_name=arg_set.repo,
+            version=version,
+            is_production=arg_set.production,
+            env=arg_set.env,
     )
 
 
 def _get_repo_version(arg_set):
     if arg_set.v and arg_set.env:
         raise VersionedDbException(
-            "Version and environment args are mutually exclusive."
+                "Version and environment args are mutually exclusive."
         )
 
     if arg_set.v:
@@ -259,15 +345,19 @@ def _get_repo_version(arg_set):
 
     vdb = VersionedDbHelper()
     return vdb.get_repository_environment(
-        repo_name=arg_set.repo, env=arg_set.env
+            repo_name=arg_set.repo, env=arg_set.env
     )
 
 
-def apply_fast_forward_to_db(arg_set):
+def apply_schema_snapshot_to_db(arg_set):
     vdb = VersionedDbHelper()
     db_conn = connection_list(arg_set)
 
-    vdb.apply_repository_fast_forward_to_database(db_conn=db_conn, repo_name=arg_set.repo, full_version=arg_set.applyff)
+    vdb.apply_repository_schema_snapshot_to_database(
+            db_conn=db_conn,
+            repo_name=arg_set.repo,
+            full_version=arg_set.applyss
+    )
 
 
 def push_repo_data_to_db(arg_set):
@@ -275,11 +365,11 @@ def push_repo_data_to_db(arg_set):
     db_conn = connection_list(arg_set)
 
     vdb.push_data_to_database(
-        db_conn=db_conn,
-        repo_name=arg_set.repo,
-        force=arg_set.force,
-        table_list=arg_set.t,
-        is_production=arg_set.production,
+            db_conn=db_conn,
+            repo_name=arg_set.repo,
+            force=arg_set.force,
+            table_list=arg_set.dt,
+            is_production=arg_set.production,
     )
 
 
@@ -288,9 +378,9 @@ def repo_database_dump(arg_set):
     db_conn = connection_list(arg_set)
 
     vdb.repo_database_dump(
-        db_conn=db_conn,
-        repo_name=arg_set.repo,
-        is_production=arg_set.production,
+            db_conn=db_conn,
+            repo_name=arg_set.repo,
+            is_production=arg_set.production,
     )
 
 
@@ -299,9 +389,9 @@ def repo_database_restore(arg_set):
     db_conn = connection_list(arg_set)
 
     vdb.repo_database_restore(
-        db_conn=db_conn,
-        repo_name=arg_set.repo,
-        file_name=arg_set.restore_database
+            db_conn=db_conn,
+            repo_name=arg_set.repo,
+            file_name=arg_set.restore
     )
 
 
@@ -309,14 +399,14 @@ def pull_table_for_repo_data(arg_set):
     vdb = VersionedDbHelper()
     db_conn = connection_list(arg_set)
 
-    vdb.pull_table_for_repo_data(db_conn=db_conn, repo_name=arg_set.repo, table_list=arg_set.t)
+    vdb.pull_table_for_repo_data(db_conn=db_conn, repo_name=arg_set.repo, table_list=arg_set.dt)
 
 
-def set_fast_forward_pull_from_db(arg_set):
+def set_schema_snapshot_pull_from_db(arg_set):
     vdb = VersionedDbHelper()
     db_conn = connection_list(arg_set)
 
-    vdb.set_repository_fast_forward(db_conn=db_conn, repo_name=arg_set.repo)
+    vdb.set_repository_schema_snapshot(db_conn=db_conn, repo_name=arg_set.repo)
 
 
 def create_repository(repo_name):
@@ -413,6 +503,9 @@ def create_config_file():
     vdb.create_config()
 
 
+# </editor-fold>
+
+
 class DbVctrl(object):
     @staticmethod
     def __init__():
@@ -422,17 +515,17 @@ class DbVctrl(object):
     def run(arg_set):
 
         try:
-            if arg_set.rl:
-                # -rl
+            if arg_set.lr:
+                # -lr
                 display_repo_list()
-            elif arg_set.rlv:
-                # -rlv
+            elif arg_set.lrv:
+                # -lrv
                 display_repo_list(verbose=True)
-            elif arg_set.rff:
-                # -rff
-                display_repo_ff_list()
-            elif arg_set.rdd:
-                # -rdd
+            elif arg_set.lss:
+                # -lss
+                display_repo_ss_list()
+            elif arg_set.ldd:
+                # -ldd
                 display_repo_dd_list()
             elif arg_set.status:
                 # -status -repo test_db -d postgresPlay
@@ -462,7 +555,7 @@ class DbVctrl(object):
                 # -rmenv test -repo test_db
                 remove_repository_env_type(repo_name=arg_set.repo, env=arg_set.rmenv)
             elif arg_set.set_version_storage_owner:
-                # --set-version-storage-owner dbowner -repo test_db
+                # -set-version-storage-owner dbowner -repo test_db
                 set_repository_version_storage_owner(repo_name=arg_set.repo, owner=arg_set.set_version_storage_owner)
             elif arg_set.timer_on:
                 # -timer-on
@@ -473,56 +566,56 @@ class DbVctrl(object):
             elif arg_set.setenv:
                 # -setenv test -repo test_db -v 1.0.0
                 set_repository_env_version(arg_set)
-            elif arg_set.schema:
-                # --include-schema membership -repo pgvctrl_test
-                set_repository_include_schema(repo_name=arg_set.repo, include_schemas=arg_set.schema)
-            elif arg_set.rm_schema:
-                # --rm-schema membership -repo pgvctrl_test
-                remove_repository_include_schema(repo_name=arg_set.repo, rminclude_schema=arg_set.rm_schema)
-            elif arg_set.exclude_schema:
-                # --exclude-schema membership -repo pgvctrl_test
-                set_repository_exclude_schema(repo_name=arg_set.repo, exclude_schemas=arg_set.exclude_schema)
-            elif arg_set.rmexclude_schema:
-                # --rmexclude-schema membership -repo pgvctrl_test
-                remove_repository_rmexclude_schema(repo_name=arg_set.repo, rmexclude_schema=arg_set.rmexclude_schema)
-            elif arg_set.table:
-                # --include-table membership.user_type -repo pgvctrl_test
-                set_repository_include_table(repo_name=arg_set.repo, include_table=arg_set.table)
-            elif arg_set.rm_table:
-                # --rminclude-table membership.user_type -repo pgvctrl_test
-                remove_repository_include_table(repo_name=arg_set.repo, rminclude_table=arg_set.rm_table)
-            elif arg_set.exclude_table:
-                # --exclude-table membership.user_type -repo pgvctrl_test
-                set_repository_exclude_table(repo_name=arg_set.repo, exclude_tables=arg_set.exclude_table)
-            elif arg_set.rmexclude_table:
-                # --rmexclude-table membership.user_type -repo pgvctrl_test
-                remove_repository_exclude_table(repo_name=arg_set.repo, rmexclude_table=arg_set.rmexclude_table)
+            elif arg_set.n:
+                # [-n | -include-schema] membership -repo pgvctrl_test
+                set_repository_include_schema(repo_name=arg_set.repo, include_schemas=arg_set.n)
+            elif arg_set.rmn:
+                # [-rmn | -rm-schema] membership -repo pgvctrl_test
+                remove_repository_include_schema(repo_name=arg_set.repo, rminclude_schema=arg_set.rmn)
+            elif arg_set.N:
+                # [-N | -exclude-schema] membership -repo pgvctrl_test
+                set_repository_exclude_schema(repo_name=arg_set.repo, exclude_schemas=arg_set.N)
+            elif arg_set.rmN:
+                # [-rmN | -rmexclude-schema] membership -repo pgvctrl_test
+                remove_repository_rmexclude_schema(repo_name=arg_set.repo, rmexclude_schema=arg_set.rmN)
+            elif arg_set.t:
+                # [-t | -include-table] membership.user_type -repo pgvctrl_test
+                set_repository_include_table(repo_name=arg_set.repo, include_table=arg_set.t)
+            elif arg_set.rmt:
+                # [-rmt | -rminclude-table] membership.user_type -repo pgvctrl_test
+                remove_repository_include_table(repo_name=arg_set.repo, rminclude_table=arg_set.rmt)
+            elif arg_set.T:
+                # [-T | -exclude-table] membership.user_type -repo pgvctrl_test
+                set_repository_exclude_table(repo_name=arg_set.repo, exclude_tables=arg_set.T)
+            elif arg_set.rmT:
+                # [-rmT | -rmexclude-table] membership.user_type -repo pgvctrl_test
+                remove_repository_exclude_table(repo_name=arg_set.repo, rmexclude_table=arg_set.rmT)
             elif arg_set.apply:
                 # -apply <-v 0.1.0 | -env test> -repo test_db -d postgresPlay
                 apply_repository_to_db(arg_set)
-            elif arg_set.setff:
-                # -setff -repo test_db -d postgresPlay
-                set_fast_forward_pull_from_db(arg_set)
-            elif arg_set.applyff:
-                # -applyff 0.1.0.BaseDeploy -repo test_db -d postgresPlay
-                apply_fast_forward_to_db(arg_set)
+            elif arg_set.getss:
+                # -getss -repo test_db -d postgresPlay
+                set_schema_snapshot_pull_from_db(arg_set)
+            elif arg_set.applyss:
+                # -applyss 0.1.0.BaseDeploy -repo test_db -d postgresPlay
+                apply_schema_snapshot_to_db(arg_set)
             elif arg_set.pulldata:
-                # -pulldata -t error_set -t membership.user_state -repo test_db -d postgresPlay
+                # -pulldata -dt error_set -dt membership.user_state -repo test_db -d postgresPlay
                 pull_table_for_repo_data(arg_set)
             elif arg_set.pushdata:
-                # -pushdata [-t error_set ... ] -repo test_db -d postgresPlay
+                # -pushdata [-dt error_set ... ] -repo test_db -d postgresPlay
                 push_repo_data_to_db(arg_set)
             elif arg_set.version:
                 # -version
                 show_version()
-            elif arg_set.dump_database:
-                # -dump-database -repo test_db -d postgresPlay [-production]
+            elif arg_set.dump:
+                # -dump -repo test_db -d postgresPlay [-production]
                 if user_yes_no_query("Do you want to dump the database?"):
                     repo_database_dump(arg_set)
                 else:
                     error_message("Dump database cancelled.")
-            elif arg_set.restore_database:
-                # -restore-database dump_file -repo test_db -d postgresPlay
+            elif arg_set.restore:
+                # -restore dump_file -repo test_db -d postgresPlay
                 if user_yes_no_query("Do you want to restore the database?"):
                     repo_database_restore(arg_set)
                 else:
@@ -530,7 +623,7 @@ class DbVctrl(object):
             else:
                 prj_name = pkg_resources.require(Const.PGVCTRL)[0].project_name
                 error_message(
-                    f'{prj_name}: No operation specified\nTry "{prj_name} --help" for more information.'
+                        f'{prj_name}: No operation specified\nTry "{prj_name} --help" for more information.'
                 )
         except VersionedDbExceptionProductionChangeNoProductionFlag as e:
             error_message(e.message)

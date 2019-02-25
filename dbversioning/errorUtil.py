@@ -83,9 +83,9 @@ class VersionedDbExceptionProductionChangeNoProductionFlag(
         pass
 
 
-class VersionedDbExceptionFastForwardNotAllowed(VersionedDbException):
+class VersionedDbExceptionSchemaSnapshotNotAllowed(VersionedDbException):
     def __init__(self):
-        self.message = "Fast forwards only allowed on empty databases."
+        self.message = "Schema Snapshots only allowed on empty databases."
         pass
 
 

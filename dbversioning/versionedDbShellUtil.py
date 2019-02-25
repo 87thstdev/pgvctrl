@@ -108,7 +108,8 @@ class VersionDbShellUtil:
         return True
 
     @staticmethod
-    def apply_fast_forward_sql(db_conn, sql_file):
+    def apply_schema_snapshot_sql(db_conn, sql_file):
+        start = datetime.datetime.now()
         psql = _local_psql()
         psql_parm_list = copy.copy(db_conn)
 
@@ -120,8 +121,15 @@ class VersionDbShellUtil:
             information_message(f"Applying: {sql_file.full_name}")
             rtn = psql.run(psql_parm_list, retcode=0)
             msg = rtn[2]
-            msg_formatted = msg.replace(f"psql:{sql_file.full_name}:", "\t")
-            information_message(f"{msg_formatted}")
+
+            end = datetime.datetime.now()
+            delta = end - start
+
+            msg_formatted = msg.replace(f"psql:{sql_file.full_name}:", "")
+            if RepositoryConf.is_timer_on():
+                information_message(f"{msg_formatted}{Const.TAB}Time: {get_time_text(delta.total_seconds())}\n")
+            else:
+                information_message(msg_formatted)
 
         except ProcessExecutionError as e:
             raise VersionedDbExceptionSqlExecutionError(e.stderr)
@@ -142,7 +150,7 @@ class VersionDbShellUtil:
             pg_dump_parm_list.append("--disable-triggers")
             pg_dump_parm_list.append("--if-exists")
             pg_dump_parm_list.append("-c")
-            pg_dump_parm_list.append(Const.TBL_ARG)
+            pg_dump_parm_list.append(Const.DB_TABLE_ARG)
             pg_dump_parm_list.append(tbl)
             pg_dump_parm_list.append("-f")
             pg_dump_parm_list.append(sql_loc)
@@ -189,7 +197,7 @@ class VersionDbShellUtil:
             pg_dump_parm_list.append("--disable-triggers")
             pg_dump_parm_list.append("--if-exists")
             pg_dump_parm_list.append("-c")
-            pg_dump_parm_list.append(Const.TBL_ARG)
+            pg_dump_parm_list.append(Const.DB_TABLE_ARG)
             pg_dump_parm_list.append(tbl["table"])
             pg_dump_parm_list.append("-f")
             pg_dump_parm_list.append(sql_loc)
@@ -263,11 +271,12 @@ class VersionDbShellUtil:
             end = datetime.datetime.now()
             delta = end - start
             msg_formatted = msg.replace(f"psql:{sql_file.path}:", "\t")
-            information_message(f"{msg_formatted}")
+            if msg_formatted:
+                information_message(f"{msg_formatted}")
             exec_time = delta.total_seconds()
 
             if RepositoryConf.is_timer_on():
-                notice_message(f"\tTime: {get_time_text(exec_time)}\n")
+                notice_message(f"{Const.TAB}Time: {get_time_text(exec_time)}\n")
 
         except ProcessExecutionError as e:
             raise VersionedDbExceptionSqlExecutionError(e.stderr)
@@ -297,60 +306,39 @@ class VersionDbShellUtil:
         psql(db_conn, "-c", update_version_sql, retcode=0)
 
     @staticmethod
-    def dump_version_fast_forward(db_conn, v_stg, repo_name) -> str:
+    def dump_version_schema_snapshot(db_conn, v_stg, repo_name) -> (str, Optional[float]):
+        start = datetime.datetime.now()
         pg_dump = _local_pg_dump()
         conf = RepositoryConf()
         conf.check_include_exclude_violation(repo_name)
 
         dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
 
-        ensure_dir_exists(conf.fast_forward_dir())
+        ensure_dir_exists(conf.schema_snapshot_dir())
 
-        repo_ff = os.path.join(conf.fast_forward_dir(), dbver.repo_name)
+        repo_ss = os.path.join(conf.schema_snapshot_dir(), dbver.repo_name)
 
-        ensure_dir_exists(repo_ff)
+        ensure_dir_exists(repo_ss)
+        d = datetime.datetime.now().strftime(SNAPSHOT_DATE_FORMAT)
+        file_name = f"{dbver.version}.{dbver.env}.{d}.sql" if dbver.env else f"{dbver.version}.{d}.sql"
 
-        file_name = f"{dbver.version}.{dbver.env}.sql" if dbver.env else f"{dbver.version}.sql"
-
-        ff = os.path.join(repo_ff, file_name)
+        ss = os.path.join(repo_ss, file_name)
 
         schema_args, tbl_args = _get_schema_table_args(conf, repo_name)
 
-        pg_dump(db_conn, "-s", "-f", ff, schema_args, tbl_args, retcode=0)
-
-        rtn = pg_dump(db_conn, "--column-inserts", "-a", "-t", v_stg.tbl)
-
-        with open(ff, "a") as file:
-            file.write(rtn)
-
-        return file_name
-
-    @staticmethod
-    def dump_version_snapshot(db_conn, v_stg):
-        pg_dump = _local_pg_dump()
-        conf = RepositoryConf()
-
-        dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
-
-        ensure_dir_exists(conf.snapshot_dir())
-
-        repo_sh = os.path.join(conf.snapshot_dir(), dbver.repo_name)
-
-        ensure_dir_exists(repo_sh)
-
-        d = datetime.datetime.now().strftime(SNAPSHOT_DATE_FORMAT)
-
-        ss = os.path.join(repo_sh, f"{dbver.version}.{d}.sql")
-
-        pg_dump(db_conn, "-s", "-f", ss, retcode=0)
+        pg_dump(db_conn, "-s", "-f", ss, schema_args, tbl_args, retcode=0)
 
         rtn = pg_dump(db_conn, "--column-inserts", "-a", "-t", v_stg.tbl)
 
         with open(ss, "a") as file:
             file.write(rtn)
 
+        end = datetime.datetime.now()
+        delta = end - start
+        return file_name, delta.total_seconds()
+
     @staticmethod
-    def dump_database_backup(db_conn, v_stg, dump_options: List[str]) -> Optional[float]:
+    def dump_backup(db_conn, v_stg, dump_options: List[str]) -> Optional[float]:
         start = datetime.datetime.now()
         pg_dump = _local_pg_dump()
         conf = RepositoryConf()
@@ -381,7 +369,7 @@ class VersionDbShellUtil:
         return delta.total_seconds()
 
     @staticmethod
-    def restore_database_backup(db_conn, file_path: str, restore_options: List[str]) -> Optional[float]:
+    def restore_backup(db_conn, file_path: str, restore_options: List[str]) -> Optional[float]:
         start = datetime.datetime.now()
         pg_restore = _local_pg_restore()
 
@@ -417,7 +405,7 @@ class VersionDbShellUtil:
 
         version_sql = f"SELECT {v_tbl.v}, {v_tbl.rev}, {v_tbl.repo}, {v_tbl.is_prod}, {v_tbl.env}, {v_tbl.hash}, " f"'notused' " f"throwaway FROM {v_tbl.tbl};"
 
-        rtn = psql(db_conn, Const.TBL_ARG, "-A", "-c", version_sql, retcode=0)
+        rtn = psql(db_conn, Const.DB_TABLE_ARG, "-A", "-c", version_sql, retcode=0)
         rtn_array = rtn.split("|")
 
         if len(rtn_array) > 1:
@@ -495,7 +483,7 @@ class VersionDbShellUtil:
 
         psql_parm_list = copy.copy(db_conn)
 
-        psql_parm_list.append(Const.TBL_ARG)
+        psql_parm_list.append(Const.DB_TABLE_ARG)
         psql_parm_list.append("-A")
         psql_parm_list.append("-c")
         psql_parm_list.append(user_tbl_count_sql)
@@ -538,7 +526,7 @@ def _good_version_table(v_tbl, db_conn):
 
     psql_parm_list = copy.copy(db_conn)
 
-    psql_parm_list.append(Const.TBL_ARG)
+    psql_parm_list.append(Const.DB_TABLE_ARG)
     psql_parm_list.append("-A")
     psql_parm_list.append("-c")
     psql_parm_list.append(version_sql)
@@ -600,7 +588,7 @@ def get_table_size(tbl, db_conn):
 
     tbl_sql = f"SELECT pg_size_pretty(pg_total_relation_size('{tbl['table']}')) " f"As tbl_size, pg_total_relation_size('{tbl['table']}') num_size;"
 
-    rtn = psql[db_conn, Const.TBL_ARG, "-A", "-c", tbl_sql].run()
+    rtn = psql[db_conn, Const.DB_TABLE_ARG, "-A", "-c", tbl_sql].run()
 
     rtn_array = rtn[STDOUT].split("|")
     size_txt = rtn_array[0]
@@ -692,19 +680,19 @@ def repo_unregistered_message(repo_name):
 
 
 def sql_applied_message(sql_name):
-    print(colors.lightgray & colors.bold | f"\t\tApplied\t\t{sql_name}")
+    print(colors.lightgray & colors.bold | f"{Const.TABS}Applied\t\t{sql_name}")
 
 
 def sql_not_applied_message(sql_name):
-    print(colors.Green & colors.bold | f"\t\tNot Applied\t{sql_name}")
+    print(colors.Green & colors.bold | f"{Const.TABS}Not Applied\t{sql_name}")
 
 
 def sql_different_message(sql_name):
-    print(colors.DarkOrange & colors.bold | f"\t\tDifferent\t{sql_name}")
+    print(colors.DarkOrange & colors.bold | f"{Const.TABS}Different\t{sql_name}")
 
 
 def sql_missing_applied_message(sql_name):
-    print(colors.red & colors.bold | f"\t\tMissing\t\t{sql_name}")
+    print(colors.red & colors.bold | f"{Const.TABS}Missing\t\t{sql_name}")
 
 
 def _local_psql():

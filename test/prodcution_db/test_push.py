@@ -53,7 +53,7 @@ class TestProdPushingDatabase:
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ],
-                msg=f"{Const.PUSHING_DATA}\nRunning: error_set.sql\n\n"
+                msg=f"{Const.PUSHING_DATA}\nRunning: error_set.sql\n"
         )
 
     def test_push_data_no_prod_flag(self):

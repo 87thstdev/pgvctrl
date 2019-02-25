@@ -93,8 +93,8 @@ class TestConfigUpdating:
     def test_set_repo_two_on_ver_env(self):
         base_msg = (
             f"{TestUtil.pgvctrl_test_repo}\n"
-            f"\tv {TestUtil.test_second_version_no_name} \n"
-            f"\tv {TestUtil.test_version} ['{TestUtil.env_qa}', '{TestUtil.env_test}']\n"
+            f"{Const.TAB}v {TestUtil.test_second_version_no_name} \n"
+            f"{Const.TAB}v {TestUtil.test_version} ['{TestUtil.env_qa}', '{TestUtil.env_test}']\n"
         )
 
         capture_dbvctrl_out(arg_list=[
@@ -177,7 +177,7 @@ class TestConfigUpdating:
     def test_include_schema(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.INCLUDE_SCHEMA_ARG,
+                    Const.INCLUDE_SCHEMA_LONG_ARG,
                     TestUtil.schema_membership,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
@@ -192,14 +192,14 @@ class TestConfigUpdating:
 
     def test_remove_include_schema(self):
         capture_dbvctrl_out(arg_list=[
-            Const.INCLUDE_SCHEMA_ARG,
+            Const.INCLUDE_SCHEMA_LONG_ARG,
             TestUtil.schema_membership,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
         ])
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.RMINCLUDE_SCHEMA_ARG,
+                    Const.RMINCLUDE_SCHEMA_LONG_ARG,
                     TestUtil.schema_membership,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
@@ -215,7 +215,7 @@ class TestConfigUpdating:
     def test_exclude_schema(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.EXCLUDE_SCHEMA_ARG,
+                    Const.EXCLUDE_SCHEMA_LONG_ARG,
                     TestUtil.schema_membership,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo
@@ -230,14 +230,14 @@ class TestConfigUpdating:
 
     def test_remove_exclude_schema(self):
         capture_dbvctrl_out(arg_list=[
-            Const.EXCLUDE_SCHEMA_ARG,
+            Const.EXCLUDE_SCHEMA_LONG_ARG,
             TestUtil.schema_membership,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
         ])
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.RMEXCLUDE_SCHEMA_ARG,
+                    Const.RMEXCLUDE_SCHEMA_LONG_ARG,
                     TestUtil.schema_membership,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo
@@ -254,14 +254,14 @@ class TestConfigUpdating:
     def test_exclude_schema_then_include(self):
         # Exclude first
         capture_dbvctrl_out(arg_list=[
-            Const.EXCLUDE_SCHEMA_ARG,
+            Const.EXCLUDE_SCHEMA_LONG_ARG,
             TestUtil.schema_membership,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
         ])
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.INCLUDE_SCHEMA_ARG,
+                    Const.INCLUDE_SCHEMA_LONG_ARG,
                     TestUtil.schema_membership,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo
@@ -283,7 +283,7 @@ class TestConfigUpdating:
     def test_include_schema_then_exclude(self):
         # Include first
         capture_dbvctrl_out(arg_list=[
-            Const.INCLUDE_SCHEMA_ARG,
+            Const.INCLUDE_SCHEMA_LONG_ARG,
             TestUtil.schema_membership,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
@@ -291,7 +291,7 @@ class TestConfigUpdating:
 
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.EXCLUDE_SCHEMA_ARG,
+                    Const.EXCLUDE_SCHEMA_LONG_ARG,
                     TestUtil.schema_membership,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo
@@ -313,9 +313,9 @@ class TestConfigUpdating:
     def test_include_table(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.INCLUDE_TABLE_ARG,
+                    Const.INCLUDE_TABLE_LONG_ARG,
                     TestUtil.table_membership_user_state,
-                    Const.INCLUDE_TABLE_ARG,
+                    Const.INCLUDE_TABLE_LONG_ARG,
                     TestUtil.table_public_item,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo
@@ -335,7 +335,7 @@ class TestConfigUpdating:
 
     def test_remove_include_table(self):
         capture_dbvctrl_out(arg_list=[
-            Const.INCLUDE_TABLE_ARG,
+            Const.INCLUDE_TABLE_LONG_ARG,
             TestUtil.table_membership_user_state,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
@@ -343,7 +343,7 @@ class TestConfigUpdating:
 
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.RMINCLUDE_TABLE_ARG,
+                    Const.RMINCLUDE_TABLE_LONG_ARG,
                     TestUtil.table_membership_user_state,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo
@@ -360,7 +360,7 @@ class TestConfigUpdating:
     def test_exclude_table(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.EXCLUDE_TABLE_ARG,
+                    Const.EXCLUDE_TABLE_LONG_ARG,
                     TestUtil.table_membership_user_state,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo
@@ -376,7 +376,7 @@ class TestConfigUpdating:
 
     def test_remove_exclude_table(self):
         capture_dbvctrl_out(arg_list=[
-            Const.EXCLUDE_TABLE_ARG,
+            Const.EXCLUDE_TABLE_LONG_ARG,
             TestUtil.table_membership_user_state,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
@@ -384,7 +384,7 @@ class TestConfigUpdating:
 
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.RMEXCLUDE_TABLE_ARG,
+                    Const.RMEXCLUDE_TABLE_LONG_ARG,
                     TestUtil.table_membership_user_state,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
@@ -401,7 +401,7 @@ class TestConfigUpdating:
     def test_include_table_then_exclude(self):
         # Include first
         capture_dbvctrl_out(arg_list=[
-            Const.INCLUDE_TABLE_ARG,
+            Const.INCLUDE_TABLE_LONG_ARG,
             TestUtil.table_membership_user_state,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
@@ -409,7 +409,7 @@ class TestConfigUpdating:
 
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.EXCLUDE_TABLE_ARG,
+                    Const.EXCLUDE_TABLE_LONG_ARG,
                     TestUtil.table_membership_user_state,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo
@@ -430,7 +430,7 @@ class TestConfigUpdating:
     def test_exclude_table_then_include(self):
         # Exclude first
         capture_dbvctrl_out(arg_list=[
-            Const.EXCLUDE_TABLE_ARG,
+            Const.EXCLUDE_TABLE_LONG_ARG,
             TestUtil.table_membership_user_state,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
@@ -438,7 +438,7 @@ class TestConfigUpdating:
 
         dbvctrl_assert_simple_msg(
                 arg_list=[
-                    Const.INCLUDE_TABLE_ARG,
+                    Const.INCLUDE_TABLE_LONG_ARG,
                     TestUtil.table_membership_user_state,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,

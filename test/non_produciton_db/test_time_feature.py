@@ -78,10 +78,10 @@ class TestApplyWithTimerOn:
         total_time = 0.0
         for ln in output_array:
             if "Time:" in ln:
-                time += float(ln[7:11])
+                time += float(ln[10:14])
 
             if "Total time:" in ln:
-                total_time = float(ln[13:17])
+                total_time = float(ln[16:20])
 
         # Because float addition
         delta = round(abs(total_time - time), 2)
@@ -123,7 +123,7 @@ class TestDatabaseDumpWithTimer:
     def test_database_dump_with_timer(self):
         with mock.patch('builtins.input', return_value="YES"):
             out_rtn, errors = capture_dbvctrl_out(arg_list=[
-                Const.DUMP_DATABASE_ARG,
+                Const.DUMP_ARG,
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,
                 Const.DATABASE_ARG,
@@ -165,7 +165,7 @@ class TestDatabaseRestoreWithTimer:
         ])
         with mock.patch('builtins.input', return_value="YES"):
             capture_dbvctrl_out(arg_list=[
-                Const.DUMP_DATABASE_ARG,
+                Const.DUMP_ARG,
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,
                 Const.DATABASE_ARG,
@@ -186,7 +186,7 @@ class TestDatabaseRestoreWithTimer:
 
         with mock.patch('builtins.input', return_value="YES"):
             out, errors = capture_dbvctrl_out(arg_list=[
-                Const.RESTORE_DATABASE_ARG,
+                Const.RESTORE_ARG,
                 self.backup_file,
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,
@@ -208,6 +208,125 @@ class TestDatabaseRestoreWithTimer:
             assert errors is None
             assert "(time: " in out
             assert time > 0
+
+
+class TestDatabaseSetSchemaSnapshotWithTimer:
+    def setup_method(self):
+        TestUtil.drop_database()
+        TestUtil.create_database()
+        TestUtil.get_static_config()
+        capture_dbvctrl_out(arg_list=[Const.TIMER_ON_ARG])
+        capture_dbvctrl_out(arg_list=[
+            Const.INIT_ARG,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+        capture_dbvctrl_out(arg_list=[
+            Const.APPLY_ARG,
+            Const.V_ARG,
+            TestUtil.test_version,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+
+    def teardown_method(self):
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_backups_path)
+        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.drop_database()
+
+    def test_set_schema_snapshot_with_timer(self):
+        out_rtn, errors = capture_dbvctrl_out(arg_list=[
+            Const.GETSS_ARG,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+
+        output_array = out_rtn.split("\n")
+        time = 0.00
+        for ln in output_array:
+            if "(time: " in ln:
+                time = float(ln[79:83])
+
+        assert errors is None
+        assert "(time: " in out_rtn
+        assert time > 0
+
+
+class TestDatabaseApplySchemaSnapshotWithTimer:
+    def setup_method(self):
+        TestUtil.drop_database()
+        TestUtil.create_database()
+        TestUtil.get_static_config()
+        capture_dbvctrl_out(arg_list=[Const.TIMER_ON_ARG])
+        capture_dbvctrl_out(arg_list=[
+            Const.INIT_ARG,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+        TestUtil.mkrepo_ver(
+                TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
+        )
+        capture_dbvctrl_out(arg_list=[
+            Const.APPLY_ARG,
+            Const.V_ARG,
+            TestUtil.test_first_version,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+
+    def teardown_method(self):
+        TestUtil.delete_folder(TestUtil.test_first_version_path)
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ss_path)
+        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.drop_database()
+
+    def test_apply_schema_snapshot_with_timer(self):
+        capture_dbvctrl_out(
+                arg_list=[
+                    Const.GETSS_ARG,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ]
+        )
+
+        TestUtil.drop_database()
+        TestUtil.create_database()
+
+        files = TestUtil.get_snapshot_file_names(TestUtil.pgvctrl_test_repo)
+        file_name = files[0]
+        f_nm = file_name.rstrip('.sql')
+        out_rtn, errors = capture_dbvctrl_out(
+                arg_list=[
+                    Const.APPLY_SS_ARG,
+                    f_nm,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ]
+        )
+        output_array = out_rtn.split("\n")
+        time = 0.00
+        for ln in output_array:
+            if f"{Const.TAB}Time: " in ln:
+                time = float(ln[10:14])
+
+        assert errors is None
+        assert "Time: " in out_rtn
+        assert time > 0
 
 
 class TestPushApplyingWithTimerDb:
@@ -259,7 +378,7 @@ class TestPushApplyingWithTimerDb:
         total_time = 0.0
         for ln in output_array:
             if "Time:" in ln:
-                time += float(ln[7:11])
+                time += float(ln[10:14])
 
             if "Total time:" in ln:
                 total_time = float(ln[12:16])
@@ -307,7 +426,7 @@ class TestPullDataWithTimer:
     def test_pull_data_from_repos_table_list(self):
         arg_list = [
             Const.PULL_DATA_ARG,
-            Const.TBL_ARG,
+            Const.DATA_TBL_ARG,
             TestUtil.error_set_table_name,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,

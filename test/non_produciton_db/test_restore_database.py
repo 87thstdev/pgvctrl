@@ -30,7 +30,7 @@ class TestDatabaseRestore:
         ])
         with mock.patch('builtins.input', return_value="YES"):
             capture_dbvctrl_out(arg_list=[
-                Const.DUMP_DATABASE_ARG,
+                Const.DUMP_ARG,
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,
                 Const.DATABASE_ARG,
@@ -51,7 +51,7 @@ class TestDatabaseRestore:
 
         with mock.patch('builtins.input', return_value="YES"):
             out, errors = capture_dbvctrl_out(arg_list=[
-                Const.RESTORE_DATABASE_ARG,
+                Const.RESTORE_ARG,
                 self.backup_file,
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,
@@ -78,7 +78,7 @@ class TestDatabaseRestore:
     def test_database_restore_db_not_empty(self):
         with mock.patch('builtins.input', return_value="YES"):
             out, errors = capture_dbvctrl_out(arg_list=[
-                Const.RESTORE_DATABASE_ARG,
+                Const.RESTORE_ARG,
                 self.backup_file,
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,
@@ -93,7 +93,7 @@ class TestDatabaseRestore:
     def test_database_restore_db_not_found(self):
         with mock.patch('builtins.input', return_value="YES"):
             out, errors = capture_dbvctrl_out(arg_list=[
-                Const.RESTORE_DATABASE_ARG,
+                Const.RESTORE_ARG,
                 self.backup_file,
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,
@@ -109,7 +109,7 @@ class TestDatabaseRestore:
     def test_database_restore_file_not_found(self):
         with mock.patch('builtins.input', return_value="YES"):
             out, errors = capture_dbvctrl_out(arg_list=[
-                Const.RESTORE_DATABASE_ARG,
+                Const.RESTORE_ARG,
                 "nofile",
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,
@@ -125,7 +125,7 @@ class TestDatabaseRestore:
     def test_database_restore_cancel(self):
         with mock.patch('builtins.input', return_value="NO"):
             out, errors = capture_dbvctrl_out(arg_list=[
-                Const.RESTORE_DATABASE_ARG,
+                Const.RESTORE_ARG,
                 self.backup_file,
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,
@@ -138,7 +138,7 @@ class TestDatabaseRestore:
     def test_database_restore_cancel_any(self):
         with mock.patch('builtins.input', return_value="asdfsdfasdf"):
             out, errors = capture_dbvctrl_out(arg_list=[
-                Const.RESTORE_DATABASE_ARG,
+                Const.RESTORE_ARG,
                 "nofile",
                 Const.REPO_ARG,
                 TestUtil.pgvctrl_test_repo,

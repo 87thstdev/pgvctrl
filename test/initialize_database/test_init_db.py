@@ -128,8 +128,6 @@ class TestInitDb:
                     TestUtil.port,
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
-                    Const.PWD_ARG,
-                    TestUtil.psw,
                     Const.USER_ARG,
                     TestUtil.user_bad
                 ])
@@ -150,8 +148,6 @@ class TestInitDb:
                     TestUtil.port,
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
-                    Const.PWD_ARG,
-                    TestUtil.psw,
                     Const.USER_ARG,
                     TestUtil.user
                 ],

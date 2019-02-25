@@ -24,10 +24,6 @@ def _append_server_args(args, rtn_conn):
         rtn_conn.append(Const.PSQL_USER_PARAM)
         rtn_conn.append(args.u)
 
-    if args.pwd:
-        rtn_conn.append(Const.PSQL_PWD_PARAM)
-        rtn_conn.append(args.p)
-
 
 def connection_list(args):
     """

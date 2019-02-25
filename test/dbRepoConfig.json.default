@@ -1,5 +1,4 @@
 {
-    "autoSnapshots": false,
     "dumpDatabaseOptionsDefault": "-Fc -Z4",
     "defaultVersionStorage": {
         "env": "env",
