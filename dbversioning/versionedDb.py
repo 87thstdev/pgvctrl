@@ -19,7 +19,7 @@ from dbversioning.versionedDbHelper import (
 class SchemaSnapshot(object):
     def __init__(self, repo_path):
         """
-        init_db: Initialize a database to use dbvctrl
+        init_db: Initialize a database to use pgvctrl
         """
         self._repo_path = repo_path
         self.db_name = os.path.basename(repo_path)
@@ -104,7 +104,7 @@ class Version(object):
 class VersionDb(object):
     def __init__(self, repo_path):
         """
-        init_db: Initialize a database to use dbvctrl
+        init_db: Initialize a database to use pgvctrl
         """
         db_name = os.path.basename(repo_path)
         if not dir_exists(repo_path):
