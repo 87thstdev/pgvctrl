@@ -1,7 +1,7 @@
-dbvctrl
+pgvctrl
 =======
 
-Database **dbvctrl** is a tool designed to help deploy changes to
+Database **pgvctrl** is a tool designed to help deploy changes to
 postgres databases. All changes are stored in versioned folders with the
 order of execution set by the programmer.
 
