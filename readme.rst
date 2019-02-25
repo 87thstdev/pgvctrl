@@ -225,7 +225,9 @@ Getting Started
 
    .. code-block::
 
-      pgvctrl -rss
+      pgvctrl -lss
+        or
+      pgvctrl -list-schema-snapshots
 
    Output:
 
@@ -238,7 +240,9 @@ Getting Started
 
    .. code-block::
 
-      pgvctrl -rdd
+      pgvctrl -ldd
+        or
+      pgvctrl -list-database-dumps
 
    Output:
 
@@ -508,7 +512,7 @@ Output:
 Manage schemas and tables in Schema Snapshots
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Manage schemas (–schema, –exclude-schema, –rm-schema, –rmexclude-schema):
+Manage schemas (–schema, –exclude-schema, –rm-schema, –rm-exclude-schema):
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #. Allows the user to say what schemas structures to include/exclude
@@ -520,7 +524,9 @@ To include a schema:
 
 .. code-block::
 
-   pgvctrl --schema membership -repo pgvctrl_test
+   pgvctrl -n membership -repo pgvctrl_test
+     or
+   pgvctrl -schema membership -repo pgvctrl_test
 
 Output:
 
@@ -546,7 +552,9 @@ To include a table:
 
 .. code-block::
 
-   pgvctrl --table membership.user -repo pgvctrl_test
+   pgvctrl -t membership.user -repo pgvctrl_test
+     or
+   pgvctrl -table membership.user -repo pgvctrl_test
 
 Output:
 
@@ -560,7 +568,7 @@ Output:
 #. If a table/schema is included and then later excluded, the table/schema is moved from included to exclude and vice versa.
 #. Include table/schema works the same as with pg_dump.
 
-Schema Snapshot (-setss, -applyss)
+Schema Snapshot (-getss, -applyss)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **What are Schema Snapshots?**\  Schema Snapshots are snapshots of the
@@ -574,15 +582,15 @@ database structure (tables, views, functions ect.) at the time the snapshot was 
 #. If there were database schema changes outside of pgvctrl, it will be captured in the Schema Snapshot.
 #. Schema Snapshots should only be applied to empty databases.
 
--setss: Set version Schema Snapshot
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-getss: Set version Schema Snapshot
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block::
 
-   -setss -repo [repository name] [db connection information]
+   -getss -repo [repository name] [db connection information]
 
--applyss: Apply version Schema Snapshot
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-applyss or -apply-schema-snapshot: Apply version Schema Snapshot
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block::
 
@@ -602,13 +610,13 @@ There could be many reason why one would want to manage data:
 
 .. code-block::
 
-   -pulldata [-t [table name]] -repo [repository name] [db connection information]
+   -pulldata [-dt [table name]] -repo [repository name] [db connection information]
 
 e.g.
 
 .. code-block::
 
-   -pulldata -t error_set -t membership.user_state -repo mydb -d mylocaldb
+   -pulldata -dt error_set -dt membership.user_state -repo mydb -d mylocaldb
 
 Output:
 
@@ -642,7 +650,7 @@ e.g. For pushing by table(s).
 
 .. code-block::
 
-   -pushdata -t error_set -t process_state -repo mydb -d mylocaldb
+   -pushdata -dt error_set -dt process_state -repo mydb -d mylocaldb
 
 e.g. For pushing all tables.
 
