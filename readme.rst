@@ -513,7 +513,7 @@ Manage schemas and tables in Schema Snapshots
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Manage schemas (–schema, –exclude-schema, –rm-schema, –rm-exclude-schema):
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #. Allows the user to say what schemas structures to include/exclude
    when Schema Snapshots are created.
@@ -569,7 +569,7 @@ Output:
 #. Include table/schema works the same as with pg_dump.
 
 Schema Snapshot (-getss, -applyss)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **What are Schema Snapshots?**\  Schema Snapshots are snapshots of the
 database structure (tables, views, functions ect.) at the time the snapshot was taken.
