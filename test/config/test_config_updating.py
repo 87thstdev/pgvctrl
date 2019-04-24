@@ -174,7 +174,7 @@ class TestConfigUpdating:
                 msg=f"Repository environment removed: {TestUtil.pgvctrl_test_repo} {TestUtil.env_qa}\n"
         )
 
-    def test_include_schema(self):
+    def test_include_schemas(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[
                     Const.INCLUDE_SCHEMA_LONG_ARG,
@@ -185,10 +185,22 @@ class TestConfigUpdating:
                 msg=f"Repository added: {TestUtil.pgvctrl_test_repo} "
                     f"include-schemas ['{TestUtil.schema_membership}']\n"
         )
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.INCLUDE_SCHEMA_LONG_ARG,
+                    TestUtil.schema_public,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                ],
+                msg=f"Repository added: {TestUtil.pgvctrl_test_repo} "
+                f"include-schemas ['{TestUtil.schema_public}']\n"
+        )
         inc_sch_name = RepositoryConf.get_repo_include_schemas(
                 TestUtil.pgvctrl_test_repo
         )
-        assert inc_sch_name == ["membership"]
+        assert len(inc_sch_name) == 2
+        assert TestUtil.schema_public in inc_sch_name
+        assert TestUtil.schema_membership in inc_sch_name
 
     def test_remove_include_schema(self):
         capture_dbvctrl_out(arg_list=[
@@ -223,10 +235,22 @@ class TestConfigUpdating:
                 msg=f"Repository added: {TestUtil.pgvctrl_test_repo} "
                     f"exclude-schemas ['{TestUtil.schema_membership}']\n"
         )
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.EXCLUDE_SCHEMA_LONG_ARG,
+                    TestUtil.schema_public,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo
+                ],
+                msg=f"Repository added: {TestUtil.pgvctrl_test_repo} "
+                f"exclude-schemas ['{TestUtil.schema_public}']\n"
+        )
         exc_sch_name = RepositoryConf.get_repo_exclude_schemas(
             TestUtil.pgvctrl_test_repo
         )
-        assert exc_sch_name == ["membership"]
+        assert len(exc_sch_name) == 2
+        assert TestUtil.schema_public in exc_sch_name
+        assert TestUtil.schema_membership in exc_sch_name
 
     def test_remove_exclude_schema(self):
         capture_dbvctrl_out(arg_list=[
