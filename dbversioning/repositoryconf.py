@@ -471,7 +471,7 @@ class RepositoryConf(object):
 
             if add_to in rp[0]:
                 current_set = set(rp[0][add_to])
-                add_set.union(current_set)
+                add_set = add_set.union(current_set)
 
             rp[0][add_to] = list(add_set)
 
