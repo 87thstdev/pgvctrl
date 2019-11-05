@@ -406,11 +406,11 @@ class TestUtil(object):
 
 
 def capture_dbvctrl_out(arg_list: List[str]):
-    args = parse_args(arg_list)
     out = io.StringIO()
     errors = None
     with redirect_stdout(out):
         try:
+            args = parse_args(arg_list)
             DbVctrl.run(args)
         except BaseException as e:
             errors = e

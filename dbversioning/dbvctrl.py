@@ -270,7 +270,82 @@ def parse_args(args):
             action="append",
     )
 
-    return parser.parse_args(args)
+    return _validate_args(parser, args)
+
+
+def _validate_args(parser, args):
+    parsed_args = parser.parse_args(args)
+
+    if parsed_args.status and (parsed_args.repo is None):
+        parser.error(f"{Const.STATUS} requires {Const.REPO_ARG}.")
+
+    if parsed_args.mkv and (parsed_args.repo is None):
+        parser.error(f"{Const.MAKE_V_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.init and (parsed_args.repo is None):
+        parser.error(f"{Const.INIT_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.mkenv and (parsed_args.repo is None):
+        parser.error(f"{Const.MAKE_ENV_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.rmenv and (parsed_args.repo is None):
+        parser.error(f"{Const.REMOVE_ENV_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.chkver and (parsed_args.repo is None):
+        parser.error(f"{Const.CHECK_VER_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.set_version_storage_owner and (parsed_args.repo is None):
+        parser.error(f"{Const.SET_VERSION_STORAGE_TABLE_OWNER_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.setenv and (parsed_args.repo is None):
+        parser.error(f"{Const.SET_ENV_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.n and (parsed_args.repo is None):
+        parser.error(f"[{Const.INCLUDE_SCHEMA_ARG} | {Const.INCLUDE_SCHEMA_LONG_ARG}] requires {Const.REPO_ARG}.")
+
+    if parsed_args.rmn and (parsed_args.repo is None):
+        parser.error(f"[{Const.RMINCLUDE_SCHEMA_ARG} | {Const.RMINCLUDE_SCHEMA_LONG_ARG}] requires {Const.REPO_ARG}.")
+
+    if parsed_args.N and (parsed_args.repo is None):
+        parser.error(f"[{Const.EXCLUDE_SCHEMA_ARG} | {Const.EXCLUDE_SCHEMA_LONG_ARG}] requires {Const.REPO_ARG}.")
+
+    if parsed_args.rmN and (parsed_args.repo is None):
+        parser.error(f"[{Const.RMEXCLUDE_SCHEMA_ARG} | {Const.RMEXCLUDE_SCHEMA_LONG_ARG}] requires {Const.REPO_ARG}.")
+
+    if parsed_args.t and (parsed_args.repo is None):
+        parser.error(f"[{Const.INCLUDE_TABLE_ARG} | {Const.INCLUDE_TABLE_LONG_ARG}] requires {Const.REPO_ARG}.")
+
+    if parsed_args.rmt and (parsed_args.repo is None):
+        parser.error(f"[{Const.RMINCLUDE_TABLE_ARG} | {Const.RMINCLUDE_TABLE_LONG_ARG}] requires {Const.REPO_ARG}.")
+
+    if parsed_args.T and (parsed_args.repo is None):
+        parser.error(f"[{Const.EXCLUDE_TABLE_ARG} | {Const.EXCLUDE_TABLE_LONG_ARG}] requires {Const.REPO_ARG}.")
+
+    if parsed_args.rmT and (parsed_args.repo is None):
+        parser.error(f"[{Const.RMEXCLUDE_TABLE_ARG} | {Const.RMEXCLUDE_TABLE_LONG_ARG}] requires {Const.REPO_ARG}.")
+
+    if parsed_args.apply and (parsed_args.repo is None):
+        parser.error(f"{Const.APPLY_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.getss and (parsed_args.repo is None):
+        parser.error(f"{Const.GETSS_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.applyss and (parsed_args.repo is None):
+        parser.error(f"[{Const.APPLY_SS_ARG} | {Const.APPLY_SS_LONG_ARG}] requires {Const.REPO_ARG}.")
+
+    if parsed_args.pulldata and (parsed_args.repo is None):
+        parser.error(f"{Const.PULL_DATA_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.pushdata and (parsed_args.repo is None):
+        parser.error(f"{Const.PUSH_DATA_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.dump and (parsed_args.repo is None):
+        parser.error(f"{Const.DUMP_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.restore and (parsed_args.repo is None):
+        parser.error(f"{Const.RESTORE_ARG} requires {Const.REPO_ARG}.")
+
+    return parsed_args
 
 
 # <editor-fold desc="arg_calls">
@@ -567,7 +642,7 @@ class DbVctrl(object):
                 # -setenv test -repo test_db -v 1.0.0
                 set_repository_env_version(arg_set)
             elif arg_set.n:
-                # [-n | -include-schema] membership -repo pgvctrl_test
+                # [-n | -schema] membership -repo pgvctrl_test
                 set_repository_include_schema(repo_name=arg_set.repo, include_schemas=arg_set.n)
             elif arg_set.rmn:
                 # [-rmn | -rm-schema] membership -repo pgvctrl_test
