@@ -1,7 +1,9 @@
 import os
 from collections import namedtuple
+from logging import log
 from typing import List, Optional
 
+import pytest
 import simplejson as json
 from os.path import join
 
@@ -324,6 +326,7 @@ class VersionedDbHelper:
 
     @staticmethod
     def get_repository_version(repository, version):
+        # TODO: Fix, return none or VersionDb
         conf = RepositoryConf()
         root = conf.root()
 
@@ -349,6 +352,17 @@ class VersionedDbHelper:
         vdb = VersionDb(join(os.getcwd(), root, repository))
         if vdb.create_version(version):
             information_message(f"Version {repository}/{version} created.")
+
+    @staticmethod
+    def remove_repository_version(repository: str, version: str, version_nums: str):
+        conf = RepositoryConf()
+        root = conf.root()
+        vdb = VersionDb(join(os.getcwd(), root, repository))
+        if vdb.remove_version(version):
+            conf.remove_repo_version(repo_name=repository, version_nums=version_nums)
+            information_message(f"Version {repository}/{version} removed.")
+        else:
+            error_message(f"Version {repository}/{version} does not exits.")
 
     @staticmethod
     def get_repository_schema_snapshot_version(repository, version):
@@ -676,6 +690,20 @@ class VersionedDbHelper:
             )
 
         VersionedDbHelper.create_repository_version(repo_name, version)
+
+    @staticmethod
+    def remove_repository_version_folder(repo_name, version):
+        version_nums = VersionedDbHelper.get_version_numbers(version)
+        version_found = VersionedDbHelper.get_repository_version(
+                repo_name, version_nums
+        )
+
+        if version_found is None:
+            raise VersionedDbExceptionRepoVersionDoesNotExits(
+                    repo_name=repo_name, version_name=version
+            )
+
+        VersionedDbHelper.remove_repository_version(repo_name, version, version_found[0].version_number)
 
     @staticmethod
     def create_repository(repo_name):

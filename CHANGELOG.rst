@@ -5,3 +5,6 @@
 
     (-status, -mkv, -init, -mkenv, -rmenv, -chkver, -set-version-storage-owner, -setenv, -n, -schema, -rmn, -rm-schema, -N, -exclude-schema, -rmN, -rm-exclude-schema, -t, -table, -rmt, -rm-table, -T, -exclude-table, -rmT, -rm-exclude-table, -apply , -getss, -applyss, -apply-schema-snapshot, -pulldata, -pushdata, -dump, -restore)
 
+  * Added feature -rmv: Remove version number and files (requires confirmation)
+
+    Removes the version and all the files with it.

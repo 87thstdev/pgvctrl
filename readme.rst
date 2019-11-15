@@ -179,6 +179,26 @@ Getting Started
 
       Version mydb/1.0.0.my_new_version created.
 
+#. Remove repository version of repository: -rmv: Remove version number and files
+
+   .. code-block::
+
+      pgvctrl -rmv [x.x.x.version_name] -repo [repository name]
+
+   e.g.:
+
+   .. code-block::
+
+      pgvctrl -rmv 1.0.0.my_new_version -repo mydb
+
+   Output:
+
+   .. code-block::
+
+      Do you want to remove the repository version? [YES/NO]
+      Version mydb/1.0.0.my_new_version removed.
+
+
 #. Create sql change files in the versioned directory! These files will
    be used to update your database and should have the naming convention
    of: [order number].[change name].sql e.g.: 100.AddedUserTable.sql

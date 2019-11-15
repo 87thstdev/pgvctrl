@@ -53,6 +53,17 @@ def test_mkv_no_repo():
     )
 
 
+def test_rmv_no_repo():
+    dbvctrl_assert_simple_msg(
+            arg_list=[
+                Const.REMOVE_V_ARG,
+                TestUtil.test_make_version
+            ],
+            msg='',
+            error_code=2
+    )
+
+
 def test_mkenv_fail_no_repo():
     dbvctrl_assert_simple_msg(
             arg_list=[

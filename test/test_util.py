@@ -80,6 +80,7 @@ class TestUtil(object):
     test_first_version_path = (
         f"databases/{pgvctrl_test_repo}/{test_first_version}"
     )
+    test_version_no_name = "1.0.0"
     test_second_version_no_name = "1.0.0"
     test_version = "2.0.0.NewVersion"
     pgvctrl_databases_ss_path = (
@@ -97,7 +98,8 @@ class TestUtil(object):
         f"databases/{pgvctrl_test_repo}/{test_make_version}"
     )
     test_bad_version = "999.1.bad_version"
-    test_version_path = f"databases/pgvctrl_temp_test/{test_version}"
+    test_temp_version_path = f"databases/pgvctrl_temp_test/{test_version}"
+    test_temp_version_no_name_path = f"databases/pgvctrl_temp_test/{test_version_no_name}"
     test_sql_path = f"databases/pgvctrl_test/{test_version}/"
     error_sql = "130.Error.sql"
     error_sql_path = f"databases/pgvctrl_test/{test_version}/{error_sql}"

@@ -1,19 +1,17 @@
 import hashlib
 import os
+from shutil import rmtree
 from typing import List
 
 from dbversioning.errorUtil import (
     VersionedDbExceptionRepoVersionNumber,
     VersionedDbExceptionRepoDoesNotExits,
-    VersionedDbExceptionRepoNameInvalid,
-    VersionedDbExceptionSqlNamingError)
+    VersionedDbExceptionRepoNameInvalid, VersionedDbExceptionSqlNamingError)
 from dbversioning.osUtil import dir_exists
 from dbversioning.repositoryconf import (
-    DATA_DUMP_DIR,
-    ROLLBACK_FILE_ENDING)
+    DATA_DUMP_DIR, ROLLBACK_FILE_ENDING)
 from dbversioning.versionedDbHelper import (
-    get_valid_elements,
-    get_valid_sql_elements)
+    get_valid_elements, get_valid_sql_elements)
 
 
 class SchemaSnapshot(object):
@@ -133,6 +131,13 @@ class VersionDb(object):
     def create_version(self, version):
         os.mkdir(os.path.join(self._repo_path, version))
         return True
+
+    def remove_version(self, version):
+        path = os.path.join(self._repo_path, version)
+        if os.path.isdir(path):
+            rmtree(path)
+            return True
+        return False
 
 
 def _set_version_info(version_dir, ver):

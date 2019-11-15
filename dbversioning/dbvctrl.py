@@ -7,7 +7,6 @@ import pkg_resources
 import dbversioning.dbvctrlConst as Const
 from dbversioning.errorUtil import (
     VersionedDbException,
-    VersionedDbExceptionProductionChangeNoProductionFlag,
 )
 from dbversioning.versionedDbConnection import connection_list
 from dbversioning.versionedDbShellUtil import information_message, error_message, error_message_non_terminating
@@ -156,6 +155,11 @@ def parse_args(args):
             help="Make version number"
     )
     group.add_argument(
+            Const.REMOVE_V_ARG,
+            metavar="VERSION_NUMBER",
+            help="Remove version number and files (requires confirmation)"
+    )
+    group.add_argument(
             Const.MAKE_ENV_ARG,
             metavar="ENV_NAME",
             help="Make environment type"
@@ -281,6 +285,9 @@ def _validate_args(parser, args):
 
     if parsed_args.mkv and (parsed_args.repo is None):
         parser.error(f"{Const.MAKE_V_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.rmv and (parsed_args.repo is None):
+        parser.error(f"{Const.REMOVE_V_ARG} requires {Const.REPO_ARG}.")
 
     if parsed_args.init and (parsed_args.repo is None):
         parser.error(f"{Const.INIT_ARG} requires {Const.REPO_ARG}.")
@@ -499,6 +506,11 @@ def create_repository_version_folder(repo_name: str, version: str):
     vdb.create_repository_version_folder(repo_name=repo_name, version=version)
 
 
+def remove_repository_version_folder(repo_name: str, version: str):
+    vdb = VersionedDbHelper()
+    vdb.remove_repository_version_folder(repo_name=repo_name, version=version)
+
+
 def create_repository_env_type(repo_name: str, env: str):
     vdb = VersionedDbHelper()
     vdb.create_repository_environment(repo_name=repo_name, env=env)
@@ -623,6 +635,12 @@ class DbVctrl(object):
             elif arg_set.mkv:
                 # -mkv 2.0.0.new_version -repo test_db
                 create_repository_version_folder(repo_name=arg_set.repo, version=arg_set.mkv)
+            elif arg_set.rmv:
+                # -rmv 1.0.0.old_version -repo test_db
+                if user_yes_no_query("Do you want to remove the repository version?"):
+                    remove_repository_version_folder(repo_name=arg_set.repo, version=arg_set.rmv)
+                else:
+                    error_message("Repository version removal cancelled.")
             elif arg_set.mkenv:
                 # -mkenv test -repo test_db
                 create_repository_env_type(repo_name=arg_set.repo, env=arg_set.mkenv)
@@ -700,8 +718,6 @@ class DbVctrl(object):
                 error_message(
                         f'{prj_name}: No operation specified\nTry "{prj_name} --help" for more information.'
                 )
-        except VersionedDbExceptionProductionChangeNoProductionFlag as e:
-            error_message(e.message)
         except VersionedDbException as e:
             error_message(e.message)
         except KeyError as e:
