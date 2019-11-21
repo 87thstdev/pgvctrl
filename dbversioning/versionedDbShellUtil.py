@@ -306,7 +306,7 @@ class VersionDbShellUtil:
         psql(db_conn, "-c", update_version_sql, retcode=0)
 
     @staticmethod
-    def dump_version_schema_snapshot(db_conn, v_stg, repo_name) -> (str, Optional[float]):
+    def dump_version_schema_snapshot(db_conn, v_stg, repo_name, name: str) -> (str, Optional[float]):
         start = datetime.datetime.now()
         pg_dump = _local_pg_dump()
         conf = RepositoryConf()
@@ -319,8 +319,12 @@ class VersionDbShellUtil:
         repo_ss = os.path.join(conf.schema_snapshot_dir(), dbver.repo_name)
 
         ensure_dir_exists(repo_ss)
-        d = datetime.datetime.now().strftime(SNAPSHOT_DATE_FORMAT)
-        file_name = f"{dbver.version}.{dbver.env}.{d}.sql" if dbver.env else f"{dbver.version}.{d}.sql"
+
+        if name is None:
+            d = datetime.datetime.now().strftime(SNAPSHOT_DATE_FORMAT)
+            file_name = f"{dbver.version}.{dbver.env}.{d}.sql" if dbver.env else f"{dbver.version}.{d}.sql"
+        else:
+            file_name = f"{name}.sql"
 
         ss = os.path.join(repo_ss, file_name)
 

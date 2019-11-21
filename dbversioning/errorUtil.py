@@ -13,6 +13,12 @@ class VersionedDbExceptionFileExits(VersionedDbException):
         pass
 
 
+class VersionedDbExceptionInvalidSqlName(VersionedDbException):
+    def __init__(self, name: str):
+        self.message = f"Invalid Sql file name should be [name].sql: {name}"
+        pass
+
+
 class VersionedDbExceptionRepoVersionNumber(VersionedDbException):
     def __init__(self, version: str):
         self.message = f"Repository version number invalid, should be " \

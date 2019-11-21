@@ -37,7 +37,7 @@ class TestDatabaseSchemaSnapshot:
     def teardown_method(self):
         TestUtil.delete_folder(TestUtil.test_first_version_path)
         TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ss_path)
+        TestUtil.delete_folder_full(TestUtil.pgvctrl_databases_ss_path)
         TestUtil.delete_file(TestUtil.config_file)
         TestUtil.drop_database()
 
@@ -536,6 +536,50 @@ class TestDatabaseSchemaSnapshot:
 
         assert msg == f"Applying: {f_nm}\n\n"
         assert errors is None
+
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.CHECK_VER_ARG,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ],
+                msg=f"{TestUtil.test_first_version}.0: {TestUtil.pgvctrl_test_repo} environment (None)\n"
+        )
+
+    def test_apply_schema_snapshot_name_created(self):
+        ss_name = "my_ss"
+        msg, errors = capture_dbvctrl_out(
+                arg_list=[
+                    Const.GETSS_ARG,
+                    Const.NAME_ARG,
+                    ss_name,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ]
+        )
+
+        assert errors is None
+
+        TestUtil.drop_database()
+        TestUtil.create_database()
+
+        msg, errors = capture_dbvctrl_out(
+                arg_list=[
+                    Const.APPLY_SS_ARG,
+                    ss_name,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ]
+        )
+
+        assert errors is None
+        assert msg == f"Applying: {ss_name}\n\n"
 
         dbvctrl_assert_simple_msg(
                 arg_list=[

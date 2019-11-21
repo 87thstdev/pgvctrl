@@ -315,12 +315,13 @@ class TestUtil(object):
                 f.write(f"{append}\n")
 
     @staticmethod
-    def create_repo_ss_sql_file(repo_name: str, file_name: str):
+    def create_repo_ss_sql_file(repo_name: str, file_names: List[str]):
         ensure_dir_exists(f"databases/_schemaSnapshot/{repo_name}")
-        full_file_name = f'databases/_schemaSnapshot/{repo_name}/{file_name}'
-        if not os.path.exists(full_file_name):
-            with open(full_file_name, 'w'):
-                pass
+        for file_name in file_names:
+            full_file_name = f'databases/_schemaSnapshot/{repo_name}/{file_name}'
+            if not os.path.exists(full_file_name):
+                with open(full_file_name, 'w'):
+                    pass
 
     @staticmethod
     def create_repo_dd_file(repo_name: str, file_name: str):
@@ -386,6 +387,13 @@ class TestUtil(object):
     @staticmethod
     def get_snapshot_file_names(repo: str):
         return os.listdir(f"databases/_schemaSnapshot/{repo}")
+
+    @staticmethod
+    def rename_snapshot_file(repo: str, src: str, dst: str):
+        return os.rename(
+                src=f"databases/_schemaSnapshot/{repo}/{src}",
+                dst=f"databases/_schemaSnapshot/{repo}/{dst}"
+        )
 
     @staticmethod
     def get_repo_dict():

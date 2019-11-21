@@ -607,7 +607,7 @@ database structure (tables, views, functions ect.) at the time the snapshot was 
 
 .. code-block::
 
-   -getss -repo [repository name] [db connection information]
+   -getss -repo [repository name] [db connection information] [--name=]
 
 -applyss or -apply-schema-snapshot: Apply version Schema Snapshot
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -664,7 +664,7 @@ Once you have your data in your repository, pushing data is easy.
 
 .. code-block::
 
-   -pushdata -repo [repository name] [db connection information]
+   -pushdata -repo [repository name] [db connection information] [--force]
 
 e.g. For pushing by table(s).
 

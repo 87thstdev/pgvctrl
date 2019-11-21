@@ -23,11 +23,7 @@ class TestDatabaseSchemaSnapshotList:
     def test_schema_snapshot_list_simple(self):
         TestUtil.create_repo_ss_sql_file(
                 repo_name=TestUtil.pgvctrl_test_repo,
-                file_name=f"1.0.0.sql"
-        )
-        TestUtil.create_repo_ss_sql_file(
-                repo_name=TestUtil.pgvctrl_test_repo,
-                file_name=f"2.0.0.sql"
+                file_names=["1.0.0.sql", "2.0.0.sql"]
         )
         dbvctrl_assert_simple_msg(
                 arg_list=[
@@ -38,27 +34,30 @@ class TestDatabaseSchemaSnapshotList:
                     f"{Const.TAB}2.0.0{Const.TAB}0.0 B\n"
         )
 
+    def test_schema_snapshot_list_simple_w_none_v(self):
+        TestUtil.create_repo_ss_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                file_names=["1.0.0.sql", "my_ss.sql"]
+        )
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.LIST_SS_ARG,
+                ],
+                msg=f"{TestUtil.pgvctrl_test_repo}\n"
+                    f"{Const.TAB}my_ss{Const.TAB}0.0 B\n"
+                    f"{Const.TAB}1.0.0{Const.TAB}0.0 B\n"
+
+        )
+
     def test_schema_snapshot_list_multi(self):
         TestUtil.create_repo_ss_sql_file(
                 repo_name=TestUtil.pgvctrl_test_repo,
-                file_name=f"1.0.0.sql"
-        )
-        TestUtil.create_repo_ss_sql_file(
-                repo_name=TestUtil.pgvctrl_test_repo,
-                file_name=f"2.0.0.dev.sql"
+                file_names=["1.0.0.sql", "2.0.0.dev.sql"]
         )
 
         TestUtil.create_repo_ss_sql_file(
                 repo_name=TestUtil.pgvctrl_test_temp_repo,
-                file_name=f"12.0.0.sql"
-        )
-        TestUtil.create_repo_ss_sql_file(
-                repo_name=TestUtil.pgvctrl_test_temp_repo,
-                file_name=f"13.0.0.sql"
-        )
-        TestUtil.create_repo_ss_sql_file(
-                repo_name=TestUtil.pgvctrl_test_temp_repo,
-                file_name=f"13.4.0.sql"
+                file_names=["12.0.0.sql", "13.0.0.sql", "13.4.0.sql"]
         )
 
         dbvctrl_assert_simple_msg(
@@ -74,21 +73,17 @@ class TestDatabaseSchemaSnapshotList:
                     f"{Const.TAB}2.0.0.dev{Const.TAB}0.0 B\n"
         )
 
-    def test_schema_snapshot_list_fail(self):
+    def test_schema_snapshot_list_no_maintenance(self):
         TestUtil.create_repo_ss_sql_file(
                 repo_name=TestUtil.pgvctrl_test_repo,
-                file_name=f"1.0.sql"
+                file_names=["10.0.sql", "2.0.0.sql"]
         )
-        TestUtil.create_repo_ss_sql_file(
-                repo_name=TestUtil.pgvctrl_test_repo,
-                file_name=f"2.0.0.sql"
-        )
+
         dbvctrl_assert_simple_msg(
                 arg_list=[
                     Const.LIST_SS_ARG,
                 ],
-                msg=f"pgvctrl_test\n"
-                    f"Repository version number invalid, should be [Major].[Minor].[Maintenance] "
-                    f"at a minimum: 1.0.sql\n",
-                error_code=1
+                msg=f"{TestUtil.pgvctrl_test_repo}\n"
+                    f"{Const.TAB}2.0.0{Const.TAB}0.0 B\n"
+                    f"{Const.TAB}10.0{Const.TAB}0.0 B\n"
         )

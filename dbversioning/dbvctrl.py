@@ -135,6 +135,11 @@ def parse_args(args):
             metavar="FILE_NAME",
     )
     parser.add_argument(
+            Const.NAME_ARG,
+            help=f"Name out file for ({Const.GETSS_ARG})",
+            metavar="NAME",
+    )
+    parser.add_argument(
             Const.V_ARG,
             metavar="VERSION_NUMBER",
             help="Version number"
@@ -488,7 +493,7 @@ def set_schema_snapshot_pull_from_db(arg_set):
     vdb = VersionedDbHelper()
     db_conn = connection_list(arg_set)
 
-    vdb.set_repository_schema_snapshot(db_conn=db_conn, repo_name=arg_set.repo)
+    vdb.set_repository_schema_snapshot(db_conn=db_conn, repo_name=arg_set.repo, name=arg_set.name)
 
 
 def create_repository(repo_name):
@@ -687,7 +692,7 @@ class DbVctrl(object):
                 # -apply <-v 0.1.0 | -env test> -repo test_db -d postgresPlay
                 apply_repository_to_db(arg_set)
             elif arg_set.getss:
-                # -getss -repo test_db -d postgresPlay
+                # -getss -repo test_db -d postgresPlay (--name my_ss)
                 set_schema_snapshot_pull_from_db(arg_set)
             elif arg_set.applyss:
                 # -applyss 0.1.0.BaseDeploy -repo test_db -d postgresPlay

@@ -261,9 +261,12 @@ class VersionedDbHelper:
             for ss_sql in ss_locations:
                 ss_sql_ver.append(SchemaSnapshotVersion(ss_sql))
 
+            def _none_to_0(val):
+                return 0 if val is None else val
+
             ss_sql_ver = sorted(
                     ss_sql_ver,
-                    key=lambda vs: (vs.major, vs.minor, vs.maintenance),
+                    key=lambda vs: (_none_to_0(vs.major), _none_to_0(vs.minor), _none_to_0(vs.maintenance), vs.full_name),
             )
 
             for ss_v in ss_sql_ver:
@@ -414,7 +417,7 @@ class VersionedDbHelper:
 
     @staticmethod
     def apply_repository_schema_snapshot_to_database(
-        repo_name, db_conn, full_version
+        repo_name, db_conn, full_version, force: bool = False
     ):
         if not VersionDbShellUtil.is_database_empty(db_conn):
             raise VersionedDbExceptionSchemaSnapshotNotAllowed()
@@ -618,10 +621,10 @@ class VersionedDbHelper:
         return True
 
     @staticmethod
-    def set_repository_schema_snapshot(repo_name, db_conn):
+    def set_repository_schema_snapshot(repo_name, db_conn, name: str):
         v_stg = VersionedDbHelper._get_v_stg(repo_name)
         file_name, exec_time = VersionDbShellUtil.dump_version_schema_snapshot(
-            db_conn, v_stg, repo_name
+            db_conn=db_conn, v_stg=v_stg, repo_name=repo_name, name=name
         )
 
         if file_name:

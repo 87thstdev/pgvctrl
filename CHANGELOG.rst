@@ -8,3 +8,7 @@
   * Added feature -rmv: Remove version number and files (requires confirmation)
 
     Removes the version and all the files with it.
+
+  * Added feature: Add --name command for -getss
+
+    Sets Schema Snapshots name
