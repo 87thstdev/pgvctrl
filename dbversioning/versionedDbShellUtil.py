@@ -4,11 +4,11 @@ import datetime
 import sys
 from typing import List, Union, Optional
 
-import simplejson as json
+import rapidjson as json
+from rapidjson import JSONDecodeError
 
 import copy
 from plumbum import colors, local, ProcessExecutionError
-from simplejson import JSONDecodeError
 
 import dbversioning.dbvctrlConst as Const
 from dbversioning.osUtil import ensure_dir_exists, make_data_file
@@ -456,7 +456,6 @@ class VersionDbShellUtil:
                 conf,
                 indent=4,
                 sort_keys=True,
-                separators=(",", ": "),
                 ensure_ascii=True,
             )
             f.write(to_unicode(str_))

@@ -1,7 +1,7 @@
 import os
 from typing import List, Dict, Union
 
-import simplejson as json
+import rapidjson as json
 
 from collections import namedtuple
 
@@ -216,7 +216,6 @@ class RepositoryConf(object):
                 conf,
                 indent=4,
                 sort_keys=True,
-                separators=(",", ": "),
                 ensure_ascii=True,
             )
 
@@ -244,7 +243,6 @@ class RepositoryConf(object):
                 conf,
                 indent=4,
                 sort_keys=True,
-                separators=(",", ": "),
                 ensure_ascii=True,
             )
 
@@ -270,7 +268,6 @@ class RepositoryConf(object):
                 conf,
                 indent=4,
                 sort_keys=True,
-                separators=(",", ": "),
                 ensure_ascii=True,
             )
 
@@ -293,7 +290,6 @@ class RepositoryConf(object):
                 conf,
                 indent=4,
                 sort_keys=True,
-                separators=(",", ": "),
                 ensure_ascii=True,
             )
 
@@ -319,7 +315,6 @@ class RepositoryConf(object):
                     conf,
                     indent=4,
                     sort_keys=True,
-                    separators=(",", ": "),
                     ensure_ascii=True,
             )
 
@@ -339,7 +334,6 @@ class RepositoryConf(object):
                     conf,
                     indent=4,
                     sort_keys=True,
-                    separators=(",", ": "),
                     ensure_ascii=True,
             )
 
@@ -365,7 +359,6 @@ class RepositoryConf(object):
                 conf,
                 indent=4,
                 sort_keys=True,
-                separators=(",", ": "),
                 ensure_ascii=True,
             )
 
@@ -391,7 +384,6 @@ class RepositoryConf(object):
                     conf,
                     indent=4,
                     sort_keys=True,
-                    separators=(",", ": "),
                     ensure_ascii=True,
             )
 
@@ -426,7 +418,6 @@ class RepositoryConf(object):
             conf,
             indent=4,
             sort_keys=True,
-            separators=(",", ": "),
             ensure_ascii=True,
         )
 

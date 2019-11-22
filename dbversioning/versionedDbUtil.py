@@ -1,10 +1,9 @@
 import os
 from collections import namedtuple
-from logging import log
 from typing import List, Optional
 
 import pytest
-import simplejson as json
+import rapidjson as json
 from os.path import join
 
 import dbversioning.dbvctrlConst as Const
@@ -901,7 +900,6 @@ class VersionedDbHelper:
                     conf.config_json(),
                     indent=4,
                     sort_keys=True,
-                    separators=(",", ": "),
                     ensure_ascii=True,
                 )
                 outfile.write(to_unicode(str_))

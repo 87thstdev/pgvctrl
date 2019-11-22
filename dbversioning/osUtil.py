@@ -1,6 +1,6 @@
 import os
 
-import simplejson as json
+import rapidjson as json
 
 
 def ensure_dir_exists(dir_name):
@@ -19,7 +19,6 @@ def make_data_file(file_name):
                 [],
                 indent=4,
                 sort_keys=True,
-                separators=(",", ": "),
                 ensure_ascii=True,
             )
             outfile.write(str_)

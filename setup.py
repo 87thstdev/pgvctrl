@@ -24,6 +24,6 @@ setup(
     packages=find_packages(
         exclude=["*.tests", "*.tests.*", "tests.*", "tests", "test"]
     ),
-    install_requires=["simplejson", "plumbum"],
+    install_requires=["python-rapidjson", "plumbum"],
     entry_points={"console_scripts": ["pgvctrl=dbversioning.dbvctrl:main"]},
 )

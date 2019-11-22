@@ -20,10 +20,11 @@ class TestBadConf:
         TestUtil.delete_file(TestUtil.config_file)
 
         arg_list = [Const.MKCONF_ARG]
-        dbvctrl_assert_simple_msg(
-                arg_list=arg_list,
-                msg=f"Config file created: {TestUtil.config_file}\n"
+        out_rtn, errors = capture_dbvctrl_out(
+                arg_list=arg_list
         )
+        assert errors is None
+        assert out_rtn == f"Config file created: {TestUtil.config_file}\n"
 
     def test_mkconf_exists(self):
         arg_list = [Const.MKCONF_ARG]

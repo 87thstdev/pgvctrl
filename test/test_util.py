@@ -8,7 +8,7 @@ from shutil import (
     rmtree)
 from typing import List
 
-import simplejson as json
+import rapidjson as json
 
 from plumbum import local
 
