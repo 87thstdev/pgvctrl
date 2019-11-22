@@ -12,3 +12,9 @@
   * Added feature: Add --name command for -getss
 
     Sets Schema Snapshots name
+
+  * Added feature: Add --name command for -dump
+
+    Sets Database Dump name
+
+  * Change out simplejson with python-rapidjson

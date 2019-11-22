@@ -342,7 +342,7 @@ class VersionDbShellUtil:
         return file_name, delta.total_seconds()
 
     @staticmethod
-    def dump_backup(db_conn, v_stg, dump_options: List[str]) -> Optional[float]:
+    def dump_backup(db_conn, v_stg, dump_options: List[str], name: str) -> Optional[float]:
         start = datetime.datetime.now()
         pg_dump = _local_pg_dump()
         conf = RepositoryConf()
@@ -355,12 +355,10 @@ class VersionDbShellUtil:
 
         ensure_dir_exists(repo_db_bak)
 
-        d = datetime.datetime.now().strftime(SNAPSHOT_DATE_FORMAT)
-
-        if dbver.env:
-            file_name = f"{dbver.repo_name}.{dbver.env}.{d}"
-        else:
-            file_name = f"{dbver.repo_name}.{d}"
+        file_name = name
+        if file_name is None:
+            d = datetime.datetime.now().strftime(SNAPSHOT_DATE_FORMAT)
+            file_name = f"{dbver.repo_name}.{dbver.env}.{d}" if dbver.env else f"{dbver.repo_name}.{d}"
 
         db_bak = os.path.join(repo_db_bak, file_name)
 

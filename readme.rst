@@ -708,13 +708,15 @@ backup.
 
 .. code-block::
 
-    -dump -repo [repository name] [db connection information]
+    -dump -repo [repository name] [db connection information] [--name=]
 
 e.g. For dumping the database.
 
 .. code-block::
 
     -dump -repo mydb -d mylocaldb
+
+    -dump -repo mydb -d mylocaldb --name mybackup
 
 Output:
 

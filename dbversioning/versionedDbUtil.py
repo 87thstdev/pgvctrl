@@ -483,7 +483,7 @@ class VersionedDbHelper:
         return None
 
     @staticmethod
-    def repo_database_dump(repo_name, db_conn, is_production):
+    def repo_database_dump(repo_name, db_conn, name: str, is_production: bool):
         v_stg = VersionedDbHelper._get_v_stg(repo_name)
         dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
 
@@ -491,7 +491,7 @@ class VersionedDbHelper:
             raise VersionedDbExceptionProductionChangeNoProductionFlag(
                 Const.DUMP_ARG
             )
-        # dump_database_backup
+
         conf = RepositoryConf()
         dump_options = conf.get_repo_dump_options(repo_name=repo_name)
 
@@ -499,7 +499,12 @@ class VersionedDbHelper:
             dump_options = DUMP_OPTIONS_DEFAULT
 
         dump_options_list = dump_options.split(" ")
-        exec_time = VersionDbShellUtil.dump_backup(db_conn, v_stg, dump_options_list)
+        exec_time = VersionDbShellUtil.dump_backup(
+                db_conn=db_conn,
+                v_stg=v_stg,
+                dump_options=dump_options_list,
+                name=name
+        )
 
         msg = f"Repository {repo_name} database backed up"
         if RepositoryConf.is_timer_on():

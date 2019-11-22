@@ -136,7 +136,7 @@ def parse_args(args):
     )
     parser.add_argument(
             Const.NAME_ARG,
-            help=f"Name out file for ({Const.GETSS_ARG})",
+            help=f"Name out file for ({Const.GETSS_ARG}, {Const.DUMP_ARG})",
             metavar="NAME",
     )
     parser.add_argument(
@@ -467,6 +467,7 @@ def repo_database_dump(arg_set):
     vdb.repo_database_dump(
             db_conn=db_conn,
             repo_name=arg_set.repo,
+            name=arg_set.name,
             is_production=arg_set.production,
     )
 
