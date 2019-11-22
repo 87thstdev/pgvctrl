@@ -2,7 +2,6 @@ import os
 from collections import namedtuple
 from typing import List, Optional
 
-import pytest
 import rapidjson as json
 from os.path import join
 
