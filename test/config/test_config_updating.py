@@ -381,7 +381,7 @@ class TestConfigUpdating:
         )
         assert inc_table_name == []
 
-    def test_exclude_table(self):
+    def test_exclude_tables(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[
                     Const.EXCLUDE_TABLE_LONG_ARG,
@@ -393,10 +393,21 @@ class TestConfigUpdating:
                     f"exclude-table ['{TestUtil.table_membership_user_state}']\n"
         )
 
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.EXCLUDE_TABLE_LONG_ARG,
+                    TestUtil.table_public_item,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo
+                ],
+                msg=f"Repository added: {TestUtil.pgvctrl_test_repo} "
+                    f"exclude-table ['{TestUtil.table_public_item}']\n"
+        )
+
         name_list = RepositoryConf.get_repo_list(
             repo_name=TestUtil.pgvctrl_test_repo, list_name=EXCLUDE_TABLES_PROP
         )
-        assert name_list == [TestUtil.table_membership_user_state]
+        assert name_list == [TestUtil.table_public_item, TestUtil.table_membership_user_state]
 
     def test_remove_exclude_table(self):
         capture_dbvctrl_out(arg_list=[
