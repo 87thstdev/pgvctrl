@@ -5,19 +5,16 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import dbversioning.dbvctrlConst as Const
 from test.test_util import (
     TestUtil,
-    capture_dbvctrl_out,
     dbvctrl_assert_simple_msg)
 
 
 class TestRepoMakeRemove:
     def setup_method(self):
-        TestUtil.delete_file(TestUtil.config_file)
-        capture_dbvctrl_out(arg_list=[Const.MKCONF_ARG])
+        TestUtil.make_conf()
 
     def teardown_method(self):
-        TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.delete_folder(TestUtil.pgvctrl_no_files_repo_path)
-        TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
 
     def test_mkrepo_not_exists(self):
         dbvctrl_assert_simple_msg(

@@ -8,10 +8,11 @@ from test.test_util import (
 
 class TestInitWithTblOwner:
     def setup_method(self):
+        TestUtil.create_config()
+        TestUtil.remove_root_folder()
         TestUtil.create_database()
         TestUtil.remove_table_owner_role()
         TestUtil.create_table_owner_role()
-        TestUtil.create_config()
         TestUtil.mkrepo(TestUtil.pgvctrl_test_temp_repo)
         capture_dbvctrl_out(arg_list=[
             Const.SET_VERSION_STORAGE_TABLE_OWNER_ARG,
@@ -21,10 +22,10 @@ class TestInitWithTblOwner:
         ])
 
     def teardown_method(self):
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
         TestUtil.remove_table_owner_role()
-        TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
 
     def test_init(self):
         dbvctrl_assert_simple_msg(
@@ -46,9 +47,9 @@ class TestInitWithTblOwner:
 
 class TestInitWithTblOwnerWithDbRoleMissing:
     def setup_method(self):
+        TestUtil.create_config()
         TestUtil.create_database()
         TestUtil.remove_table_owner_role()
-        TestUtil.create_config()
         TestUtil.mkrepo(TestUtil.pgvctrl_test_temp_repo)
         capture_dbvctrl_out(arg_list=[
             Const.SET_VERSION_STORAGE_TABLE_OWNER_ARG,
@@ -58,10 +59,10 @@ class TestInitWithTblOwnerWithDbRoleMissing:
         ])
 
     def teardown_method(self):
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
         TestUtil.remove_table_owner_role()
-        TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
 
     def test_init_fail(self):
         dbvctrl_assert_simple_msg(

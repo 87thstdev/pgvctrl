@@ -11,11 +11,12 @@ from test.test_util import (
 
 class TestMakeVersion:
     def setup_method(self):
-        TestUtil.get_static_config()
+        TestUtil.make_conf()
+        TestUtil.mkrepo(repo_name=TestUtil.pgvctrl_test_repo)
 
     def teardown_method(self):
-        TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.delete_folder(TestUtil.test_make_version_path)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
 
     def test_mkv(self):
         dbvctrl_assert_simple_msg(

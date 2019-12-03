@@ -13,8 +13,8 @@ class TestInitDb:
 
     def teardown_method(self):
         TestUtil.drop_database()
-        TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
 
     def test_init(self):
         dbvctrl_assert_simple_msg(

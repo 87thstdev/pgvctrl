@@ -8,9 +8,27 @@ from test.test_util import (
 
 class TestPullData:
     def setup_method(self):
+        TestUtil.make_conf()
         TestUtil.drop_database()
         TestUtil.create_database()
-        TestUtil.get_static_config()
+        capture_dbvctrl_out(arg_list=[
+            Const.MAKE_REPO_ARG,
+            TestUtil.pgvctrl_test_repo
+        ])
+        TestUtil.create_simple_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                version=TestUtil.test_version,
+                file_name="100.error_set.sql",
+                contents="""
+                    CREATE TABLE IF NOT EXISTS error_set (
+                        error_id SERIAL PRIMARY KEY,
+                        error_code VARCHAR NOT NULL UNIQUE,
+                        error_name VARCHAR NOT NULL UNIQUE
+                    );
+                    INSERT INTO error_set (error_code, error_name)
+                    VALUES ('1000', 'General Error'), ('2000', 'Custom General Error');
+                    """
+        )
         capture_dbvctrl_out(arg_list=[
             Const.INIT_ARG,
             Const.REPO_ARG,
@@ -27,13 +45,10 @@ class TestPullData:
             Const.DATABASE_ARG,
             TestUtil.pgvctrl_test_db,
         ])
-        TestUtil.delete_folder_full(TestUtil.error_set_data_folder_path)
 
     def teardown_method(self):
-        TestUtil.delete_folder(TestUtil.test_first_version_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
-        TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.delete_folder_full(TestUtil.error_set_data_folder_path)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_pull_data_no_list(self):

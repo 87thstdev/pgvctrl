@@ -11,11 +11,9 @@ from test.test_util import (
     capture_dbvctrl_out)
 
 
-
-
 class TestMakeVersion:
     def setup_method(self):
-        TestUtil.get_static_config()
+        TestUtil.make_conf()
         capture_dbvctrl_out(arg_list=[
             Const.MAKE_REPO_ARG,
             TestUtil.pgvctrl_test_temp_repo
@@ -33,8 +31,8 @@ class TestMakeVersion:
         )
 
     def teardown_method(self):
-        TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_temp_repo_path)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
 
     def test_rmv_canceled(self):
         with mock.patch('builtins.input', return_value="NO"):

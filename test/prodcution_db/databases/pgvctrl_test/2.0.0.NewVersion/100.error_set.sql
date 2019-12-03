@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS error_set (error_id SERIAL PRIMARY KEY);

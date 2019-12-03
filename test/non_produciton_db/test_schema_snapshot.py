@@ -11,9 +11,20 @@ from test.test_util import (
 
 class TestDatabaseSchemaSnapshot:
     def setup_method(self):
+        TestUtil.make_conf()
         TestUtil.drop_database()
         TestUtil.create_database()
-        TestUtil.get_static_config()
+        TestUtil.mkrepo(repo_name=TestUtil.pgvctrl_test_repo)
+        TestUtil.mkrepo_ver(repo_name=TestUtil.pgvctrl_test_repo, version=TestUtil.test_first_version)
+        TestUtil.create_simple_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                version=TestUtil.test_first_version,
+                file_name="100.make_schema.sql",
+                contents=
+                f"CREATE SCHEMA {TestUtil.schema_membership};CREATE SCHEMA my_sch;"
+                f"CREATE TABLE {TestUtil.schema_membership}.user_state (id integer);"
+                f"CREATE TABLE {TestUtil.schema_public}.item (id integer);"
+        )
         capture_dbvctrl_out(arg_list=[
             Const.INIT_ARG,
             Const.REPO_ARG,
@@ -21,9 +32,6 @@ class TestDatabaseSchemaSnapshot:
             Const.DATABASE_ARG,
             TestUtil.pgvctrl_test_db,
         ])
-        TestUtil.mkrepo_ver(
-                TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
-        )
         capture_dbvctrl_out(arg_list=[
             Const.APPLY_ARG,
             Const.V_ARG,
@@ -35,10 +43,8 @@ class TestDatabaseSchemaSnapshot:
         ])
 
     def teardown_method(self):
-        TestUtil.delete_folder(TestUtil.test_first_version_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_databases_ss_path)
-        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_set_schema_snapshot(self):
@@ -88,12 +94,12 @@ class TestDatabaseSchemaSnapshot:
         full_path = f"databases/_schemaSnapshot/{TestUtil.pgvctrl_test_repo}/{file_name}"
 
         has_member_sch = TestUtil.file_contains(
-            full_path,
-            f"CREATE SCHEMA {TestUtil.schema_membership}",
+                full_path,
+                f"CREATE SCHEMA {TestUtil.schema_membership}",
         )
         has_public_sch = TestUtil.file_contains(
-            full_path,
-            f"CREATE SCHEMA {TestUtil.schema_public}",
+                full_path,
+                f"CREATE SCHEMA my_sch",
         )
         assert has_member_sch is True
         assert has_public_sch is False
@@ -160,10 +166,10 @@ class TestDatabaseSchemaSnapshot:
         file_name = files[0]
         full_path = f"databases/_schemaSnapshot/{TestUtil.pgvctrl_test_repo}/{file_name}"
         has_member = TestUtil.file_contains(
-            full_path, TestUtil.schema_membership
+                full_path, TestUtil.schema_membership
         )
         has_public = TestUtil.file_contains(
-            full_path, TestUtil.schema_public
+                full_path, TestUtil.schema_public
         )
         date_str = file_name.split(".")[4]
         date_of = datetime.strptime(date_str, SNAPSHOT_DATE_FORMAT)
@@ -275,12 +281,12 @@ class TestDatabaseSchemaSnapshot:
         full_path = f"databases/_schemaSnapshot/{TestUtil.pgvctrl_test_repo}/{file_name}"
 
         has_member_tbl = TestUtil.file_contains(
-            full_path,
-            f"CREATE TABLE {TestUtil.table_membership_user_state}",
+                full_path,
+                f"CREATE TABLE {TestUtil.table_membership_user_state}",
         )
         has_public_tbl = TestUtil.file_contains(
-            full_path,
-            f"CREATE TABLE {TestUtil.table_public_item}",
+                full_path,
+                f"CREATE TABLE {TestUtil.table_public_item}",
         )
         assert msg == f"Schema snapshot set: {TestUtil.pgvctrl_test_repo} ({file_name})\n"
         assert has_member_tbl is True
@@ -428,8 +434,8 @@ class TestDatabaseSchemaSnapshot:
 
         has_member_sch = TestUtil.file_contains(full_path, f"CREATE SCHEMA {TestUtil.schema_membership}")
         has_member_tbl = TestUtil.file_contains(
-            full_path,
-            f"CREATE TABLE {TestUtil.table_membership_user_state}",
+                full_path,
+                f"CREATE TABLE {TestUtil.table_membership_user_state}",
         )
         assert has_member_sch is True
         assert has_member_tbl is False
@@ -595,12 +601,11 @@ class TestDatabaseSchemaSnapshot:
 
 class TestDatabaseSchemaSnapshotEnv:
     def setup_method(self):
+        TestUtil.make_conf()
         TestUtil.drop_database()
         TestUtil.create_database()
-        TestUtil.get_static_config()
-        TestUtil.mkrepo_ver(
-                TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
-        )
+        TestUtil.mkrepo(repo_name=TestUtil.pgvctrl_test_repo)
+        TestUtil.mkrepo_ver(repo_name=TestUtil.pgvctrl_test_repo, version=TestUtil.test_first_version)
         capture_dbvctrl_out(arg_list=[
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
@@ -629,10 +634,8 @@ class TestDatabaseSchemaSnapshotEnv:
         ])
 
     def teardown_method(self):
-        TestUtil.delete_folder(TestUtil.test_first_version_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ss_path)
-        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_set_schema_snapshot_env(self):
@@ -654,14 +657,13 @@ class TestDatabaseSchemaSnapshotEnv:
 
 class TestSchemaSnapshotOnCleanDb:
     def setup_method(self):
+        TestUtil.make_conf()
         TestUtil.create_database()
         ensure_dir_exists(TestUtil.pgvctrl_test_db_ss_path)
-        TestUtil.get_static_config()
 
     def teardown_method(self):
-        TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ss_path)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_apply_bad_schema_snapshot(self):

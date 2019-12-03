@@ -75,7 +75,7 @@ class VersionedDbHelper:
         pass
 
     @staticmethod
-    def display_repo_list(verbose):
+    def display_repo_list(verbose) -> bool:
         """
         :return: list of database in config
         """
@@ -85,6 +85,8 @@ class VersionedDbHelper:
 
         ignored = {SCHEMA_SNAPSHOT_DIR, DATABASE_BACKUP_DIR}
         repo_locations = get_valid_elements(root, ignored)
+        if len(repo_locations) == 0:
+            return False
 
         for repo_location in repo_locations:
             db_repos.append(VersionDb(join(os.getcwd(), root, repo_location)))
@@ -134,6 +136,8 @@ class VersionedDbHelper:
                             sql_rollback_information_message(sql_message=sql_msg)
                         else:
                             information_message(message=sql_msg)
+
+        return True
 
     @staticmethod
     def display_db_version_status(v_tbl, repo_name, db_conn):

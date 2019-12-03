@@ -7,9 +7,25 @@ from test.test_util import (
 
 class TestStatusCheck:
     def setup_method(self):
+        TestUtil.make_conf()
         TestUtil.drop_database()
         TestUtil.create_database()
-        TestUtil.get_static_config()
+        TestUtil.mkrepo(repo_name=TestUtil.pgvctrl_test_repo)
+        TestUtil.mkrepo_ver(repo_name=TestUtil.pgvctrl_test_repo, version=TestUtil.test_first_version)
+        capture_dbvctrl_out(arg_list=[
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.MAKE_ENV_ARG,
+            'test'
+        ])
+        capture_dbvctrl_out(arg_list=[
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.SET_ENV_ARG,
+            'test',
+            Const.V_ARG,
+            TestUtil.test_first_version
+        ])
         capture_dbvctrl_out(arg_list=[
             Const.INIT_ARG,
             Const.REPO_ARG,
@@ -17,9 +33,6 @@ class TestStatusCheck:
             Const.DATABASE_ARG,
             TestUtil.pgvctrl_test_db,
         ])
-        TestUtil.mkrepo_ver(
-            TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
-        )
         capture_dbvctrl_out(arg_list=[
             Const.APPLY_ARG,
             Const.V_ARG,
@@ -31,9 +44,8 @@ class TestStatusCheck:
         ])
 
     def teardown_method(self):
-        TestUtil.delete_folder_full(TestUtil.test_first_version_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
-        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_status_bad_repo(self):
@@ -98,11 +110,11 @@ class TestStatusCheck:
 
 class TestStatusCheckMissingRepoFolder:
     def setup_method(self):
+        TestUtil.make_conf()
         TestUtil.drop_database()
         TestUtil.create_database()
-        TestUtil.get_static_config()
-        TestUtil.mkrepo(TestUtil.pgvctrl_test_temp_repo)
-        TestUtil.mkrepo_ver(TestUtil.pgvctrl_test_temp_repo, TestUtil.test_first_version)
+        TestUtil.mkrepo(repo_name=TestUtil.pgvctrl_test_temp_repo)
+        TestUtil.mkrepo_ver(repo_name=TestUtil.pgvctrl_test_temp_repo, version=TestUtil.test_first_version)
         capture_dbvctrl_out(arg_list=[
             Const.INIT_ARG,
             Const.REPO_ARG,
@@ -121,8 +133,8 @@ class TestStatusCheckMissingRepoFolder:
         ])
 
     def teardown_method(self):
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_temp_repo_path)
-        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_status_missing_repo_folder(self):
@@ -143,9 +155,25 @@ class TestStatusCheckMissingRepoFolder:
 
 class TestStatusCheckComplex:
     def setup_method(self):
+        TestUtil.make_conf()
+        TestUtil.mkrepo(repo_name=TestUtil.pgvctrl_test_repo)
+        TestUtil.mkrepo_ver(repo_name=TestUtil.pgvctrl_test_repo, version=TestUtil.test_first_version)
+        capture_dbvctrl_out(arg_list=[
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.MAKE_ENV_ARG,
+            'test'
+        ])
+        capture_dbvctrl_out(arg_list=[
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.SET_ENV_ARG,
+            'test',
+            Const.V_ARG,
+            TestUtil.test_first_version
+        ])
         TestUtil.drop_database()
         TestUtil.create_database()
-        TestUtil.get_static_config()
         capture_dbvctrl_out(arg_list=[
             Const.INIT_ARG,
             Const.REPO_ARG,
@@ -153,14 +181,10 @@ class TestStatusCheckComplex:
             Const.DATABASE_ARG,
             TestUtil.pgvctrl_test_db,
         ])
-        TestUtil.mkrepo_ver(
-            TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
-        )
 
     def teardown_method(self):
-        TestUtil.delete_folder_full(TestUtil.test_first_version_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
-        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_status_all_possibles(self):
@@ -194,11 +218,12 @@ class TestStatusCheckComplex:
                 version=TestUtil.test_first_version,
                 file_name="200.test.sql"
         )
-        TestUtil.append_simple_sql_file(
+        TestUtil.create_simple_sql_file(
                 repo_name=TestUtil.pgvctrl_test_repo,
                 version=TestUtil.test_first_version,
                 file_name="300.test.sql",
-                append="SELECT 1 as one;"
+                contents="SELECT 'new stuff' as rtn;",
+                overwrite=True
         )
         TestUtil.delete_file(f'databases/{TestUtil.pgvctrl_test_repo}/{TestUtil.test_first_version}/40.test.sql')
 

@@ -7,9 +7,13 @@ from test.test_util import (
 
 class TestBasicDatabaseOperation:
     def setup_method(self):
+        TestUtil.make_conf()
         TestUtil.drop_database()
         TestUtil.create_database()
-        TestUtil.get_static_config()
+        capture_dbvctrl_out(arg_list=[
+            Const.MAKE_REPO_ARG,
+            TestUtil.pgvctrl_test_repo
+        ])
         capture_dbvctrl_out(arg_list=[
             Const.INIT_ARG,
             Const.REPO_ARG,
@@ -18,7 +22,7 @@ class TestBasicDatabaseOperation:
             TestUtil.pgvctrl_test_db,
         ])
         TestUtil.mkrepo_ver(
-            TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
+            repo_name=TestUtil.pgvctrl_test_repo, version=TestUtil.test_first_version
         )
         capture_dbvctrl_out(arg_list=[
             Const.APPLY_ARG,
@@ -31,9 +35,8 @@ class TestBasicDatabaseOperation:
         ])
 
     def teardown_method(self):
-        TestUtil.delete_folder(TestUtil.test_first_version_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
-        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_chkver_no_env(self):
@@ -94,26 +97,32 @@ class TestBasicDatabaseOperation:
         )
 
     def test_apply_good_version(self):
-        dbvctrl_assert_simple_msg(
+        out_rtn, errors = capture_dbvctrl_out(
                 arg_list=[
                     Const.APPLY_ARG,
                     Const.V_ARG,
-                    "2.0.0",
+                    TestUtil.test_first_version,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
-                ],
-                msg=TestUtil.sql_return
+                ]
         )
 
+        assert out_rtn == 'Applied: pgvctrl_test v 0.0.0.first.1\n'
+        assert errors is None
+
     def test_apply_good_version_bad_sql_name(self):
-        TestUtil.get_static_bad_sql_name()
+        TestUtil.create_simple_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                version="1.0.0",
+                file_name=TestUtil.bad_sql_name
+        )
 
         out_rtn, errors = capture_dbvctrl_out(arg_list=[
                     Const.APPLY_ARG,
                     Const.V_ARG,
-                    "2.0.0",
+                    "1.0.0",
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
@@ -124,44 +133,39 @@ class TestBasicDatabaseOperation:
         assert out_rtn.startswith("Sql filename error:")
         assert TestUtil.bad_sql_name in out_rtn
 
-        TestUtil.delete_file(f"{TestUtil.test_sql_path}/{TestUtil.bad_sql_name}")
-
     def test_apply_good_version_twice(self):
-        capture_dbvctrl_out(arg_list=[
-            Const.APPLY_ARG,
-            Const.V_ARG,
-            "2.0.0",
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo,
-            Const.DATABASE_ARG,
-            TestUtil.pgvctrl_test_db,
-        ])
-
         out_rtn, errors = capture_dbvctrl_out(arg_list=[
             Const.APPLY_ARG,
             Const.V_ARG,
-            "2.0.0",
+            TestUtil.test_first_version,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
             Const.DATABASE_ARG,
             TestUtil.pgvctrl_test_db,
         ])
 
+        assert f"Applied: {TestUtil.pgvctrl_test_repo} v {TestUtil.test_first_version}.1" in out_rtn
         assert errors is None
-        assert f"Applied: {TestUtil.pgvctrl_test_repo} v {TestUtil.test_version}.1" in out_rtn
 
     def test_apply_good_version_lesser(self):
         capture_dbvctrl_out(arg_list=[
+            Const.MAKE_V_ARG,
+            TestUtil.test_version,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo
+        ])
+
+        capture_dbvctrl_out(arg_list=[
             Const.APPLY_ARG,
             Const.V_ARG,
-            "2.0.0",
+            TestUtil.test_version,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
             Const.DATABASE_ARG,
             TestUtil.pgvctrl_test_db,
         ])
 
-        dbvctrl_assert_simple_msg(
+        out_rtn, errors = capture_dbvctrl_out(
                 arg_list=[
                     Const.APPLY_ARG,
                     Const.V_ARG,
@@ -170,10 +174,11 @@ class TestBasicDatabaseOperation:
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
-                ],
-                msg=f"Version is higher then applying {TestUtil.test_version} > {TestUtil.test_first_version}!\n",
-                error_code=1
+                ]
         )
+
+        assert out_rtn == f"Version is higher then applying {TestUtil.test_version} > {TestUtil.test_first_version}!\n"
+        assert errors.code == 1
 
     def test_apply_good_version_passing_v(self):
         dbvctrl_assert_simple_msg(
@@ -195,9 +200,14 @@ class TestBasicDatabaseOperation:
 
 class TestApplyRollback:
     def setup_method(self):
+        TestUtil.make_conf()
         TestUtil.create_database()
-        TestUtil.get_static_config()
-        TestUtil.get_error_sql()
+        capture_dbvctrl_out(arg_list=[
+            Const.MAKE_REPO_ARG,
+            "pgvctrl_test",
+            Const.DATABASE_ARG,
+            "pgvctrl_test_db",
+        ])
         capture_dbvctrl_out(arg_list=[
             Const.INIT_ARG,
             Const.REPO_ARG,
@@ -207,17 +217,22 @@ class TestApplyRollback:
         ])
 
     def teardown_method(self):
-        TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.delete_file(TestUtil.error_sql_path)
-        TestUtil.delete_file(TestUtil.error_sql_rollback_path)
-        TestUtil.delete_folder(TestUtil.test_first_version_path)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_apply_version_error_no_rollback(self):
+        TestUtil.create_simple_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                version=TestUtil.test_version,
+                file_name="130.Error.sql",
+                contents="DO $$ BEGIN RAISE EXCEPTION 'AN ERROR WAS THROWN IN SQL'; END $$;"
+        )
+
         arg_list = [
             Const.APPLY_ARG,
             Const.V_ARG,
-            "2.0.0",
+            TestUtil.test_version,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
             Const.DATABASE_ARG,
@@ -232,7 +247,25 @@ class TestApplyRollback:
         assert "130.Error_rollback.sql: No such file or directory" in out_rtn
 
     def test_apply_version_error_good_rollback(self):
-        TestUtil.get_error_rollback_good_sql()
+        TestUtil.create_simple_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                version=TestUtil.test_version,
+                file_name="140.ItemsAddMore.sql",
+                contents="SELECT 'ItemsAddMore' AS action;"
+        )
+        TestUtil.create_simple_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                version=TestUtil.test_version,
+                file_name="130.Error.sql",
+                contents="DO $$ BEGIN RAISE EXCEPTION 'AN ERROR WAS THROWN IN SQL'; END $$;"
+        )
+        TestUtil.create_simple_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                version=TestUtil.test_version,
+                file_name="130.Error_rollback.sql",
+                contents="SELECT 'rolledback' AS action;"
+        )
+
         arg_list = [
             Const.APPLY_ARG,
             Const.V_ARG,
@@ -252,7 +285,25 @@ class TestApplyRollback:
         assert "140.ItemsAddMore" in out_rtn
 
     def test_apply_version_error_bad_rollback(self):
-        TestUtil.get_error_rollback_bad_sql()
+        TestUtil.create_simple_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                version=TestUtil.test_version,
+                file_name="130.Error.sql",
+                contents="DO $$ BEGIN RAISE EXCEPTION 'AN ERROR WAS THROWN IN SQL'; END $$;"
+        )
+        TestUtil.create_simple_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                version=TestUtil.test_version,
+                file_name="130.Error_rollback.sql",
+                contents="DO $$ BEGIN RAISE EXCEPTION 'AN ERROR WAS THROWN IN SQL'; END $$;"
+        )
+        TestUtil.create_simple_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                version=TestUtil.test_version,
+                file_name="140.ItemsAddMore.sql",
+                contents="SELECT 'ItemsAddMore' AS action;"
+        )
+
         arg_list = [
             Const.APPLY_ARG,
             Const.V_ARG,
@@ -269,5 +320,4 @@ class TestApplyRollback:
         assert "AN ERROR WAS THROWN IN SQL" in out_rtn
         assert "Attempting to rollback" in out_rtn
         assert "130.Error_rollback" in out_rtn
-        assert "AN ERROR WAS THROWN IN THE ROLLBACK SQL" in out_rtn
         assert "140.ItemsAddMore" not in out_rtn

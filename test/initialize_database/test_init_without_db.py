@@ -6,13 +6,13 @@ from test.test_util import (
 
 class TestInitWithoutDb:
     def setup_method(self):
-        TestUtil.drop_database()
         TestUtil.create_config()
+        TestUtil.drop_database()
         TestUtil.mkrepo(TestUtil.pgvctrl_test_temp_repo)
 
     def teardown_method(self):
-        TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
+        TestUtil.remove_config()
+        TestUtil.remove_config()
 
     def test_init_invalid(self):
         arg_list = [

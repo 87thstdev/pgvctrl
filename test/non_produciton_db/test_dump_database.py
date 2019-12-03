@@ -10,9 +10,19 @@ from test.test_util import (
 
 class TestDataDumpCheckContents:
     def setup_method(self):
+        TestUtil.make_conf()
         TestUtil.drop_database()
         TestUtil.create_database()
-        TestUtil.get_static_config()
+        capture_dbvctrl_out(arg_list=[
+            Const.MAKE_REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+        ])
+        TestUtil.create_simple_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                version=TestUtil.test_version,
+                file_name='100.schemas.sql',
+                contents=f"CREATE SCHEMA {TestUtil.schema_membership};CREATE SCHEMA my_sch;"
+        )
         capture_dbvctrl_out(arg_list=[
             Const.INIT_ARG,
             Const.REPO_ARG,
@@ -31,8 +41,8 @@ class TestDataDumpCheckContents:
         ])
 
     def teardown_method(self):
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_backups_path)
-        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_data_dump_all_include(self):
@@ -62,19 +72,23 @@ class TestDataDumpCheckContents:
                 f"{TestUtil.pgvctrl_test_db_backups_path}/{backup_file}",
                 f"CREATE SCHEMA {TestUtil.schema_membership}",
         )
-        has_public_sch = TestUtil.file_contains(
+        has_my_sch = TestUtil.file_contains(
                 f"{TestUtil.pgvctrl_test_db_backups_path}/{backup_file}",
-                f"CREATE SCHEMA {TestUtil.schema_public}",
+                f"CREATE SCHEMA my_sch",
         )
         assert has_member_sch is True
-        assert has_public_sch is False
+        assert has_my_sch is False
 
 
 class TestDataDump:
     def setup_method(self):
+        TestUtil.make_conf()
         TestUtil.drop_database()
         TestUtil.create_database()
-        TestUtil.get_static_config()
+        capture_dbvctrl_out(arg_list=[
+            Const.MAKE_REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+        ])
         capture_dbvctrl_out(arg_list=[
             Const.INIT_ARG,
             Const.REPO_ARG,
@@ -82,19 +96,10 @@ class TestDataDump:
             Const.DATABASE_ARG,
             TestUtil.pgvctrl_test_db,
         ])
-        # capture_dbvctrl_out(arg_list=[
-        #     Const.APPLY_ARG,
-        #     Const.V_ARG,
-        #     TestUtil.test_version,
-        #     Const.REPO_ARG,
-        #     TestUtil.pgvctrl_test_repo,
-        #     Const.DATABASE_ARG,
-        #     TestUtil.pgvctrl_test_db,
-        # ])
 
     def teardown_method(self):
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_backups_path)
-        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_data_dump_all(self):
@@ -193,57 +198,72 @@ class TestDataDump:
             assert out == f"{TestUtil.pgvctrl_std_dump_reply}DB Error pg_dump: no matching schemas were found\n\n"
             assert errors.code == 1
 
-    # TODO: FIX TEST
-    # def test_data_dump_exclude_schema(self):
-    #     capture_dbvctrl_out(arg_list=[
-    #         Const.EXCLUDE_SCHEMA_LONG_ARG,
-    #         TestUtil.schema_membership,
-    #         Const.REPO_ARG,
-    #         TestUtil.pgvctrl_test_repo,
-    #     ])
-    #
-    #     capture_dbvctrl_out(arg_list=[
-    #         Const.APPLY_ARG,
-    #         Const.V_ARG,
-    #         "2.0.0",
-    #         Const.REPO_ARG,
-    #         TestUtil.pgvctrl_test_repo,
-    #         Const.DATABASE_ARG,
-    #         TestUtil.pgvctrl_test_db,
-    #     ])
-    #
-    #     with mock.patch('builtins.input', return_value="YES"):
-    #         out, errors = capture_dbvctrl_out(arg_list=[
-    #             Const.DUMP_ARG,
-    #             Const.REPO_ARG,
-    #             TestUtil.pgvctrl_test_repo,
-    #             Const.DATABASE_ARG,
-    #             TestUtil.pgvctrl_test_db,
-    #         ])
-    #         assert out == f"{TestUtil.pgvctrl_std_dump_reply}" \
-    #             f"Repository {TestUtil.pgvctrl_test_repo} database backed up\n"
-    #         assert errors is None
-    #
-    #     files = TestUtil.get_backup_file_name(TestUtil.pgvctrl_test_repo)
-    #     backup_file = files[0]
-    #
-    #     has_member_sch = TestUtil.file_contains(
-    #             f"{TestUtil.pgvctrl_test_db_backups_path}/{backup_file}",
-    #             f"CREATE SCHEMA {TestUtil.schema_membership}",
-    #     )
-    #     has_public_sch = TestUtil.file_contains(
-    #             f"{TestUtil.pgvctrl_test_db_backups_path}/{backup_file}",
-    #             f"CREATE SCHEMA {TestUtil.schema_public}",
-    #     )
-    #     assert has_member_sch is False
-    #     assert has_public_sch is True
+    def test_data_dump_exclude_schema(self):
+        capture_dbvctrl_out(arg_list=[
+            Const.EXCLUDE_SCHEMA_LONG_ARG,
+            TestUtil.schema_membership,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+        ])
+        TestUtil.create_simple_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                version=TestUtil.test_version,
+                file_name='100.schemas.sql',
+                contents=f"CREATE SCHEMA {TestUtil.schema_membership};CREATE SCHEMA my_sch;"
+        )
+
+        capture_dbvctrl_out(arg_list=[
+            Const.APPLY_ARG,
+            Const.V_ARG,
+            TestUtil.test_version,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+
+        with mock.patch('builtins.input', return_value="YES"):
+            out, errors = capture_dbvctrl_out(arg_list=[
+                Const.DUMP_ARG,
+                Const.REPO_ARG,
+                TestUtil.pgvctrl_test_repo,
+                Const.DATABASE_ARG,
+                TestUtil.pgvctrl_test_db,
+            ])
+            assert out == f"{TestUtil.pgvctrl_std_dump_reply}" \
+                f"Repository {TestUtil.pgvctrl_test_repo} database backed up\n"
+            assert errors is None
+
+        files = TestUtil.get_backup_file_name(TestUtil.pgvctrl_test_repo)
+        backup_file = files[0]
+
+        has_member_sch = TestUtil.file_contains(
+                f"{TestUtil.pgvctrl_test_db_backups_path}/{backup_file}",
+                f"CREATE SCHEMA {TestUtil.schema_membership}",
+        )
+        has_my_sch = TestUtil.file_contains(
+                f"{TestUtil.pgvctrl_test_db_backups_path}/{backup_file}",
+                f"CREATE SCHEMA my_sch",
+        )
+        assert has_member_sch is False
+        assert has_my_sch is True
 
 
 class TestDataDumpENv:
     def setup_method(self):
+        TestUtil.make_conf()
         TestUtil.drop_database()
         TestUtil.create_database()
-        TestUtil.get_static_config()
+        capture_dbvctrl_out(arg_list=[
+            Const.MAKE_REPO_ARG,
+            TestUtil.pgvctrl_test_repo
+        ])
+        capture_dbvctrl_out(arg_list=[
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.MAKE_V_ARG,
+            TestUtil.test_first_version
+        ])
         capture_dbvctrl_out(arg_list=[
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
@@ -272,8 +292,8 @@ class TestDataDumpENv:
         ])
 
     def teardown_method(self):
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_backups_path)
-        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_data_dump_env(self):

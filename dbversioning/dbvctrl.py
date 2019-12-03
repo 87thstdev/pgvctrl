@@ -363,7 +363,8 @@ def _validate_args(parser, args):
 # <editor-fold desc="arg_calls">
 def display_repo_list(verbose=False):
     c = VersionedDbHelper()
-    c.display_repo_list(verbose)
+    if not c.display_repo_list(verbose):
+        error_message_non_terminating("No Repositories available.")
 
 
 def display_repo_ss_list():

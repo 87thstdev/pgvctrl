@@ -3,12 +3,8 @@ import os
 import io
 import sys
 from contextlib import redirect_stdout
-from shutil import (
-    copy2,
-    rmtree)
+from shutil import rmtree
 from typing import List
-
-import rapidjson as json
 
 from plumbum import local
 
@@ -55,9 +51,6 @@ class TestUtil(object):
     pgvctrl_no_files_repo = "pgvctrl_no_files"
     pgvctrl_no_files_repo_path = "databases/pgvctrl_no_files"
     pgvctrl_test_db = "pgvctrl_test_db"
-    pgvctrl_test_db_snapshots_path = (
-        f"databases/_schemaSnapshot/{pgvctrl_test_repo}"
-    )
     pgvctrl_std_dump_qa_reply = "Do you want to dump the database? [YES/NO]\n"
     pgvctrl_std_dump_reply = f"{pgvctrl_std_dump_qa_reply}"
     pgvctrl_std_dump_cancelled_reply = f"{pgvctrl_std_dump_qa_reply}Dump database cancelled.\n"
@@ -120,50 +113,19 @@ class TestUtil(object):
     error_set_table_name = "error_set"
     error_set_table_error_set_table = '{\n        "apply-order": 0,\n        "column-inserts": true,\n        "table": "error_set"\n    }'
     bad_table_name = "asdeeiaoivjaiosdj"
-    custom_error_message = "WHY WOULD YOU DO THAT!"
+    custom_error_message = "Custom General Error"
     bad_sql_name = "one.bad_number.sql"
     error_set_data_folder_path = f"databases/{pgvctrl_test_repo}/data"
     app_error_set_data_path = f"{error_set_data_folder_path}/app_error_set.sql"
     error_set_data_path = f"{error_set_data_folder_path}/error_set.sql"
     config_file = "dbRepoConfig.json"
+    database_folder = "databases"
     data_file_default = "data.json.default"
     data_file_applying_default = "data.json.applying.default"
     app_error_set_file_default = "app_error_set.sql.default"
     error_set_file_default = "error_set.sql.default"
     test_version_pre_push_path = f"databases/{pgvctrl_test_repo}/data/{Const.DATA_PRE_PUSH_FILE}"
     test_version_post_push_path = f"databases/{pgvctrl_test_repo}/data/{Const.DATA_POST_PUSH_FILE}"
-
-    sql_return = (
-        'Running: 90.\n'
-        f'\t6: NOTICE:  No name sql!\n\n'
-        'Running: 100.AddUsersTable\n'
-        'Running: 110.Notice\n'
-        '\t8: NOTICE:  WHO DAT? 87admin\n'
-        '\t8: NOTICE:  Just me, 87admin\n'
-        '\t8: NOTICE:  Guess we are talking to ourselves!  87admin\n\n'
-        'Running: 120.ItemTable\n'
-        'Running: 140.ItemsAddMore\n'
-        'Running: 200.AddEmailTable\n'
-        'Running: 300.UserStateTable\n'
-        'Running: 400.ErrorSet\n'
-        f'Applied: {pgvctrl_test_repo} v {test_version}.0\n'
-    )
-
-    sql_return_timer = (
-        'Running: 90.\n'
-        '\t6: NOTICE:  No name sql!\n\n'
-        'Running: 100.AddUsersTable\n'
-        'Running: 110.Notice\n'
-        '\t8: NOTICE:  WHO DAT? 87admin\n'
-        '\t8: NOTICE:  Just me, 87admin\n'
-        '\t8: NOTICE:  Guess we are talking to ourselves!  87admin\n\n'
-        'Running: 120.ItemTable\n'
-        'Running: 140.ItemsAddMore\n'
-        'Running: 200.AddEmailTable\n'
-        'Running: 300.UserStateTable\n'
-        'Running: 400.ErrorSet\n'
-        f'Applied: {pgvctrl_test_repo} v {test_version}.0\n'
-    )
 
     @staticmethod
     def local_psql():
@@ -263,9 +225,17 @@ class TestUtil(object):
             rmtree(dir_name)
 
     @staticmethod
-    def create_config():
-        out_rtn, errors = capture_dbvctrl_out(arg_list=[Const.MKCONF_ARG])
-        print(out_rtn)
+    def create_config(contents: str = None):
+        if contents is None:
+            out_rtn, errors = capture_dbvctrl_out(arg_list=[Const.MKCONF_ARG])
+            print(out_rtn)
+        else:
+            with open(TestUtil.config_file, 'w') as f:
+                f.write(contents)
+
+    @staticmethod
+    def remove_config():
+        TestUtil.delete_file(TestUtil.config_file)
 
     @staticmethod
     def mkrepo(repo_name):
@@ -273,46 +243,52 @@ class TestUtil(object):
         print(out_rtn)
 
     @staticmethod
-    def mkrepo_ver(repo_name, ver):
-        out_rtn, errors = capture_dbvctrl_out(arg_list=[Const.REPO_ARG, repo_name, Const.MAKE_V_ARG, ver])
+    def mkrepo_ver(repo_name, version):
+        out_rtn, errors = capture_dbvctrl_out(arg_list=[Const.REPO_ARG, repo_name, Const.MAKE_V_ARG, version])
+        assert errors is None
         print(out_rtn)
 
     @staticmethod
-    def get_static_config():
-        copy2(f"{TestUtil.config_file}.default", TestUtil.config_file)
+    def make_conf():
+        capture_dbvctrl_out(arg_list=[
+            Const.MKCONF_ARG
+        ])
 
     @staticmethod
-    def get_static_data_config():
-        ensure_dir_exists(TestUtil.error_set_data_folder_path)
-        copy2(TestUtil.data_file_default, TestUtil.test_version_data_path)
-
-    @staticmethod
-    def get_static_data_applying_config():
-        ensure_dir_exists(TestUtil.error_set_data_folder_path)
-        copy2(TestUtil.data_file_applying_default, TestUtil.test_version_data_path)
-
-    @staticmethod
-    def get_static_app_error_set_data():
-        ensure_dir_exists(TestUtil.error_set_data_folder_path)
-        copy2(TestUtil.app_error_set_file_default, TestUtil.app_error_set_data_path)
-
-    @staticmethod
-    def get_static_bad_sql_name():
-        copy2(TestUtil.bad_sql_name, TestUtil.test_sql_path)
-
-    @staticmethod
-    def create_simple_sql_file(repo_name: str, version: str, file_name: str):
-        full_file_name = f'databases/{repo_name}/{version}/{file_name}'
+    def create_simple_data_sql_file(repo_name: str, file_name: str, contents: str = None):
+        ensure_dir_exists(f"databases/{repo_name}/data")
+        full_file_name = f'databases/{repo_name}/data/{file_name}'
         if not os.path.exists(full_file_name):
             with open(full_file_name, 'w') as f:
-                f.write(f"SELECT '{file_name}' as file_name;\n")
+                if contents:
+                    f.write(contents)
+                else:
+                    f.write(f"SELECT '{file_name}' as file_name;\n")
 
     @staticmethod
-    def append_simple_sql_file(repo_name: str, version: str, file_name: str, append: str):
+    def create_simple_sql_file(
+            repo_name: str, version: str, file_name: str, contents: str = None, overwrite: bool = False):
+        ensure_dir_exists(f'databases/{repo_name}/{version}')
         full_file_name = f'databases/{repo_name}/{version}/{file_name}'
-        if os.path.exists(full_file_name):
-            with open(full_file_name, "a") as f:
-                f.write(f"{append}\n")
+        if overwrite or not os.path.exists(full_file_name):
+            with open(full_file_name, 'w') as f:
+                if contents:
+                    f.write(contents)
+                else:
+                    f.write(f"SELECT '{file_name}' as file_name;\n")
+        else:
+            raise Exception(f'File present {full_file_name}')
+
+    @staticmethod
+    def create_data_applying_config(repo_name: str, contents: str = None):
+        ensure_dir_exists(f'databases/{repo_name}/data')
+        full_file_name = f'databases/{repo_name}/data/data.json'
+        if not os.path.exists(full_file_name):
+            with open(full_file_name, 'w') as f:
+                if contents:
+                    f.write(contents)
+                else:
+                    f.write("[]")
 
     @staticmethod
     def create_repo_ss_sql_file(repo_name: str, file_names: List[str]):
@@ -332,53 +308,16 @@ class TestUtil(object):
                 pass
 
     @staticmethod
-    def get_static_error_set_data():
-        ensure_dir_exists(TestUtil.error_set_data_folder_path)
-        copy2(TestUtil.error_set_file_default, TestUtil.error_set_data_path)
+    def create_root_folder():
+        ensure_dir_exists(TestUtil.database_folder)
 
     @staticmethod
-    def get_static_pre_push_sql():
-        ensure_dir_exists(TestUtil.error_set_data_folder_path)
-        copy2(f"{Const.DATA_PRE_PUSH_FILE}.default", TestUtil.test_version_pre_push_path)
+    def remove_root_folder():
+        TestUtil.delete_folder_full(TestUtil.database_folder)
 
     @staticmethod
-    def get_static_post_push_sql():
-        ensure_dir_exists(TestUtil.error_set_data_folder_path)
-        copy2(f"{Const.DATA_POST_PUSH_FILE}.default", TestUtil.test_version_post_push_path)
-
-    @staticmethod
-    def get_static_bad_config():
-        copy2(f"{TestUtil.config_file}.bad.default", TestUtil.config_file)
-
-    @staticmethod
-    def get_static_bad_repositories_config():
-        copy2(f"{TestUtil.config_file}.bad.repositories.default", TestUtil.config_file)
-
-    @staticmethod
-    def get_static_bad_config_multi_repos():
-        copy2(f"{TestUtil.config_file}.bad.multi.repos.default", TestUtil.config_file)
-
-    @staticmethod
-    def get_static_invalid_config():
-        copy2(f"{TestUtil.config_file}.badjson.default", TestUtil.config_file)
-
-    @staticmethod
-    def get_error_sql():
-        copy2(f"{TestUtil.error_sql_path}.default", TestUtil.error_sql_path)
-
-    @staticmethod
-    def get_error_rollback_bad_sql():
-        copy2(
-            f"{TestUtil.error_sql_rollback_path}.bad.default",
-            TestUtil.error_sql_rollback_path,
-        )
-
-    @staticmethod
-    def get_error_rollback_good_sql():
-        copy2(
-            f"{TestUtil.error_sql_rollback_path}.good.default",
-            TestUtil.error_sql_rollback_path,
-        )
+    def create_repo_folder(repo_name: str):
+        ensure_dir_exists(f"{TestUtil.database_folder}/{repo_name}")
 
     @staticmethod
     def get_backup_file_name(repo: str):
@@ -387,22 +326,6 @@ class TestUtil(object):
     @staticmethod
     def get_snapshot_file_names(repo: str):
         return os.listdir(f"databases/_schemaSnapshot/{repo}")
-
-    @staticmethod
-    def rename_snapshot_file(repo: str, src: str, dst: str):
-        return os.rename(
-                src=f"databases/_schemaSnapshot/{repo}/{src}",
-                dst=f"databases/_schemaSnapshot/{repo}/{dst}"
-        )
-
-    @staticmethod
-    def get_repo_dict():
-        d = None
-        if os.path.isfile(TestUtil.config_file):
-            with open(TestUtil.config_file) as json_data:
-                d = json.load(json_data)
-
-        return d
 
     @staticmethod
     def file_contains(file_path, key):
@@ -438,9 +361,8 @@ def dbvctrl_assert_simple_msg(arg_list: List[str], msg: str, error_code: int=Non
 
     print_cmd_error_details(out_rtn, arg_list)
 
+    assert out_rtn == msg
     if error_code:
         assert errors.code == error_code
     else:
         assert errors is None
-
-    assert out_rtn == msg
