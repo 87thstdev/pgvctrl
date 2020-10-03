@@ -67,19 +67,18 @@ class TestPullData:
         )
 
     def test_pull_data_bad_table(self):
-        dbvctrl_assert_simple_msg(
-                arg_list=[
-                    Const.PULL_DATA_ARG,
-                    Const.DATA_TBL_ARG,
-                    TestUtil.bad_table_name,
-                    Const.REPO_ARG,
-                    TestUtil.pgvctrl_test_repo,
-                    Const.DATABASE_ARG,
-                    TestUtil.pgvctrl_test_db,
-                ],
-                msg=f"Pulling: {TestUtil.bad_table_name}\nSql Error: pg_dump: no matching tables were found\n\n",
-                error_code=1
-        )
+        out_rtn, errors = capture_dbvctrl_out(arg_list=[
+            Const.PULL_DATA_ARG,
+            Const.DATA_TBL_ARG,
+            TestUtil.bad_table_name,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+        assert f"Pulling: {TestUtil.bad_table_name}" in out_rtn
+        assert "no matching tables were found" in out_rtn
+        assert errors.code == 1
 
         has_table = TestUtil.file_contains(TestUtil.test_version_data_path, TestUtil.bad_table_name)
         assert not has_table

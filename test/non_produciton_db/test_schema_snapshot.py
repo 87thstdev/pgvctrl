@@ -6,6 +6,7 @@ from dbversioning.versionedDbShellUtil import SNAPSHOT_DATE_FORMAT
 from test.test_util import (
     TestUtil,
     capture_dbvctrl_out,
+    LOCAL_HOST,
     dbvctrl_assert_simple_msg)
 
 
@@ -123,17 +124,16 @@ class TestDatabaseSchemaSnapshot:
             TestUtil.pgvctrl_test_db,
         ])
 
-        dbvctrl_assert_simple_msg(
-                arg_list=[
-                    Const.GETSS_ARG,
-                    Const.REPO_ARG,
-                    TestUtil.pgvctrl_test_repo,
-                    Const.DATABASE_ARG,
-                    TestUtil.pgvctrl_test_db,
-                ],
-                msg=f"DB Error pg_dump: no matching schemas were found\n\n",
-                error_code=1
-        )
+        out_rtn, errors = capture_dbvctrl_out(arg_list=[
+            Const.GETSS_ARG,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+
+        assert "no matching schemas were found" in out_rtn
+        assert errors.code == 1
 
     def test_set_schema_snapshot_exclude_schema(self):
         capture_dbvctrl_out(arg_list=[
@@ -310,17 +310,16 @@ class TestDatabaseSchemaSnapshot:
             TestUtil.pgvctrl_test_db,
         ])
 
-        dbvctrl_assert_simple_msg(
-                arg_list=[
-                    Const.GETSS_ARG,
-                    Const.REPO_ARG,
-                    TestUtil.pgvctrl_test_repo,
-                    Const.DATABASE_ARG,
-                    TestUtil.pgvctrl_test_db,
-                ],
-                msg=f"DB Error pg_dump: no matching tables were found\n\n",
-                error_code=1
-        )
+        out_rtn, errors = capture_dbvctrl_out(arg_list=[
+            Const.GETSS_ARG,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+
+        assert "no matching tables were found" in out_rtn
+        assert errors.code == 1
 
     def test_set_schema_snapshot_exclude_table(self):
         capture_dbvctrl_out(arg_list=[
@@ -695,6 +694,6 @@ class TestSchemaSnapshotOnCleanDb:
                     Const.DATABASE_ARG,
                     bad_db,
                 ],
-                msg=f"Invalid Data Connection: ['{Const.DATABASE_ARG}', '{bad_db}']\n",
+                msg=f"Invalid Data Connection: ['{Const.DATABASE_ARG}', '{bad_db}', '{Const.PSQL_HOST_PARAM}', '{LOCAL_HOST}']\n",
                 error_code=1
         )

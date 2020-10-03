@@ -11,7 +11,7 @@ def readme():
 
 setup(
     name="pgvctrl",
-    version="1.0.2",
+    version="1.1.0",
     description="postgreSQL database version control tool",
     long_description=readme(),
     long_description_content_type="text/x-rst",
@@ -24,6 +24,6 @@ setup(
     packages=find_packages(
         exclude=["*.tests", "*.tests.*", "tests.*", "tests", "test"]
     ),
-    install_requires=["python-rapidjson", "plumbum"],
+    install_requires=["plumbum"],
     entry_points={"console_scripts": ["pgvctrl=dbversioning.dbvctrl:main"]},
 )

@@ -4,8 +4,7 @@ import datetime
 import sys
 from typing import List, Union, Optional
 
-import rapidjson as json
-from rapidjson import JSONDecodeError
+import json
 
 import copy
 from plumbum import colors, local, ProcessExecutionError
@@ -403,7 +402,7 @@ class VersionDbShellUtil:
     def get_db_instance_version(v_tbl, db_conn):
         psql = _local_psql()
 
-        _good_version_table(v_tbl, db_conn)
+        has_good_tbl = _good_version_table(v_tbl, db_conn)
 
         version_sql = f"SELECT {v_tbl.v}, {v_tbl.rev}, {v_tbl.repo}, {v_tbl.is_prod}, {v_tbl.env}, {v_tbl.hash}, " f"'notused' " f"throwaway FROM {v_tbl.tbl};"
 
@@ -471,7 +470,7 @@ class VersionDbShellUtil:
         try:
             with open(conf_file) as json_data:
                 d = json.load(json_data)
-        except JSONDecodeError:
+        except Exception:
             raise VersionedDbExceptionBadDataConfigFile()
 
         return d

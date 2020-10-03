@@ -195,7 +195,8 @@ class TestDataDump:
                 Const.DATABASE_ARG,
                 TestUtil.pgvctrl_test_db,
             ])
-            assert out == f"{TestUtil.pgvctrl_std_dump_reply}DB Error pg_dump: no matching schemas were found\n\n"
+            assert TestUtil.pgvctrl_std_dump_reply in out
+            assert "no matching schemas were found" in out
             assert errors.code == 1
 
     def test_data_dump_exclude_schema(self):

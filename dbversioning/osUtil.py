@@ -1,6 +1,6 @@
 import os
 
-import rapidjson as json
+import json
 
 
 def ensure_dir_exists(dir_name):

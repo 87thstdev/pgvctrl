@@ -190,15 +190,13 @@ class TestDatabaseRestoreWithTimer:
             ])
 
             output_array = out.split("\n")
-            count = len(
-                f"Database {self.backup_file} "
-                f"from repository pgvctrl_test restored ['-d', '{TestUtil.pgvctrl_test_db}']. (time: "
-            )
 
             time = 0.00
             for ln in output_array:
                 if "(time:" in ln:
-                    time = float(ln[count:count+4])
+                    count = len(ln)
+                    str_i = ln[count-9:count-5]
+                    time = float(str_i)
 
             assert errors is None
             assert "(time: " in out

@@ -1,7 +1,7 @@
 import os
 from typing import List, Dict, Union
 
-import rapidjson as json
+import json
 
 from collections import namedtuple
 

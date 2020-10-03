@@ -2,7 +2,7 @@ import os
 from collections import namedtuple
 from typing import List, Optional
 
-import rapidjson as json
+import json
 from os.path import join
 
 import dbversioning.dbvctrlConst as Const

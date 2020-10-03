@@ -137,7 +137,7 @@ class TestUtil(object):
 
         psql = TestUtil.local_psql()
         rtn = psql.run(
-            ["-c", f"CREATE DATABASE {TestUtil.pgvctrl_test_db}"], retcode=0
+            ["-h", "localhost", "-c", f"CREATE DATABASE {TestUtil.pgvctrl_test_db}"], retcode=0
         )
         print(rtn)
 
@@ -145,7 +145,7 @@ class TestUtil(object):
     def create_table_owner_role():
         psql = TestUtil.local_psql()
         rtn = psql.run(
-                ["-c", f"CREATE ROLE {TestUtil.version_table_owner};"],
+                ["-h", "localhost", "-c", f"CREATE ROLE {TestUtil.version_table_owner};"],
                 retcode=(0, 1)
         )
         print(rtn)
@@ -154,7 +154,7 @@ class TestUtil(object):
     def remove_table_owner_role():
         psql = TestUtil.local_psql()
         rtn = psql.run(
-                ["-c", f"DROP ROLE {TestUtil.version_table_owner};"],
+                ["-h", "localhost", "-c", f"DROP ROLE {TestUtil.version_table_owner};"],
                 retcode=(0, 1)
         )
         print(rtn)
@@ -163,7 +163,7 @@ class TestUtil(object):
     def get_table_owner(db_name: str, table_name: str):
         psql = TestUtil.local_psql()
         rtn = psql.run(
-                ["-d",
+                ["-h", "localhost", "-d",
                  db_name,
                  "-A",
                  "-c",
@@ -180,7 +180,7 @@ class TestUtil(object):
     def drop_database():
         psql = TestUtil.local_psql()
         rtn = psql.run(
-            ["-c", f"DROP DATABASE IF EXISTS {TestUtil.pgvctrl_test_db}"],
+            ["-h", "localhost", "-c", f"DROP DATABASE IF EXISTS {TestUtil.pgvctrl_test_db}"],
             retcode=0,
         )
         print(rtn)
@@ -189,7 +189,7 @@ class TestUtil(object):
     def remove_rev_recs(db_name: str):
         psql = TestUtil.local_psql()
         psql.run(
-                ["-d",
+                ["-h", "localhost", "-d",
                  db_name,
                  "-A",
                  "-c",
@@ -201,7 +201,7 @@ class TestUtil(object):
     def add_rev_recs(db_name: str):
         psql = TestUtil.local_psql()
         psql.run(
-                ["-d",
+                ["-h", "localhost", "-d",
                  db_name,
                  "-A",
                  "-c",

@@ -1,4 +1,4 @@
-1.1.0 / 2019-11-??
+1.1.0 / 2020-10-03
 ==================
 
   * Fixed bug: Ensure the following arguments have the -repo argument.
@@ -17,4 +17,4 @@
 
     Sets Database Dump name
 
-  * Change out simplejson with python-rapidjson
+  * Remove third-party json dependency

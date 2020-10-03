@@ -63,7 +63,7 @@ class TestDatabaseRestore:
             assert out == (
                 f"{TestUtil.pgvctrl_std_restore_qa_reply}"
                 f"Database {self.backup_file} "
-                f"from repository pgvctrl_test restored ['-d', '{TestUtil.pgvctrl_test_db}'].\n"
+                f"from repository pgvctrl_test restored ['-d', '{TestUtil.pgvctrl_test_db}', '-h', '{Const.LOCAL_HOST}'].\n"
             )
 
         dbvctrl_assert_simple_msg(
@@ -104,7 +104,7 @@ class TestDatabaseRestore:
             ])
             assert out == (
                 f"{TestUtil.pgvctrl_std_restore_qa_reply}"
-                f"Invalid Data Connection: ['-d', 'nodb']\n"
+                f"Invalid Data Connection: ['-d', 'nodb', '-h', '{Const.LOCAL_HOST}']\n"
             )
             assert errors.code == 1
 
