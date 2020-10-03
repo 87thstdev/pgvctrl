@@ -7,7 +7,6 @@ import pkg_resources
 import dbversioning.dbvctrlConst as Const
 from dbversioning.errorUtil import (
     VersionedDbException,
-    VersionedDbExceptionProductionChangeNoProductionFlag,
 )
 from dbversioning.versionedDbConnection import connection_list
 from dbversioning.versionedDbShellUtil import information_message, error_message, error_message_non_terminating
@@ -136,6 +135,11 @@ def parse_args(args):
             metavar="FILE_NAME",
     )
     parser.add_argument(
+            Const.NAME_ARG,
+            help=f"Name out file for ({Const.GETSS_ARG}, {Const.DUMP_ARG})",
+            metavar="NAME",
+    )
+    parser.add_argument(
             Const.V_ARG,
             metavar="VERSION_NUMBER",
             help="Version number"
@@ -154,6 +158,11 @@ def parse_args(args):
             Const.MAKE_V_ARG,
             metavar="VERSION_NUMBER",
             help="Make version number"
+    )
+    group.add_argument(
+            Const.REMOVE_V_ARG,
+            metavar="VERSION_NUMBER",
+            help="Remove version number and files (requires confirmation)"
     )
     group.add_argument(
             Const.MAKE_ENV_ARG,
@@ -270,13 +279,92 @@ def parse_args(args):
             action="append",
     )
 
-    return parser.parse_args(args)
+    return _validate_args(parser, args)
+
+
+def _validate_args(parser, args):
+    parsed_args = parser.parse_args(args)
+
+    if parsed_args.status and (parsed_args.repo is None):
+        parser.error(f"{Const.STATUS} requires {Const.REPO_ARG}.")
+
+    if parsed_args.mkv and (parsed_args.repo is None):
+        parser.error(f"{Const.MAKE_V_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.rmv and (parsed_args.repo is None):
+        parser.error(f"{Const.REMOVE_V_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.init and (parsed_args.repo is None):
+        parser.error(f"{Const.INIT_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.mkenv and (parsed_args.repo is None):
+        parser.error(f"{Const.MAKE_ENV_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.rmenv and (parsed_args.repo is None):
+        parser.error(f"{Const.REMOVE_ENV_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.chkver and (parsed_args.repo is None):
+        parser.error(f"{Const.CHECK_VER_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.set_version_storage_owner and (parsed_args.repo is None):
+        parser.error(f"{Const.SET_VERSION_STORAGE_TABLE_OWNER_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.setenv and (parsed_args.repo is None):
+        parser.error(f"{Const.SET_ENV_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.n and (parsed_args.repo is None):
+        parser.error(f"[{Const.INCLUDE_SCHEMA_ARG} | {Const.INCLUDE_SCHEMA_LONG_ARG}] requires {Const.REPO_ARG}.")
+
+    if parsed_args.rmn and (parsed_args.repo is None):
+        parser.error(f"[{Const.RMINCLUDE_SCHEMA_ARG} | {Const.RMINCLUDE_SCHEMA_LONG_ARG}] requires {Const.REPO_ARG}.")
+
+    if parsed_args.N and (parsed_args.repo is None):
+        parser.error(f"[{Const.EXCLUDE_SCHEMA_ARG} | {Const.EXCLUDE_SCHEMA_LONG_ARG}] requires {Const.REPO_ARG}.")
+
+    if parsed_args.rmN and (parsed_args.repo is None):
+        parser.error(f"[{Const.RMEXCLUDE_SCHEMA_ARG} | {Const.RMEXCLUDE_SCHEMA_LONG_ARG}] requires {Const.REPO_ARG}.")
+
+    if parsed_args.t and (parsed_args.repo is None):
+        parser.error(f"[{Const.INCLUDE_TABLE_ARG} | {Const.INCLUDE_TABLE_LONG_ARG}] requires {Const.REPO_ARG}.")
+
+    if parsed_args.rmt and (parsed_args.repo is None):
+        parser.error(f"[{Const.RMINCLUDE_TABLE_ARG} | {Const.RMINCLUDE_TABLE_LONG_ARG}] requires {Const.REPO_ARG}.")
+
+    if parsed_args.T and (parsed_args.repo is None):
+        parser.error(f"[{Const.EXCLUDE_TABLE_ARG} | {Const.EXCLUDE_TABLE_LONG_ARG}] requires {Const.REPO_ARG}.")
+
+    if parsed_args.rmT and (parsed_args.repo is None):
+        parser.error(f"[{Const.RMEXCLUDE_TABLE_ARG} | {Const.RMEXCLUDE_TABLE_LONG_ARG}] requires {Const.REPO_ARG}.")
+
+    if parsed_args.apply and (parsed_args.repo is None):
+        parser.error(f"{Const.APPLY_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.getss and (parsed_args.repo is None):
+        parser.error(f"{Const.GETSS_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.applyss and (parsed_args.repo is None):
+        parser.error(f"[{Const.APPLY_SS_ARG} | {Const.APPLY_SS_LONG_ARG}] requires {Const.REPO_ARG}.")
+
+    if parsed_args.pulldata and (parsed_args.repo is None):
+        parser.error(f"{Const.PULL_DATA_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.pushdata and (parsed_args.repo is None):
+        parser.error(f"{Const.PUSH_DATA_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.dump and (parsed_args.repo is None):
+        parser.error(f"{Const.DUMP_ARG} requires {Const.REPO_ARG}.")
+
+    if parsed_args.restore and (parsed_args.repo is None):
+        parser.error(f"{Const.RESTORE_ARG} requires {Const.REPO_ARG}.")
+
+    return parsed_args
 
 
 # <editor-fold desc="arg_calls">
 def display_repo_list(verbose=False):
     c = VersionedDbHelper()
-    c.display_repo_list(verbose)
+    if not c.display_repo_list(verbose):
+        error_message_non_terminating("No Repositories available.")
 
 
 def display_repo_ss_list():
@@ -380,6 +468,7 @@ def repo_database_dump(arg_set):
     vdb.repo_database_dump(
             db_conn=db_conn,
             repo_name=arg_set.repo,
+            name=arg_set.name,
             is_production=arg_set.production,
     )
 
@@ -406,7 +495,7 @@ def set_schema_snapshot_pull_from_db(arg_set):
     vdb = VersionedDbHelper()
     db_conn = connection_list(arg_set)
 
-    vdb.set_repository_schema_snapshot(db_conn=db_conn, repo_name=arg_set.repo)
+    vdb.set_repository_schema_snapshot(db_conn=db_conn, repo_name=arg_set.repo, name=arg_set.name)
 
 
 def create_repository(repo_name):
@@ -422,6 +511,11 @@ def remove_repository(repo_name):
 def create_repository_version_folder(repo_name: str, version: str):
     vdb = VersionedDbHelper()
     vdb.create_repository_version_folder(repo_name=repo_name, version=version)
+
+
+def remove_repository_version_folder(repo_name: str, version: str):
+    vdb = VersionedDbHelper()
+    vdb.remove_repository_version_folder(repo_name=repo_name, version=version)
 
 
 def create_repository_env_type(repo_name: str, env: str):
@@ -548,6 +642,12 @@ class DbVctrl(object):
             elif arg_set.mkv:
                 # -mkv 2.0.0.new_version -repo test_db
                 create_repository_version_folder(repo_name=arg_set.repo, version=arg_set.mkv)
+            elif arg_set.rmv:
+                # -rmv 1.0.0.old_version -repo test_db
+                if user_yes_no_query("Do you want to remove the repository version?"):
+                    remove_repository_version_folder(repo_name=arg_set.repo, version=arg_set.rmv)
+                else:
+                    error_message("Repository version removal cancelled.")
             elif arg_set.mkenv:
                 # -mkenv test -repo test_db
                 create_repository_env_type(repo_name=arg_set.repo, env=arg_set.mkenv)
@@ -567,7 +667,7 @@ class DbVctrl(object):
                 # -setenv test -repo test_db -v 1.0.0
                 set_repository_env_version(arg_set)
             elif arg_set.n:
-                # [-n | -include-schema] membership -repo pgvctrl_test
+                # [-n | -schema] membership -repo pgvctrl_test
                 set_repository_include_schema(repo_name=arg_set.repo, include_schemas=arg_set.n)
             elif arg_set.rmn:
                 # [-rmn | -rm-schema] membership -repo pgvctrl_test
@@ -594,7 +694,7 @@ class DbVctrl(object):
                 # -apply <-v 0.1.0 | -env test> -repo test_db -d postgresPlay
                 apply_repository_to_db(arg_set)
             elif arg_set.getss:
-                # -getss -repo test_db -d postgresPlay
+                # -getss -repo test_db -d postgresPlay (--name my_ss)
                 set_schema_snapshot_pull_from_db(arg_set)
             elif arg_set.applyss:
                 # -applyss 0.1.0.BaseDeploy -repo test_db -d postgresPlay
@@ -625,8 +725,6 @@ class DbVctrl(object):
                 error_message(
                         f'{prj_name}: No operation specified\nTry "{prj_name} --help" for more information.'
                 )
-        except VersionedDbExceptionProductionChangeNoProductionFlag as e:
-            error_message(e.message)
         except VersionedDbException as e:
             error_message(e.message)
         except KeyError as e:

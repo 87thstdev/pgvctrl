@@ -179,6 +179,26 @@ Getting Started
 
       Version mydb/1.0.0.my_new_version created.
 
+#. Remove repository version of repository: -rmv: Remove version number and files
+
+   .. code-block::
+
+      pgvctrl -rmv [x.x.x.version_name] -repo [repository name]
+
+   e.g.:
+
+   .. code-block::
+
+      pgvctrl -rmv 1.0.0.my_new_version -repo mydb
+
+   Output:
+
+   .. code-block::
+
+      Do you want to remove the repository version? [YES/NO]
+      Version mydb/1.0.0.my_new_version removed.
+
+
 #. Create sql change files in the versioned directory! These files will
    be used to update your database and should have the naming convention
    of: [order number].[change name].sql e.g.: 100.AddedUserTable.sql
@@ -587,7 +607,7 @@ database structure (tables, views, functions ect.) at the time the snapshot was 
 
 .. code-block::
 
-   -getss -repo [repository name] [db connection information]
+   -getss -repo [repository name] [db connection information] [--name=]
 
 -applyss or -apply-schema-snapshot: Apply version Schema Snapshot
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -644,7 +664,7 @@ Once you have your data in your repository, pushing data is easy.
 
 .. code-block::
 
-   -pushdata -repo [repository name] [db connection information]
+   -pushdata -repo [repository name] [db connection information] [--force]
 
 e.g. For pushing by table(s).
 
@@ -688,13 +708,15 @@ backup.
 
 .. code-block::
 
-    -dump -repo [repository name] [db connection information]
+    -dump -repo [repository name] [db connection information] [--name=]
 
 e.g. For dumping the database.
 
 .. code-block::
 
     -dump -repo mydb -d mylocaldb
+
+    -dump -repo mydb -d mylocaldb --name mybackup
 
 Output:
 

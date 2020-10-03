@@ -9,10 +9,10 @@ from test.test_util import (
 
 class TestTimerSetting:
     def setup_method(self):
-        TestUtil.get_static_config()
+        TestUtil.make_conf()
 
     def teardown_method(self):
-        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.remove_config()
 
     def test_timer_on(self):
         dbvctrl_assert_simple_msg(
@@ -29,9 +29,13 @@ class TestTimerSetting:
 
 class TestApplyWithTimerOn:
     def setup_method(self):
+        TestUtil.make_conf()
         TestUtil.drop_database()
         TestUtil.create_database()
-        TestUtil.get_static_config()
+        TestUtil.mkrepo(repo_name=TestUtil.pgvctrl_test_repo)
+        TestUtil.mkrepo_ver(repo_name=TestUtil.pgvctrl_test_repo, version=TestUtil.test_first_version)
+        TestUtil.create_simple_sql_file(repo_name=TestUtil.pgvctrl_test_repo, version=TestUtil.test_first_version,
+                                        file_name='100.test.sql')
         capture_dbvctrl_out(arg_list=[Const.TIMER_ON_ARG])
         capture_dbvctrl_out(arg_list=[
             Const.INIT_ARG,
@@ -40,23 +44,10 @@ class TestApplyWithTimerOn:
             Const.DATABASE_ARG,
             TestUtil.pgvctrl_test_db,
         ])
-        TestUtil.mkrepo_ver(
-            TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
-        )
-        capture_dbvctrl_out(arg_list=[
-            Const.APPLY_ARG,
-            Const.V_ARG,
-            TestUtil.test_first_version,
-            Const.REPO_ARG,
-            TestUtil.pgvctrl_test_repo,
-            Const.DATABASE_ARG,
-            TestUtil.pgvctrl_test_db,
-        ])
 
     def teardown_method(self):
-        TestUtil.delete_folder(TestUtil.test_first_version_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
-        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_apply_with_timer_on(self):
@@ -65,7 +56,7 @@ class TestApplyWithTimerOn:
                 arg_list=[
                     Const.APPLY_ARG,
                     Const.V_ARG,
-                    "2.0.0",
+                    TestUtil.test_first_version,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
@@ -94,9 +85,11 @@ class TestApplyWithTimerOn:
 
 class TestDatabaseDumpWithTimer:
     def setup_method(self):
+        TestUtil.make_conf()
         TestUtil.drop_database()
         TestUtil.create_database()
-        TestUtil.get_static_config()
+        TestUtil.mkrepo(repo_name=TestUtil.pgvctrl_test_repo)
+        TestUtil.mkrepo_ver(repo_name=TestUtil.pgvctrl_test_repo, version=TestUtil.test_version)
         capture_dbvctrl_out(arg_list=[Const.TIMER_ON_ARG])
         capture_dbvctrl_out(arg_list=[
             Const.INIT_ARG,
@@ -116,8 +109,8 @@ class TestDatabaseDumpWithTimer:
         ])
 
     def teardown_method(self):
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_backups_path)
-        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_database_dump_with_timer(self):
@@ -143,9 +136,11 @@ class TestDatabaseDumpWithTimer:
 
 class TestDatabaseRestoreWithTimer:
     def setup_method(self):
+        TestUtil.make_conf()
         TestUtil.drop_database()
         TestUtil.create_database()
-        TestUtil.get_static_config()
+        TestUtil.mkrepo(repo_name=TestUtil.pgvctrl_test_repo)
+        TestUtil.mkrepo_ver(repo_name=TestUtil.pgvctrl_test_repo, version=TestUtil.test_version)
         capture_dbvctrl_out(arg_list=[Const.TIMER_ON_ARG])
         capture_dbvctrl_out(arg_list=[
             Const.INIT_ARG,
@@ -176,8 +171,8 @@ class TestDatabaseRestoreWithTimer:
         self.backup_file = files[0]
 
     def teardown_method(self):
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_backups_path)
-        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_database_restore_with_timer(self):
@@ -195,15 +190,13 @@ class TestDatabaseRestoreWithTimer:
             ])
 
             output_array = out.split("\n")
-            count = len(
-                f"Database {self.backup_file} "
-                f"from repository pgvctrl_test restored ['-d', '{TestUtil.pgvctrl_test_db}']. (time: "
-            )
 
             time = 0.00
             for ln in output_array:
                 if "(time:" in ln:
-                    time = float(ln[count:count+4])
+                    count = len(ln)
+                    str_i = ln[count-9:count-5]
+                    time = float(str_i)
 
             assert errors is None
             assert "(time: " in out
@@ -212,9 +205,11 @@ class TestDatabaseRestoreWithTimer:
 
 class TestDatabaseSetSchemaSnapshotWithTimer:
     def setup_method(self):
+        TestUtil.make_conf()
         TestUtil.drop_database()
         TestUtil.create_database()
-        TestUtil.get_static_config()
+        TestUtil.mkrepo(repo_name=TestUtil.pgvctrl_test_repo)
+        TestUtil.mkrepo_ver(repo_name=TestUtil.pgvctrl_test_repo, version=TestUtil.test_version)
         capture_dbvctrl_out(arg_list=[Const.TIMER_ON_ARG])
         capture_dbvctrl_out(arg_list=[
             Const.INIT_ARG,
@@ -234,8 +229,8 @@ class TestDatabaseSetSchemaSnapshotWithTimer:
         ])
 
     def teardown_method(self):
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_backups_path)
-        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_set_schema_snapshot_with_timer(self):
@@ -260,9 +255,11 @@ class TestDatabaseSetSchemaSnapshotWithTimer:
 
 class TestDatabaseApplySchemaSnapshotWithTimer:
     def setup_method(self):
+        TestUtil.make_conf()
+        TestUtil.mkrepo(repo_name=TestUtil.pgvctrl_test_repo)
+        TestUtil.mkrepo_ver(repo_name=TestUtil.pgvctrl_test_repo, version=TestUtil.test_first_version)
         TestUtil.drop_database()
         TestUtil.create_database()
-        TestUtil.get_static_config()
         capture_dbvctrl_out(arg_list=[Const.TIMER_ON_ARG])
         capture_dbvctrl_out(arg_list=[
             Const.INIT_ARG,
@@ -271,9 +268,6 @@ class TestDatabaseApplySchemaSnapshotWithTimer:
             Const.DATABASE_ARG,
             TestUtil.pgvctrl_test_db,
         ])
-        TestUtil.mkrepo_ver(
-                TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
-        )
         capture_dbvctrl_out(arg_list=[
             Const.APPLY_ARG,
             Const.V_ARG,
@@ -285,10 +279,8 @@ class TestDatabaseApplySchemaSnapshotWithTimer:
         ])
 
     def teardown_method(self):
-        TestUtil.delete_folder(TestUtil.test_first_version_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ss_path)
-        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_apply_schema_snapshot_with_timer(self):
@@ -331,9 +323,11 @@ class TestDatabaseApplySchemaSnapshotWithTimer:
 
 class TestPushApplyingWithTimerDb:
     def setup_method(self):
+        TestUtil.make_conf()
+        TestUtil.mkrepo(repo_name=TestUtil.pgvctrl_test_repo)
+        TestUtil.mkrepo_ver(repo_name=TestUtil.pgvctrl_test_repo, version=TestUtil.test_version)
         TestUtil.drop_database()
         TestUtil.create_database()
-        TestUtil.get_static_config()
         capture_dbvctrl_out(arg_list=[Const.TIMER_ON_ARG])
         capture_dbvctrl_out(arg_list=[
             Const.INIT_ARG,
@@ -351,15 +345,25 @@ class TestPushApplyingWithTimerDb:
             Const.DATABASE_ARG,
             TestUtil.pgvctrl_test_db,
         ])
-        TestUtil.get_static_data_applying_config()
-        TestUtil.get_static_app_error_set_data()
-        TestUtil.get_static_error_set_data()
+        TestUtil.create_data_applying_config(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                contents='[{"column-inserts": true,"table":"app_error_set","apply-order":1},{"column-inserts":true,"table":"error_set","apply-order":0}]'
+        )
+        TestUtil.create_simple_data_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                file_name="error_set.sql"
+        )
+        TestUtil.create_simple_data_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                file_name="app_error_set.sql"
+        )
+        # TestUtil.get_static_data_applying_config()
+        # TestUtil.get_static_app_error_set_data()
+        # TestUtil.get_static_error_set_data()
 
     def teardown_method(self):
-        TestUtil.delete_folder(TestUtil.test_first_version_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
-        TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.delete_folder_full(TestUtil.error_set_data_folder_path)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_push_data_with_timer(self):
@@ -394,9 +398,18 @@ class TestPushApplyingWithTimerDb:
 
 class TestPullDataWithTimer:
     def setup_method(self):
+        TestUtil.make_conf()
+        TestUtil.mkrepo(repo_name=TestUtil.pgvctrl_test_repo)
+        TestUtil.mkrepo_ver(repo_name=TestUtil.pgvctrl_test_repo, version=TestUtil.test_version)
+        TestUtil.create_simple_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                version=TestUtil.test_version,
+                file_name="100.error_set.sql",
+                contents="CREATE TABLE error_set (error_id INTEGER);"
+        )
+
         TestUtil.drop_database()
         TestUtil.create_database()
-        TestUtil.get_static_config()
         capture_dbvctrl_out(arg_list=[Const.TIMER_ON_ARG])
         capture_dbvctrl_out(arg_list=[
             Const.INIT_ARG,
@@ -414,17 +427,15 @@ class TestPullDataWithTimer:
             Const.DATABASE_ARG,
             TestUtil.pgvctrl_test_db,
         ])
-        TestUtil.delete_folder_full(TestUtil.error_set_data_folder_path)
 
     def teardown_method(self):
-        TestUtil.delete_folder(TestUtil.test_first_version_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
-        TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.delete_folder_full(TestUtil.error_set_data_folder_path)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_pull_data_from_repos_table_list(self):
-        arg_list = [
+        # Puts tables in the list of data
+        capture_dbvctrl_out(arg_list=[
             Const.PULL_DATA_ARG,
             Const.DATA_TBL_ARG,
             TestUtil.error_set_table_name,
@@ -432,21 +443,16 @@ class TestPullDataWithTimer:
             TestUtil.pgvctrl_test_repo,
             Const.DATABASE_ARG,
             TestUtil.pgvctrl_test_db,
-        ]
-        # Puts tables in the list of data
-        capture_dbvctrl_out(arg_list=arg_list)
+        ])
 
-        arg_list = [
+        out_rtn, errors = capture_dbvctrl_out(arg_list=[
             Const.PULL_DATA_ARG,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
             Const.DATABASE_ARG,
             TestUtil.pgvctrl_test_db,
-        ]
+        ])
 
-        out_rtn, errors = capture_dbvctrl_out(arg_list=arg_list)
-
-        print_cmd_error_details(out_rtn, arg_list)
         output_array = out_rtn.split("\n")
         time = 0.0
 
@@ -454,7 +460,5 @@ class TestPullDataWithTimer:
             if "Time:" in ln:
                 time += float(ln[7:11])
 
-        assert errors is None
         assert "Time: " in out_rtn
-
         assert errors is None

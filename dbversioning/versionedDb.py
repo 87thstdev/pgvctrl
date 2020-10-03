@@ -1,19 +1,17 @@
 import hashlib
 import os
-from typing import List
+from shutil import rmtree
+from typing import List, Optional
 
 from dbversioning.errorUtil import (
     VersionedDbExceptionRepoVersionNumber,
     VersionedDbExceptionRepoDoesNotExits,
-    VersionedDbExceptionRepoNameInvalid,
-    VersionedDbExceptionSqlNamingError)
+    VersionedDbExceptionRepoNameInvalid, VersionedDbExceptionSqlNamingError, VersionedDbExceptionInvalidSqlName)
 from dbversioning.osUtil import dir_exists
 from dbversioning.repositoryconf import (
-    DATA_DUMP_DIR,
-    ROLLBACK_FILE_ENDING)
+    DATA_DUMP_DIR, ROLLBACK_FILE_ENDING)
 from dbversioning.versionedDbHelper import (
-    get_valid_elements,
-    get_valid_sql_elements)
+    get_valid_elements, get_valid_sql_elements)
 
 
 class SchemaSnapshot(object):
@@ -42,7 +40,7 @@ class SchemaSnapshotVersion(object):
         self.minor = None
         self.maintenance = None
 
-        _set_version_info(os.path.basename(self._version_path), self)
+        self._set_version_info(os.path.basename(self._version_path))
         file_array = os.path.splitext(os.path.basename(ss_version_path))
 
         self.name = file_array[0]
@@ -58,6 +56,24 @@ class SchemaSnapshotVersion(object):
     @property
     def sql_file(self):
         return self._version_path
+
+    def _set_version_info(self, file_name):
+        ver_array = file_name.split(".")
+        file_ext = ver_array.pop()
+
+        if len(ver_array) < 1 or file_ext != "sql":
+            raise VersionedDbExceptionInvalidSqlName(file_name)
+
+        self.major = _try_int_returning(ver_array[0])
+
+        if self.major is not None and len(ver_array) > 2:
+            self.minor = _try_int_returning(ver_array[1])
+            if self.minor is not None and len(ver_array) > 3:
+                self.maintenance = _try_int_returning(ver_array[2])
+                self.name = ".".join(ver_array[-3:])
+
+        if self.major is None:
+            self.name = ".".join(ver_array)
 
 
 class Version(object):
@@ -133,6 +149,13 @@ class VersionDb(object):
     def create_version(self, version):
         os.mkdir(os.path.join(self._repo_path, version))
         return True
+
+    def remove_version(self, version):
+        path = os.path.join(self._repo_path, version)
+        if os.path.isdir(path):
+            rmtree(path)
+            return True
+        return False
 
 
 def _set_version_info(version_dir, ver):
@@ -211,3 +234,12 @@ def get_file_hash(file_path) -> str:
             sha1.update(data)
 
     return sha1.hexdigest()
+
+
+def _try_int_returning(val) -> Optional[int]:
+    try:
+        rtn = int(val)
+    except ValueError:
+        rtn = None
+
+    return rtn

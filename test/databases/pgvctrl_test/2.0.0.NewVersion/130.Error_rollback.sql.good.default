@@ -1,6 +1,0 @@
-DO $$
-BEGIN
-
-  RAISE NOTICE 'Rolling back!';
-
-END $$;

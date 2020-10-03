@@ -7,15 +7,16 @@ from test.test_util import (
 
 class TestDatabaseEnv:
     def setup_method(self):
+        TestUtil.make_conf()
         TestUtil.create_database()
-        TestUtil.get_static_config()
+        TestUtil.mkrepo(repo_name=TestUtil.pgvctrl_test_repo)
         TestUtil.mkrepo_ver(
             TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
         )
 
     def teardown_method(self):
-        TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.delete_folder(TestUtil.test_first_version_path)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_chkver_no_env(self):
@@ -40,7 +41,21 @@ class TestDatabaseEnv:
         )
 
     def test_chkver_env(self):
-        capture_dbvctrl_out(arg_list=[
+        outstr, errors = capture_dbvctrl_out(arg_list=[
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.MAKE_ENV_ARG,
+            TestUtil.env_test
+        ])
+        outstr, errors = capture_dbvctrl_out(arg_list=[
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.SET_ENV_ARG,
+            TestUtil.env_test,
+            Const.V_ARG,
+            TestUtil.test_first_version
+        ])
+        outstr, errors = capture_dbvctrl_out(arg_list=[
             Const.INIT_ARG,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
@@ -49,8 +64,7 @@ class TestDatabaseEnv:
             Const.SET_ENV_ARG,
             TestUtil.env_test,
         ])
-
-        capture_dbvctrl_out(arg_list=[
+        outstr, errors = capture_dbvctrl_out(arg_list=[
             Const.APPLY_ARG,
             Const.ENV_ARG,
             TestUtil.env_test,
@@ -59,7 +73,6 @@ class TestDatabaseEnv:
             Const.DATABASE_ARG,
             TestUtil.pgvctrl_test_db,
         ])
-
         dbvctrl_assert_simple_msg(
                 arg_list=[
                     Const.CHECK_VER_ARG,
@@ -74,6 +87,20 @@ class TestDatabaseEnv:
         )
 
     def test_apply_good_version_env(self):
+        outstr, errors = capture_dbvctrl_out(arg_list=[
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.MAKE_ENV_ARG,
+            TestUtil.env_test
+        ])
+        outstr, errors = capture_dbvctrl_out(arg_list=[
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.SET_ENV_ARG,
+            TestUtil.env_test,
+            Const.V_ARG,
+            TestUtil.test_first_version
+        ])
         capture_dbvctrl_out(arg_list=[
             Const.INIT_ARG,
             Const.REPO_ARG,

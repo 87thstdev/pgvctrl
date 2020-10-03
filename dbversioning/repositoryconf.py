@@ -1,7 +1,7 @@
 import os
 from typing import List, Dict, Union
 
-import simplejson as json
+import json
 
 from collections import namedtuple
 
@@ -216,7 +216,6 @@ class RepositoryConf(object):
                 conf,
                 indent=4,
                 sort_keys=True,
-                separators=(",", ": "),
                 ensure_ascii=True,
             )
 
@@ -244,7 +243,6 @@ class RepositoryConf(object):
                 conf,
                 indent=4,
                 sort_keys=True,
-                separators=(",", ": "),
                 ensure_ascii=True,
             )
 
@@ -270,7 +268,6 @@ class RepositoryConf(object):
                 conf,
                 indent=4,
                 sort_keys=True,
-                separators=(",", ": "),
                 ensure_ascii=True,
             )
 
@@ -293,7 +290,6 @@ class RepositoryConf(object):
                 conf,
                 indent=4,
                 sort_keys=True,
-                separators=(",", ": "),
                 ensure_ascii=True,
             )
 
@@ -319,7 +315,6 @@ class RepositoryConf(object):
                     conf,
                     indent=4,
                     sort_keys=True,
-                    separators=(",", ": "),
                     ensure_ascii=True,
             )
 
@@ -339,7 +334,6 @@ class RepositoryConf(object):
                     conf,
                     indent=4,
                     sort_keys=True,
-                    separators=(",", ": "),
                     ensure_ascii=True,
             )
 
@@ -365,8 +359,32 @@ class RepositoryConf(object):
                 conf,
                 indent=4,
                 sort_keys=True,
-                separators=(",", ": "),
                 ensure_ascii=True,
+            )
+
+            with open(RepositoryConf.config_file_name(), "w") as outfile:
+                outfile.write(out_str)
+
+        return True
+
+    @staticmethod
+    def remove_repo_version(repo_name: str, version_nums: str):
+        conf = RepositoryConf._get_repo_dict()
+        with open(RepositoryConf.config_file_name()):
+            repos = conf[REPOSITORIES_PROP]
+            rp = [r for r in repos if r[NAME_PROP] == repo_name]
+
+            if rp[0][ENVS_PROP]:
+                for k, v in rp[0][ENVS_PROP].items():
+                    if v == version_nums:
+                        del rp[0][ENVS_PROP][k]
+                        break
+
+            out_str = json.dumps(
+                    conf,
+                    indent=4,
+                    sort_keys=True,
+                    ensure_ascii=True,
             )
 
             with open(RepositoryConf.config_file_name(), "w") as outfile:
@@ -400,7 +418,6 @@ class RepositoryConf(object):
             conf,
             indent=4,
             sort_keys=True,
-            separators=(",", ": "),
             ensure_ascii=True,
         )
 

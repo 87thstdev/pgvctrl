@@ -1,18 +1,19 @@
 import dbversioning.dbvctrlConst as Const
 from test.test_util import (
     TestUtil,
+    LOCAL_HOST,
     dbvctrl_assert_simple_msg)
 
 
 class TestInitWithoutDb:
     def setup_method(self):
-        TestUtil.drop_database()
         TestUtil.create_config()
+        TestUtil.drop_database()
         TestUtil.mkrepo(TestUtil.pgvctrl_test_temp_repo)
 
     def teardown_method(self):
-        TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
 
     def test_init_invalid(self):
         arg_list = [
@@ -24,7 +25,8 @@ class TestInitWithoutDb:
         ]
         dbvctrl_assert_simple_msg(
                 arg_list=arg_list,
-                msg=f"Invalid Data Connection: ['{Const.DATABASE_ARG}', '{TestUtil.pgvctrl_test_db}']\n",
+                msg=f"Invalid Data Connection: ['{Const.DATABASE_ARG}', '{TestUtil.pgvctrl_test_db}', "
+                    f"'{Const.PSQL_HOST_PARAM}', '{LOCAL_HOST}']\n",
                 error_code=1
         )
 

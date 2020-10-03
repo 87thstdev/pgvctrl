@@ -9,9 +9,11 @@ from test.test_util import (
 
 class TestDatabaseRestore:
     def setup_method(self):
+        TestUtil.make_conf()
         TestUtil.drop_database()
         TestUtil.create_database()
-        TestUtil.get_static_config()
+        TestUtil.mkrepo(repo_name=TestUtil.pgvctrl_test_repo)
+        TestUtil.mkrepo_ver(repo_name=TestUtil.pgvctrl_test_repo, version=TestUtil.test_version)
         capture_dbvctrl_out(arg_list=[
             Const.INIT_ARG,
             Const.REPO_ARG,
@@ -41,8 +43,8 @@ class TestDatabaseRestore:
         self.backup_file = files[0]
 
     def teardown_method(self):
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_backups_path)
-        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_database_restore(self):
@@ -61,7 +63,7 @@ class TestDatabaseRestore:
             assert out == (
                 f"{TestUtil.pgvctrl_std_restore_qa_reply}"
                 f"Database {self.backup_file} "
-                f"from repository pgvctrl_test restored ['-d', '{TestUtil.pgvctrl_test_db}'].\n"
+                f"from repository pgvctrl_test restored ['-d', '{TestUtil.pgvctrl_test_db}', '-h', '{Const.LOCAL_HOST}'].\n"
             )
 
         dbvctrl_assert_simple_msg(
@@ -102,7 +104,7 @@ class TestDatabaseRestore:
             ])
             assert out == (
                 f"{TestUtil.pgvctrl_std_restore_qa_reply}"
-                f"Invalid Data Connection: ['-d', 'nodb']\n"
+                f"Invalid Data Connection: ['-d', 'nodb', '-h', '{Const.LOCAL_HOST}']\n"
             )
             assert errors.code == 1
 

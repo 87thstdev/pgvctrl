@@ -2,7 +2,7 @@ import os
 from collections import namedtuple
 from typing import List, Optional
 
-import simplejson as json
+import json
 from os.path import join
 
 import dbversioning.dbvctrlConst as Const
@@ -75,7 +75,7 @@ class VersionedDbHelper:
         pass
 
     @staticmethod
-    def display_repo_list(verbose):
+    def display_repo_list(verbose) -> bool:
         """
         :return: list of database in config
         """
@@ -85,6 +85,8 @@ class VersionedDbHelper:
 
         ignored = {SCHEMA_SNAPSHOT_DIR, DATABASE_BACKUP_DIR}
         repo_locations = get_valid_elements(root, ignored)
+        if len(repo_locations) == 0:
+            return False
 
         for repo_location in repo_locations:
             db_repos.append(VersionDb(join(os.getcwd(), root, repo_location)))
@@ -134,6 +136,8 @@ class VersionedDbHelper:
                             sql_rollback_information_message(sql_message=sql_msg)
                         else:
                             information_message(message=sql_msg)
+
+        return True
 
     @staticmethod
     def display_db_version_status(v_tbl, repo_name, db_conn):
@@ -259,9 +263,12 @@ class VersionedDbHelper:
             for ss_sql in ss_locations:
                 ss_sql_ver.append(SchemaSnapshotVersion(ss_sql))
 
+            def _none_to_0(val):
+                return 0 if val is None else val
+
             ss_sql_ver = sorted(
                     ss_sql_ver,
-                    key=lambda vs: (vs.major, vs.minor, vs.maintenance),
+                    key=lambda vs: (_none_to_0(vs.major), _none_to_0(vs.minor), _none_to_0(vs.maintenance), vs.full_name),
             )
 
             for ss_v in ss_sql_ver:
@@ -324,6 +331,7 @@ class VersionedDbHelper:
 
     @staticmethod
     def get_repository_version(repository, version):
+        # TODO: Fix, return none or VersionDb
         conf = RepositoryConf()
         root = conf.root()
 
@@ -349,6 +357,17 @@ class VersionedDbHelper:
         vdb = VersionDb(join(os.getcwd(), root, repository))
         if vdb.create_version(version):
             information_message(f"Version {repository}/{version} created.")
+
+    @staticmethod
+    def remove_repository_version(repository: str, version: str, version_nums: str):
+        conf = RepositoryConf()
+        root = conf.root()
+        vdb = VersionDb(join(os.getcwd(), root, repository))
+        if vdb.remove_version(version):
+            conf.remove_repo_version(repo_name=repository, version_nums=version_nums)
+            information_message(f"Version {repository}/{version} removed.")
+        else:
+            error_message(f"Version {repository}/{version} does not exits.")
 
     @staticmethod
     def get_repository_schema_snapshot_version(repository, version):
@@ -400,7 +419,7 @@ class VersionedDbHelper:
 
     @staticmethod
     def apply_repository_schema_snapshot_to_database(
-        repo_name, db_conn, full_version
+        repo_name, db_conn, full_version, force: bool = False
     ):
         if not VersionDbShellUtil.is_database_empty(db_conn):
             raise VersionedDbExceptionSchemaSnapshotNotAllowed()
@@ -467,7 +486,7 @@ class VersionedDbHelper:
         return None
 
     @staticmethod
-    def repo_database_dump(repo_name, db_conn, is_production):
+    def repo_database_dump(repo_name, db_conn, name: str, is_production: bool):
         v_stg = VersionedDbHelper._get_v_stg(repo_name)
         dbver = VersionDbShellUtil.get_db_instance_version(v_stg, db_conn)
 
@@ -475,7 +494,7 @@ class VersionedDbHelper:
             raise VersionedDbExceptionProductionChangeNoProductionFlag(
                 Const.DUMP_ARG
             )
-        # dump_database_backup
+
         conf = RepositoryConf()
         dump_options = conf.get_repo_dump_options(repo_name=repo_name)
 
@@ -483,7 +502,12 @@ class VersionedDbHelper:
             dump_options = DUMP_OPTIONS_DEFAULT
 
         dump_options_list = dump_options.split(" ")
-        exec_time = VersionDbShellUtil.dump_backup(db_conn, v_stg, dump_options_list)
+        exec_time = VersionDbShellUtil.dump_backup(
+                db_conn=db_conn,
+                v_stg=v_stg,
+                dump_options=dump_options_list,
+                name=name
+        )
 
         msg = f"Repository {repo_name} database backed up"
         if RepositoryConf.is_timer_on():
@@ -604,10 +628,10 @@ class VersionedDbHelper:
         return True
 
     @staticmethod
-    def set_repository_schema_snapshot(repo_name, db_conn):
+    def set_repository_schema_snapshot(repo_name, db_conn, name: str):
         v_stg = VersionedDbHelper._get_v_stg(repo_name)
         file_name, exec_time = VersionDbShellUtil.dump_version_schema_snapshot(
-            db_conn, v_stg, repo_name
+            db_conn=db_conn, v_stg=v_stg, repo_name=repo_name, name=name
         )
 
         if file_name:
@@ -676,6 +700,20 @@ class VersionedDbHelper:
             )
 
         VersionedDbHelper.create_repository_version(repo_name, version)
+
+    @staticmethod
+    def remove_repository_version_folder(repo_name, version):
+        version_nums = VersionedDbHelper.get_version_numbers(version)
+        version_found = VersionedDbHelper.get_repository_version(
+                repo_name, version_nums
+        )
+
+        if version_found is None:
+            raise VersionedDbExceptionRepoVersionDoesNotExits(
+                    repo_name=repo_name, version_name=version
+            )
+
+        VersionedDbHelper.remove_repository_version(repo_name, version, version_found[0].version_number)
 
     @staticmethod
     def create_repository(repo_name):
@@ -870,7 +908,6 @@ class VersionedDbHelper:
                     conf.config_json(),
                     indent=4,
                     sort_keys=True,
-                    separators=(",", ": "),
                     ensure_ascii=True,
                 )
                 outfile.write(to_unicode(str_))

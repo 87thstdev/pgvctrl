@@ -6,11 +6,11 @@ from test.test_util import (
 
 class TestDatabaseDumpList:
     def setup_method(self):
-        TestUtil.get_static_config()
+        TestUtil.make_conf()
 
     def teardown_method(self):
-        TestUtil.delete_folder_full(TestUtil.db_backups_path)
-        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
 
     def test_dump_database_list_none(self):
         dbvctrl_assert_simple_msg(

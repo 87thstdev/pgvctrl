@@ -9,11 +9,16 @@ NO_PROD_FLG_PUSHDATA = f"Production changes need the -production flag: {Const.PU
 
 class TestProdPushingDatabase:
     def setup_method(self):
-        TestUtil.get_static_data_config()
-        TestUtil.get_static_error_set_data()
+        TestUtil.make_conf()
+        TestUtil.mkrepo(repo_name=TestUtil.pgvctrl_test_repo)
         TestUtil.drop_database()
         TestUtil.create_database()
-        TestUtil.get_static_config()
+        TestUtil.create_simple_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                version=TestUtil.test_version,
+                file_name="100.error_set.sql",
+                contents="CREATE TABLE IF NOT EXISTS error_set (error_id SERIAL PRIMARY KEY);"
+        )
         capture_dbvctrl_out(arg_list=[
                     Const.INIT_ARG,
                     Const.PRODUCTION_ARG,
@@ -22,29 +27,22 @@ class TestProdPushingDatabase:
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
                 ])
-
-        TestUtil.mkrepo_ver(
-                TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
+        TestUtil.create_data_applying_config(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                contents='[{"column-inserts":true,"table":"error_set","apply-order":0}]'
         )
-        capture_dbvctrl_out(arg_list=[
-                    Const.APPLY_ARG,
-                    Const.PRODUCTION_ARG,
-                    Const.REPO_ARG,
-                    TestUtil.pgvctrl_test_repo,
-                    Const.DATABASE_ARG,
-                    TestUtil.pgvctrl_test_db,
-                    Const.V_ARG,
-                    "0.0.0",
-            ])
+        TestUtil.create_simple_data_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                file_name="error_set.sql"
+        )
 
     def teardown_method(self):
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
-        TestUtil.delete_folder(TestUtil.test_first_version_path)
-        TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.delete_folder_full(TestUtil.error_set_data_folder_path)
 
     def test_push_data(self):
-        dbvctrl_assert_simple_msg(
+        out_rtn, errors = capture_dbvctrl_out(
                 arg_list=[
                     Const.PUSH_DATA_ARG,
                     Const.REPO_ARG,
@@ -52,9 +50,10 @@ class TestProdPushingDatabase:
                     Const.PRODUCTION_ARG,
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
-                ],
-                msg=f"{Const.PUSHING_DATA}\nRunning: error_set.sql\n"
+                ]
         )
+        assert out_rtn == f"{Const.PUSHING_DATA}\nRunning: error_set.sql\n"
+        assert errors is None
 
     def test_push_data_no_prod_flag(self):
         dbvctrl_assert_simple_msg(

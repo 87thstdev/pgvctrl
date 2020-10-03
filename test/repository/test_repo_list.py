@@ -16,23 +16,73 @@ from test.test_util import (
 
 class TestRepoList:
     def setup_method(self):
-        TestUtil.get_static_config()
-        TestUtil.mkrepo_ver(
-            TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
-        )
-        TestUtil.mkrepo_ver(
-                TestUtil.pgvctrl_test_repo, TestUtil.test_second_version_no_name
-        )
-        TestUtil.get_error_sql()
-        TestUtil.get_error_rollback_good_sql()
+        TestUtil.make_conf()
+        TestUtil.create_root_folder()
+        TestUtil.delete_folder_full(TestUtil.database_folder)
 
     def teardown_method(self):
-        TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.delete_folder(TestUtil.test_make_version_path)
-        TestUtil.delete_folder(TestUtil.test_first_version_path)
-        TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
-        TestUtil.delete_file(TestUtil.error_sql_path)
-        TestUtil.delete_file(TestUtil.error_sql_rollback_path)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
+
+    def test_repo_list_no_root(self):
+        out_rtn, errors = capture_dbvctrl_out(arg_list=[Const.LIST_REPOS_VERBOSE_ARG])
+
+        assert errors is None
+        assert out_rtn == "No Repositories available.\n"
+
+
+class TestRepoListWith:
+    def setup_method(self):
+        TestUtil.make_conf()
+        TestUtil.create_root_folder()
+        TestUtil.mkrepo(repo_name=TestUtil.pgvctrl_test_repo)
+        TestUtil.mkrepo_ver(
+                repo_name=TestUtil.pgvctrl_test_repo, version=TestUtil.test_version
+        )
+        TestUtil.mkrepo_ver(
+            repo_name=TestUtil.pgvctrl_test_repo, version=TestUtil.test_first_version
+        )
+        TestUtil.mkrepo_ver(
+                repo_name=TestUtil.pgvctrl_test_repo, version=TestUtil.test_second_version_no_name
+        )
+        TestUtil.create_simple_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                version=TestUtil.test_version,
+                file_name="100.sql"
+        )
+        TestUtil.create_simple_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                version=TestUtil.test_version,
+                file_name="200.Error.sql"
+        )
+        TestUtil.create_simple_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                version=TestUtil.test_version,
+                file_name="200.Error_rollback.sql"
+        )
+        capture_dbvctrl_out(
+                arg_list=[
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.MAKE_ENV_ARG,
+                    TestUtil.env_test
+                ]
+        )
+        capture_dbvctrl_out(
+                arg_list=[
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.V_ARG,
+                    TestUtil.test_first_version,
+                    Const.SET_ENV_ARG,
+                    TestUtil.env_test
+                ]
+        )
+
+
+    def teardown_method(self):
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
 
     def test_repo_list(self):
         dbvctrl_assert_simple_msg(
@@ -50,16 +100,9 @@ class TestRepoList:
                     f"{Const.TAB}v {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
                     f"{Const.TAB}v {TestUtil.test_second_version_no_name} \n"
                     f"{Const.TAB}v {TestUtil.test_version} \n"
-                    f"{Const.TABS}90 \n"
-                    f"{Const.TABS}100 AddUsersTable\n"
-                    f"{Const.TABS}110 Notice\n"
-                    f"{Const.TABS}120 ItemTable\n"
-                    f"{Const.TABS}130 Error\n"
-                    f"{Const.TABS}130 Error_rollback ROLLBACK\n"
-                    f"{Const.TABS}140 ItemsAddMore\n"
-                    f"{Const.TABS}200 AddEmailTable\n"
-                    f"{Const.TABS}300 UserStateTable\n"
-                    f"{Const.TABS}400 ErrorSet\n"
+                    f"{Const.TABS}100 \n"
+                    f"{Const.TABS}200 Error\n"
+                    f"{Const.TABS}200 Error_rollback ROLLBACK\n"
         )
 
     def test_repo_list_verbose_includes_excludes(self):
@@ -67,16 +110,9 @@ class TestRepoList:
             f"{Const.TAB}v {TestUtil.test_first_version} ['{TestUtil.env_test}']\n"
             f"{Const.TAB}v {TestUtil.test_second_version_no_name} \n"
             f"{Const.TAB}v {TestUtil.test_version} \n"
-            f"{Const.TABS}90 \n"
-            f"{Const.TABS}100 AddUsersTable\n"
-            f"{Const.TABS}110 Notice\n"
-            f"{Const.TABS}120 ItemTable\n"
-            f"{Const.TABS}130 Error\n"
-            f"{Const.TABS}130 Error_rollback ROLLBACK\n"
-            f"{Const.TABS}140 ItemsAddMore\n"
-            f"{Const.TABS}200 AddEmailTable\n"
-            f"{Const.TABS}300 UserStateTable\n"
-            f"{Const.TABS}400 ErrorSet\n"
+            f"{Const.TABS}100 \n"
+            f"{Const.TABS}200 Error\n"
+            f"{Const.TABS}200 Error_rollback ROLLBACK\n"
         )
 
         capture_dbvctrl_out(
@@ -175,7 +211,11 @@ class TestRepoList:
         )
 
     def test_repo_list_bad_sql_name(self):
-        TestUtil.get_static_bad_sql_name()
+        TestUtil.create_simple_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                version="1.0.0",
+                file_name=TestUtil.bad_sql_name
+        )
 
         out_rtn, errors = capture_dbvctrl_out(arg_list=[Const.LIST_REPOS_VERBOSE_ARG])
 
@@ -188,12 +228,12 @@ class TestRepoList:
 
 class TestBadRepoList:
     def setup_method(self):
-        TestUtil.get_static_config()
-        TestUtil.mkrepo(TestUtil.pgvctrl_test_temp_repo)
+        TestUtil.make_conf()
+        TestUtil.mkrepo(repo_name=TestUtil.pgvctrl_test_temp_repo)
 
     def teardown_method(self):
-        TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
 
     def test_make_bad_repo_version(self):
         dbvctrl_assert_simple_msg(

@@ -15,22 +15,31 @@ from test.test_util import (
 
 class TestConfigUpdating:
     def setup_method(self):
-        TestUtil.get_static_config()
+        TestUtil.create_config()
+        capture_dbvctrl_out(
+                arg_list=[
+                    Const.MAKE_REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                ]
+        )
 
     def teardown_method(self):
-        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
 
     def test_set_repo_table_owner(self):
-        dbvctrl_assert_simple_msg(
+        out_rtn, errors = capture_dbvctrl_out(
                 arg_list=[
                     Const.SET_VERSION_STORAGE_TABLE_OWNER_ARG,
                     TestUtil.version_table_owner,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
-                ],
-                msg=f"Repository version storage owner set: "
-                    f"{TestUtil.pgvctrl_test_repo} {TestUtil.version_table_owner}\n"
+                ]
         )
+
+        assert out_rtn == f"Repository version storage owner set: " \
+                          f"{TestUtil.pgvctrl_test_repo} {TestUtil.version_table_owner}\n"
+        assert errors is None
 
     def test_set_repo_table_owner_bad_repo(self):
         dbvctrl_assert_simple_msg(
@@ -77,6 +86,13 @@ class TestConfigUpdating:
             TestUtil.pgvctrl_test_repo,
         ])
 
+        capture_dbvctrl_out(arg_list=[
+            Const.MAKE_V_ARG,
+            TestUtil.test_version,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+        ])
+
         dbvctrl_assert_simple_msg(
                 arg_list=[
                     Const.SET_ENV_ARG,
@@ -93,13 +109,26 @@ class TestConfigUpdating:
     def test_set_repo_two_on_ver_env(self):
         base_msg = (
             f"{TestUtil.pgvctrl_test_repo}\n"
-            f"{Const.TAB}v {TestUtil.test_second_version_no_name} \n"
             f"{Const.TAB}v {TestUtil.test_version} ['{TestUtil.env_qa}', '{TestUtil.env_test}']\n"
         )
 
         capture_dbvctrl_out(arg_list=[
+            Const.MAKE_V_ARG,
+            TestUtil.test_version,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+        ])
+
+        capture_dbvctrl_out(arg_list=[
             Const.MAKE_ENV_ARG,
             TestUtil.env_qa,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+        ])
+
+        capture_dbvctrl_out(arg_list=[
+            Const.MAKE_ENV_ARG,
+            TestUtil.env_test,
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
         ])
@@ -126,12 +155,14 @@ class TestConfigUpdating:
                 ]
         )
 
-        dbvctrl_assert_simple_msg(
+        out_rtn, error = capture_dbvctrl_out(
                 arg_list=[
                     Const.LIST_REPOS_ARG
-                ],
-                msg=base_msg
+                ]
         )
+
+        assert out_rtn == base_msg
+        assert error is None
 
     def test_set_repo_env_no_v_fail(self):
         dbvctrl_assert_simple_msg(
@@ -381,7 +412,7 @@ class TestConfigUpdating:
         )
         assert inc_table_name == []
 
-    def test_exclude_table(self):
+    def test_exclude_tables(self):
         dbvctrl_assert_simple_msg(
                 arg_list=[
                     Const.EXCLUDE_TABLE_LONG_ARG,
@@ -393,10 +424,23 @@ class TestConfigUpdating:
                     f"exclude-table ['{TestUtil.table_membership_user_state}']\n"
         )
 
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.EXCLUDE_TABLE_LONG_ARG,
+                    TestUtil.table_public_item,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo
+                ],
+                msg=f"Repository added: {TestUtil.pgvctrl_test_repo} "
+                    f"exclude-table ['{TestUtil.table_public_item}']\n"
+        )
+
         name_list = RepositoryConf.get_repo_list(
             repo_name=TestUtil.pgvctrl_test_repo, list_name=EXCLUDE_TABLES_PROP
         )
-        assert name_list == [TestUtil.table_membership_user_state]
+        assert len(name_list) == 2
+        assert TestUtil.table_public_item in name_list
+        assert TestUtil.table_membership_user_state in name_list
 
     def test_remove_exclude_table(self):
         capture_dbvctrl_out(arg_list=[
@@ -484,11 +528,11 @@ class TestConfigUpdating:
 
 class TestConfigMakeRepo:
     def setup_method(self):
-        TestUtil.get_static_config()
+        TestUtil.create_config()
 
     def teardown_method(self):
-        TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.delete_folder(TestUtil.pgvctrl_test_temp_repo_path)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
 
     def test_mkrepo(self):
         dbvctrl_assert_simple_msg(

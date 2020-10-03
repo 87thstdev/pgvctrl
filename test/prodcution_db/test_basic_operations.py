@@ -11,9 +11,11 @@ BAD_VER = "0.1.0"
 
 class TestBasicProductionDatabaseOperation:
     def setup_method(self):
+        TestUtil.make_conf()
+        TestUtil.mkrepo(repo_name=TestUtil.pgvctrl_test_repo)
+        TestUtil.mkrepo_ver(repo_name=TestUtil.pgvctrl_test_repo, version=TestUtil.test_first_version)
         TestUtil.drop_database()
         TestUtil.create_database()
-        TestUtil.get_static_config()
         capture_dbvctrl_out(arg_list=[
                 Const.INIT_ARG,
                 Const.PRODUCTION_ARG,
@@ -22,9 +24,6 @@ class TestBasicProductionDatabaseOperation:
                 Const.DATABASE_ARG,
                 TestUtil.pgvctrl_test_db,
             ])
-        TestUtil.mkrepo_ver(
-            TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
-        )
         capture_dbvctrl_out(arg_list=[
                 Const.APPLY_ARG,
                 Const.PRODUCTION_ARG,
@@ -37,11 +36,9 @@ class TestBasicProductionDatabaseOperation:
             ])
 
     def teardown_method(self):
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
-        TestUtil.delete_folder(TestUtil.test_first_version_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ss_path)
-        TestUtil.delete_file(TestUtil.config_file)
 
     def test_chkver_no_env(self):
         dbvctrl_assert_simple_msg(
@@ -103,19 +100,20 @@ class TestBasicProductionDatabaseOperation:
         )
 
     def test_apply_good_version(self):
-        dbvctrl_assert_simple_msg(
+        out_rtn, errors = capture_dbvctrl_out(
                 arg_list=[
                     Const.APPLY_ARG,
                     Const.V_ARG,
-                    "2.0.0",
+                    "0.0.0",
                     Const.PRODUCTION_ARG,
                     Const.REPO_ARG,
                     TestUtil.pgvctrl_test_repo,
                     Const.DATABASE_ARG,
                     TestUtil.pgvctrl_test_db,
-                ],
-                msg=TestUtil.sql_return
+                ]
         )
+        assert out_rtn == "Applied: pgvctrl_test v 0.0.0.first.1\n"
+        assert errors is None
 
     def test_set_schema_snapshot(self):
         msg, errors = capture_dbvctrl_out(

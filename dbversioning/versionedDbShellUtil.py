@@ -4,11 +4,10 @@ import datetime
 import sys
 from typing import List, Union, Optional
 
-import simplejson as json
+import json
 
 import copy
 from plumbum import colors, local, ProcessExecutionError
-from simplejson import JSONDecodeError
 
 import dbversioning.dbvctrlConst as Const
 from dbversioning.osUtil import ensure_dir_exists, make_data_file
@@ -306,7 +305,7 @@ class VersionDbShellUtil:
         psql(db_conn, "-c", update_version_sql, retcode=0)
 
     @staticmethod
-    def dump_version_schema_snapshot(db_conn, v_stg, repo_name) -> (str, Optional[float]):
+    def dump_version_schema_snapshot(db_conn, v_stg, repo_name, name: str) -> (str, Optional[float]):
         start = datetime.datetime.now()
         pg_dump = _local_pg_dump()
         conf = RepositoryConf()
@@ -319,8 +318,12 @@ class VersionDbShellUtil:
         repo_ss = os.path.join(conf.schema_snapshot_dir(), dbver.repo_name)
 
         ensure_dir_exists(repo_ss)
-        d = datetime.datetime.now().strftime(SNAPSHOT_DATE_FORMAT)
-        file_name = f"{dbver.version}.{dbver.env}.{d}.sql" if dbver.env else f"{dbver.version}.{d}.sql"
+
+        if name is None:
+            d = datetime.datetime.now().strftime(SNAPSHOT_DATE_FORMAT)
+            file_name = f"{dbver.version}.{dbver.env}.{d}.sql" if dbver.env else f"{dbver.version}.{d}.sql"
+        else:
+            file_name = f"{name}.sql"
 
         ss = os.path.join(repo_ss, file_name)
 
@@ -338,7 +341,7 @@ class VersionDbShellUtil:
         return file_name, delta.total_seconds()
 
     @staticmethod
-    def dump_backup(db_conn, v_stg, dump_options: List[str]) -> Optional[float]:
+    def dump_backup(db_conn, v_stg, dump_options: List[str], name: str) -> Optional[float]:
         start = datetime.datetime.now()
         pg_dump = _local_pg_dump()
         conf = RepositoryConf()
@@ -351,12 +354,10 @@ class VersionDbShellUtil:
 
         ensure_dir_exists(repo_db_bak)
 
-        d = datetime.datetime.now().strftime(SNAPSHOT_DATE_FORMAT)
-
-        if dbver.env:
-            file_name = f"{dbver.repo_name}.{dbver.env}.{d}"
-        else:
-            file_name = f"{dbver.repo_name}.{d}"
+        file_name = name
+        if file_name is None:
+            d = datetime.datetime.now().strftime(SNAPSHOT_DATE_FORMAT)
+            file_name = f"{dbver.repo_name}.{dbver.env}.{d}" if dbver.env else f"{dbver.repo_name}.{d}"
 
         db_bak = os.path.join(repo_db_bak, file_name)
 
@@ -401,7 +402,7 @@ class VersionDbShellUtil:
     def get_db_instance_version(v_tbl, db_conn):
         psql = _local_psql()
 
-        _good_version_table(v_tbl, db_conn)
+        has_good_tbl = _good_version_table(v_tbl, db_conn)
 
         version_sql = f"SELECT {v_tbl.v}, {v_tbl.rev}, {v_tbl.repo}, {v_tbl.is_prod}, {v_tbl.env}, {v_tbl.hash}, " f"'notused' " f"throwaway FROM {v_tbl.tbl};"
 
@@ -452,7 +453,6 @@ class VersionDbShellUtil:
                 conf,
                 indent=4,
                 sort_keys=True,
-                separators=(",", ": "),
                 ensure_ascii=True,
             )
             f.write(to_unicode(str_))
@@ -470,7 +470,7 @@ class VersionDbShellUtil:
         try:
             with open(conf_file) as json_data:
                 d = json.load(json_data)
-        except JSONDecodeError:
+        except Exception:
             raise VersionedDbExceptionBadDataConfigFile()
 
         return d

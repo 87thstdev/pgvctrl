@@ -6,14 +6,26 @@ from dbversioning.versionedDbShellUtil import SNAPSHOT_DATE_FORMAT
 from test.test_util import (
     TestUtil,
     capture_dbvctrl_out,
+    LOCAL_HOST,
     dbvctrl_assert_simple_msg)
 
 
 class TestDatabaseSchemaSnapshot:
     def setup_method(self):
+        TestUtil.make_conf()
         TestUtil.drop_database()
         TestUtil.create_database()
-        TestUtil.get_static_config()
+        TestUtil.mkrepo(repo_name=TestUtil.pgvctrl_test_repo)
+        TestUtil.mkrepo_ver(repo_name=TestUtil.pgvctrl_test_repo, version=TestUtil.test_first_version)
+        TestUtil.create_simple_sql_file(
+                repo_name=TestUtil.pgvctrl_test_repo,
+                version=TestUtil.test_first_version,
+                file_name="100.make_schema.sql",
+                contents=
+                f"CREATE SCHEMA {TestUtil.schema_membership};CREATE SCHEMA my_sch;"
+                f"CREATE TABLE {TestUtil.schema_membership}.user_state (id integer);"
+                f"CREATE TABLE {TestUtil.schema_public}.item (id integer);"
+        )
         capture_dbvctrl_out(arg_list=[
             Const.INIT_ARG,
             Const.REPO_ARG,
@@ -21,9 +33,6 @@ class TestDatabaseSchemaSnapshot:
             Const.DATABASE_ARG,
             TestUtil.pgvctrl_test_db,
         ])
-        TestUtil.mkrepo_ver(
-                TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
-        )
         capture_dbvctrl_out(arg_list=[
             Const.APPLY_ARG,
             Const.V_ARG,
@@ -35,10 +44,8 @@ class TestDatabaseSchemaSnapshot:
         ])
 
     def teardown_method(self):
-        TestUtil.delete_folder(TestUtil.test_first_version_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ss_path)
-        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_set_schema_snapshot(self):
@@ -88,12 +95,12 @@ class TestDatabaseSchemaSnapshot:
         full_path = f"databases/_schemaSnapshot/{TestUtil.pgvctrl_test_repo}/{file_name}"
 
         has_member_sch = TestUtil.file_contains(
-            full_path,
-            f"CREATE SCHEMA {TestUtil.schema_membership}",
+                full_path,
+                f"CREATE SCHEMA {TestUtil.schema_membership}",
         )
         has_public_sch = TestUtil.file_contains(
-            full_path,
-            f"CREATE SCHEMA {TestUtil.schema_public}",
+                full_path,
+                f"CREATE SCHEMA my_sch",
         )
         assert has_member_sch is True
         assert has_public_sch is False
@@ -117,17 +124,16 @@ class TestDatabaseSchemaSnapshot:
             TestUtil.pgvctrl_test_db,
         ])
 
-        dbvctrl_assert_simple_msg(
-                arg_list=[
-                    Const.GETSS_ARG,
-                    Const.REPO_ARG,
-                    TestUtil.pgvctrl_test_repo,
-                    Const.DATABASE_ARG,
-                    TestUtil.pgvctrl_test_db,
-                ],
-                msg=f"DB Error pg_dump: no matching schemas were found\n\n",
-                error_code=1
-        )
+        out_rtn, errors = capture_dbvctrl_out(arg_list=[
+            Const.GETSS_ARG,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+
+        assert "no matching schemas were found" in out_rtn
+        assert errors.code == 1
 
     def test_set_schema_snapshot_exclude_schema(self):
         capture_dbvctrl_out(arg_list=[
@@ -160,10 +166,10 @@ class TestDatabaseSchemaSnapshot:
         file_name = files[0]
         full_path = f"databases/_schemaSnapshot/{TestUtil.pgvctrl_test_repo}/{file_name}"
         has_member = TestUtil.file_contains(
-            full_path, TestUtil.schema_membership
+                full_path, TestUtil.schema_membership
         )
         has_public = TestUtil.file_contains(
-            full_path, TestUtil.schema_public
+                full_path, TestUtil.schema_public
         )
         date_str = file_name.split(".")[4]
         date_of = datetime.strptime(date_str, SNAPSHOT_DATE_FORMAT)
@@ -275,12 +281,12 @@ class TestDatabaseSchemaSnapshot:
         full_path = f"databases/_schemaSnapshot/{TestUtil.pgvctrl_test_repo}/{file_name}"
 
         has_member_tbl = TestUtil.file_contains(
-            full_path,
-            f"CREATE TABLE {TestUtil.table_membership_user_state}",
+                full_path,
+                f"CREATE TABLE {TestUtil.table_membership_user_state}",
         )
         has_public_tbl = TestUtil.file_contains(
-            full_path,
-            f"CREATE TABLE {TestUtil.table_public_item}",
+                full_path,
+                f"CREATE TABLE {TestUtil.table_public_item}",
         )
         assert msg == f"Schema snapshot set: {TestUtil.pgvctrl_test_repo} ({file_name})\n"
         assert has_member_tbl is True
@@ -304,17 +310,16 @@ class TestDatabaseSchemaSnapshot:
             TestUtil.pgvctrl_test_db,
         ])
 
-        dbvctrl_assert_simple_msg(
-                arg_list=[
-                    Const.GETSS_ARG,
-                    Const.REPO_ARG,
-                    TestUtil.pgvctrl_test_repo,
-                    Const.DATABASE_ARG,
-                    TestUtil.pgvctrl_test_db,
-                ],
-                msg=f"DB Error pg_dump: no matching tables were found\n\n",
-                error_code=1
-        )
+        out_rtn, errors = capture_dbvctrl_out(arg_list=[
+            Const.GETSS_ARG,
+            Const.REPO_ARG,
+            TestUtil.pgvctrl_test_repo,
+            Const.DATABASE_ARG,
+            TestUtil.pgvctrl_test_db,
+        ])
+
+        assert "no matching tables were found" in out_rtn
+        assert errors.code == 1
 
     def test_set_schema_snapshot_exclude_table(self):
         capture_dbvctrl_out(arg_list=[
@@ -428,8 +433,8 @@ class TestDatabaseSchemaSnapshot:
 
         has_member_sch = TestUtil.file_contains(full_path, f"CREATE SCHEMA {TestUtil.schema_membership}")
         has_member_tbl = TestUtil.file_contains(
-            full_path,
-            f"CREATE TABLE {TestUtil.table_membership_user_state}",
+                full_path,
+                f"CREATE TABLE {TestUtil.table_membership_user_state}",
         )
         assert has_member_sch is True
         assert has_member_tbl is False
@@ -548,15 +553,58 @@ class TestDatabaseSchemaSnapshot:
                 msg=f"{TestUtil.test_first_version}.0: {TestUtil.pgvctrl_test_repo} environment (None)\n"
         )
 
+    def test_apply_schema_snapshot_name_created(self):
+        ss_name = "my_ss"
+        msg, errors = capture_dbvctrl_out(
+                arg_list=[
+                    Const.GETSS_ARG,
+                    Const.NAME_ARG,
+                    ss_name,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ]
+        )
+
+        assert errors is None
+
+        TestUtil.drop_database()
+        TestUtil.create_database()
+
+        msg, errors = capture_dbvctrl_out(
+                arg_list=[
+                    Const.APPLY_SS_ARG,
+                    ss_name,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ]
+        )
+
+        assert errors is None
+        assert msg == f"Applying: {ss_name}\n\n"
+
+        dbvctrl_assert_simple_msg(
+                arg_list=[
+                    Const.CHECK_VER_ARG,
+                    Const.REPO_ARG,
+                    TestUtil.pgvctrl_test_repo,
+                    Const.DATABASE_ARG,
+                    TestUtil.pgvctrl_test_db,
+                ],
+                msg=f"{TestUtil.test_first_version}.0: {TestUtil.pgvctrl_test_repo} environment (None)\n"
+        )
+
 
 class TestDatabaseSchemaSnapshotEnv:
     def setup_method(self):
+        TestUtil.make_conf()
         TestUtil.drop_database()
         TestUtil.create_database()
-        TestUtil.get_static_config()
-        TestUtil.mkrepo_ver(
-                TestUtil.pgvctrl_test_repo, TestUtil.test_first_version
-        )
+        TestUtil.mkrepo(repo_name=TestUtil.pgvctrl_test_repo)
+        TestUtil.mkrepo_ver(repo_name=TestUtil.pgvctrl_test_repo, version=TestUtil.test_first_version)
         capture_dbvctrl_out(arg_list=[
             Const.REPO_ARG,
             TestUtil.pgvctrl_test_repo,
@@ -585,10 +633,8 @@ class TestDatabaseSchemaSnapshotEnv:
         ])
 
     def teardown_method(self):
-        TestUtil.delete_folder(TestUtil.test_first_version_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ss_path)
-        TestUtil.delete_file(TestUtil.config_file)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_set_schema_snapshot_env(self):
@@ -610,14 +656,13 @@ class TestDatabaseSchemaSnapshotEnv:
 
 class TestSchemaSnapshotOnCleanDb:
     def setup_method(self):
+        TestUtil.make_conf()
         TestUtil.create_database()
         ensure_dir_exists(TestUtil.pgvctrl_test_db_ss_path)
-        TestUtil.get_static_config()
 
     def teardown_method(self):
-        TestUtil.delete_file(TestUtil.config_file)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_snapshots_path)
-        TestUtil.delete_folder_full(TestUtil.pgvctrl_test_db_ss_path)
+        TestUtil.remove_config()
+        TestUtil.remove_root_folder()
         TestUtil.drop_database()
 
     def test_apply_bad_schema_snapshot(self):
@@ -649,6 +694,6 @@ class TestSchemaSnapshotOnCleanDb:
                     Const.DATABASE_ARG,
                     bad_db,
                 ],
-                msg=f"Invalid Data Connection: ['{Const.DATABASE_ARG}', '{bad_db}']\n",
+                msg=f"Invalid Data Connection: ['{Const.DATABASE_ARG}', '{bad_db}', '{Const.PSQL_HOST_PARAM}', '{LOCAL_HOST}']\n",
                 error_code=1
         )
