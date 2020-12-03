@@ -1,3 +1,11 @@
+1.1.0 / 2020-12-03
+==================
+
+  * Added feature -on-server: running on server (no host needed)
+
+    Allows for no -host or -d.
+
+
 1.1.0 / 2020-10-03
 ==================
 

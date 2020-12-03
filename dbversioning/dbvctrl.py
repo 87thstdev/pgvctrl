@@ -221,6 +221,11 @@ def parse_args(args):
             metavar="USERNAME",
             help="database username"
     )
+    parser.add_argument(
+            Const.ON_SERVER,
+            help="running on server (no host needed)",
+            action="store_true"
+    )
 
     group.add_argument(
             Const.INCLUDE_SCHEMA_ARG,
