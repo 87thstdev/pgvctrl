@@ -17,12 +17,16 @@ def _append_server_args(args, rtn_conn) -> bool:
         rtn_conn.append(args.d)
         has_db = True
 
+    if args.on_server:
+        has_db = True
+
     if args.host:
         rtn_conn.append(Const.PSQL_HOST_PARAM)
         rtn_conn.append(args.host)
     else:
-        rtn_conn.append(Const.PSQL_HOST_PARAM)
-        rtn_conn.append(Const.LOCAL_HOST)
+        if not args.on_server:
+            rtn_conn.append(Const.PSQL_HOST_PARAM)
+            rtn_conn.append(Const.LOCAL_HOST)
 
     if args.p:
         rtn_conn.append(Const.PORT_ARG)

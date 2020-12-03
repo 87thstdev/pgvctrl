@@ -136,7 +136,8 @@ Getting Started
        -host [postgres server host]
        -p [port]
        -u [database username]
-       -pwd [password]
+
+      Use the -on-server flag when the above arguments are optional
 
    *Or*
 

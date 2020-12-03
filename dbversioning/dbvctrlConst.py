@@ -38,6 +38,7 @@ VERSION_ARG = "-version"
 V_ARG = "-v"
 
 LOCAL_HOST = "localhost"
+ON_SERVER = "-on-server"
 DATABASE_ARG = "-d"
 HOST_ARG = "-host"
 PORT_ARG = "-p"
